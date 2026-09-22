@@ -73,10 +73,19 @@ function clearAll(...elements: (Element | null | undefined)[]): void {
  * no layout runs, while animating width and height on real DOM reflows the panel
  * and its subtree on every frame.
  *
- * Scaling alone would stretch the content and turn the corners into ellipses, so
- * a second layer undoes it. The content counter-scales by exactly the inverse,
- * and the radius is divided per axis, which is what `border-radius: Rx / Ry`
- * means. The box grows, the shape never distorts, and nothing leaves the GPU.
+ * Scaling non-uniformly turns the corners into ellipses, so the radius is divided
+ * per axis - which is what `border-radius: Rx / Ry` means. That is the whole job
+ * of the second layer: preserve the container's shape.
+ *
+ * It deliberately does NOT hold the content at its natural size. The reference
+ * scales the content right along with the container, from
+ * `scale(from.w/to.w, from.h/to.h)` up to `scale(1, 1)`, so the panel shows all
+ * of its content in miniature and grows. Cancelling that scale instead leaves the
+ * content full size inside a tiny frame, so what you see through the opening
+ * panel is the top-left corner of the form at 100% rather than the whole thing
+ * shrunk down. The reference's content is stretched too, on exactly the same
+ * axes; it just never reads that way, because it spends the stretched part of the
+ * beat at `opacity: 0` behind an 8px blur.
  */
 interface ShapeOptions {
   fromScale: { x: number; y: number };
@@ -89,12 +98,7 @@ interface ShapeOptions {
   radiusEase: string;
 }
 
-function driveShape(
-  timeline: gsap.core.Timeline,
-  panel: HTMLElement,
-  content: HTMLElement,
-  options: ShapeOptions,
-): void {
+function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
   const { fromScale, toScale, fromRadius, toRadius, geoDuration, geoEase, radiusDuration, radiusEase } = options;
 
   /*
@@ -127,7 +131,6 @@ function driveShape(
         const sy = lerp(fromScale.y, toScale.y, gp) || 1;
         const r = lerp(fromRadius, toRadius, rp);
 
-        gsap.set(content, { scaleX: 1 / sx, scaleY: 1 / sy });
         /*
          * Written straight to the element, not through gsap.set.
          *
@@ -144,16 +147,13 @@ function driveShape(
   );
 }
 
-/** Freezes the content at the panel's final box so it never reflows mid-flight. */
-function freezeContent(content: HTMLElement, at: Box): void {
-  gsap.set(content, {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: at.width,
-    height: at.height,
-    transformOrigin: 'top left',
-  });
+/*
+ * The panel's layout box never changes any more - only its transform does - so
+ * the content cannot reflow and does not need pinning. It only needs the same
+ * origin as the panel, so the two scale about the same corner.
+ */
+function anchorContent(content: HTMLElement): void {
+  gsap.set(content, { transformOrigin: 'top left' });
 }
 
 interface FlightPlan {
@@ -296,7 +296,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
   // Before anything is transformed.
   const plan = measureFlight(trigger, panel, !!config.shareWords, 'open');
 
-  freezeContent(content, to);
+  anchorContent(content);
 
   const tl = Flip.from(state, {
     targets: panel,
@@ -313,7 +313,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
    * corners still visibly squaring off.
    */
   const fullScreen = toRadius === 0;
-  driveShape(tl, panel, content, {
+  driveShape(tl, panel, {
     fromScale: { x: from.width / to.width, y: from.height / to.height },
     toScale: { x: 1, y: 1 },
     fromRadius: isWindow ? WINDOW_START_RADIUS : Number.parseFloat(fromSurface.radius) || 0,
@@ -366,7 +366,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
 
   const plan = measureFlight(trigger, panel, !!config.shareWords, 'close');
 
-  freezeContent(content, from);
+  anchorContent(content);
 
   // The trigger is the destination this time, so its box is what Flip records.
   const state = Flip.getState(trigger);
@@ -380,7 +380,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     toggleClass: 'morph-closing',
   });
 
-  driveShape(tl, panel, content, {
+  driveShape(tl, panel, {
     fromScale: { x: 1, y: 1 },
     toScale: { x: to.width / from.width, y: to.height / from.height },
     fromRadius,

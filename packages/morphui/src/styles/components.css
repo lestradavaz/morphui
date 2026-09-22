@@ -121,3 +121,29 @@ html:has(.morph-dialog[open]) {
     animation: none;
   }
 }
+
+/*
+ * Layer promotion, for the length of the transition only.
+ *
+ * A view transition animates textures: the old and new states are rasterised
+ * once and the compositor samples them. Animating live DOM re-rasterises instead
+ * - glyphs, antialiasing and all - on every frame the scale changes, and the
+ * blur on the content is applied over that same live text. At full screen that is
+ * most of the viewport being repainted per frame, which is where the reference's
+ * apparent framerate advantage comes from.
+ *
+ * `will-change` asks the browser to rasterise these two once and transform the
+ * result. It is scoped to the animating classes on purpose: leaving it on
+ * permanently pins layers in memory and costs more than it saves.
+ */
+.morph-opening,
+.morph-window-opening,
+.morph-closing {
+  will-change: transform;
+}
+
+.morph-opening .morph-panel-content,
+.morph-window-opening .morph-panel-content,
+.morph-closing .morph-panel-content {
+  will-change: opacity, filter;
+}
