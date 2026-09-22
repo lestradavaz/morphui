@@ -142,8 +142,11 @@ html:has(.morph-dialog[open]) {
   will-change: transform;
 }
 
+/* Not `filter`: a filter animation cannot be composited, so hinting it only pins
+   an extra layer that has to be repainted anyway. Measured frame times were the
+   same with and without it. */
 .morph-opening .morph-panel-content,
 .morph-window-opening .morph-panel-content,
 .morph-closing .morph-panel-content {
-  will-change: opacity, filter;
+  will-change: opacity;
 }

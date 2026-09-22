@@ -91,9 +91,19 @@ export function buildWordClones(
   const layer = document.createElement('div');
   layer.setAttribute('data-morph-word-layer', '');
   layer.setAttribute('aria-hidden', 'true');
-  host.append(layer);
 
-  const clones: WordClone[] = [];
+  /*
+   * Three passes, so the browser only lays out once.
+   *
+   * Appending a clone, measuring it, then positioning it reads the DOM between
+   * two writes, which forces a synchronous layout - once per word. That showed up
+   * as a single 32ms frame against a 17.7ms worst case for the reference, and a
+   * dropped frame at the instant a transition starts is felt even when every
+   * frame after it is perfect.
+   *
+   * So: build them all, measure them all, place them all.
+   */
+  const pending: { clone: HTMLElement; targetBox: Box; sourceBox: Box }[] = [];
   for (let i = 0; i < count; i++) {
     const clone = document.createElement('span');
     clone.textContent = words[i] ?? '';
@@ -111,14 +121,20 @@ export function buildWordClones(
       `color:${style.color}`,
     ].join(';');
     layer.append(clone);
+    pending.push({ clone, targetBox: targetInk[i]!, sourceBox: sourceInk[i]! });
+  }
 
-    const ink = measureWordInk(clone)[0] ?? { x: 0, y: 0, width: 0, height: 0 };
-    const targetBox = targetInk[i]!;
+  host.append(layer);
+
+  // One flush for every clone, rather than one per clone.
+  const inks = pending.map(({ clone }) => measureWordInk(clone)[0] ?? { x: 0, y: 0, width: 0, height: 0 });
+
+  const clones: WordClone[] = pending.map(({ clone, targetBox, sourceBox }, i) => {
+    const ink = inks[i]!;
     clone.style.left = `${targetBox.x - ink.x}px`;
     clone.style.top = `${targetBox.y - ink.y}px`;
-
-    clones.push({ clone, sourceBox: sourceInk[i]!, targetBox });
-  }
+    return { clone, sourceBox, targetBox };
+  });
 
   return { layer, clones };
 }
