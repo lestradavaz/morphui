@@ -3,7 +3,7 @@ import { Flip } from 'gsap/Flip';
 
 import { EASE_FLOW, EASE_FLOW_CLOSE, EASE_IN_STRONG, EASE_OUT_SOFT, registerMorphEases } from './easing.js';
 import { box, prefersReducedMotion, slowFactor, surface, type Box } from './measure.js';
-import { buildWordClones, collectItems } from './shared.js';
+import { buildWordClones, collectItems, measureWordInk, type ItemPair } from './shared.js';
 
 export type MorphVariant = 'dialog' | 'window' | 'fullscreen';
 
@@ -89,7 +89,16 @@ function driveShape(
         const sx = lerp(fromScale.x, toScale.x, p) || 1;
         const sy = lerp(fromScale.y, toScale.y, p) || 1;
         gsap.set(content, { scaleX: 1 / sx, scaleY: 1 / sy });
-        gsap.set(panel, { borderRadius: `${radius / sx}px / ${radius / sy}px` });
+        /*
+         * Written straight to the element, not through gsap.set.
+         *
+         * `border-radius: 92px / 200px` is the two-axis shorthand - every corner
+         * gets a 92px horizontal radius and a 200px vertical one, which is what
+         * cancels a non-uniform scale. GSAP's parser does not take that form: it
+         * wrote the first number to the top-left corner and left the other three
+         * on their stylesheet value, so each corner ended up rounded differently.
+         */
+        panel.style.borderRadius = `${radius / sx}px / ${radius / sy}px`;
       },
     },
     0,
@@ -108,31 +117,59 @@ function freezeContent(content: HTMLElement, at: Box): void {
   });
 }
 
-interface FlightOptions {
-  origin: HTMLElement;
-  panel: HTMLElement;
-  host: HTMLElement;
-  shareWords: boolean;
-  duration: number;
-  ease: string;
-  phase: 'open' | 'close';
+interface FlightPlan {
+  items: ItemPair[];
+  words: { sourceInk: Box[]; targetInk: Box[]; land: HTMLElement; heading: HTMLElement; origin: HTMLElement } | null;
 }
 
 /**
- * Shared pieces, in whichever direction the panel is going.
+ * Reads every rectangle the flight needs, and must run before anything is
+ * transformed.
  *
- * Marked items are real elements, so the one inside the panel is what moves and
- * its counterpart in the trigger is simply hidden. Words are stand-ins, always
- * parked at their destination and tweened `from` the origin, so the same call
- * serves both phases - only which end is which changes.
+ * Flip applies its starting transform the moment the timeline is built, so a
+ * measurement taken after that reads the heading while the panel is squeezed
+ * down to the trigger's box - off by the better part of the viewport. Measuring
+ * is therefore its own step, called while the panel is still at its natural size.
  */
-function prepareFlight(timeline: gsap.core.Timeline, options: FlightOptions): () => void {
-  const { origin, panel, host, shareWords, duration, ease, phase } = options;
+function measureFlight(
+  origin: HTMLElement,
+  panel: HTMLElement,
+  shareWords: boolean,
+  phase: 'open' | 'close',
+): FlightPlan {
+  const items = collectItems(origin, panel);
+  const heading = shareWords ? panel.querySelector<HTMLElement>('[data-morph-words]') : null;
+  if (!heading) return { items, words: null };
+
+  const opening = phase === 'open';
+  const start = opening ? origin : heading;
+  const land = opening ? heading : origin;
+
+  return {
+    items,
+    words: {
+      sourceInk: measureWordInk(start),
+      targetInk: measureWordInk(land),
+      land,
+      heading,
+      origin,
+    },
+  };
+}
+
+/** Turns the plan into tweens. Safe to call once the panel has been transformed. */
+function buildFlight(
+  timeline: gsap.core.Timeline,
+  plan: FlightPlan,
+  host: HTMLElement,
+  duration: number,
+  ease: string,
+  phase: 'open' | 'close',
+): () => void {
   const opening = phase === 'open';
   const undo: (() => void)[] = [];
 
-  const items = collectItems(origin, panel);
-  for (const { source, target, sourceBox, targetBox } of items) {
+  for (const { source, target, sourceBox, targetBox } of plan.items) {
     const vars: gsap.TweenVars = {
       x: sourceBox.x - targetBox.x,
       y: sourceBox.y - targetBox.y,
@@ -146,46 +183,42 @@ function prepareFlight(timeline: gsap.core.Timeline, options: FlightOptions): ()
     else timeline.to(target, vars, 0);
     gsap.set(source, { visibility: 'hidden' });
   }
-  if (items.length) {
+  if (plan.items.length) {
     undo.push(() => {
-      for (const { source, target } of items) {
+      for (const { source, target } of plan.items) {
         gsap.set(source, { clearProps: 'visibility' });
         gsap.set(target, { clearProps: 'transform' });
       }
     });
   }
 
-  if (shareWords) {
-    const heading = panel.querySelector<HTMLElement>('[data-morph-words]');
-    if (heading) {
-      const start = opening ? origin : heading;
-      const land = opening ? heading : origin;
-      const built = buildWordClones(start, land, host);
-      if (built) {
-        for (const { clone, sourceBox, targetBox } of built.clones) {
-          timeline.from(
-            clone,
-            {
-              x: sourceBox.x - targetBox.x,
-              y: sourceBox.y - targetBox.y,
-              scale: targetBox.height ? sourceBox.height / targetBox.height : 1,
-              duration,
-              ease,
-            },
-            0,
-          );
-        }
-        // Neither end shows its own text while the stand-ins are up. The heading
-        // goes outright; the trigger only loses its ink, so its box can still
-        // fade on its own schedule.
-        gsap.set(heading, { opacity: 0 });
-        gsap.set(origin, { color: 'transparent' });
-        undo.push(() => {
-          built.layer.remove();
-          gsap.set(heading, { clearProps: 'opacity' });
-          gsap.set(origin, { clearProps: 'color' });
-        });
+  if (plan.words) {
+    const { sourceInk, targetInk, land, heading, origin } = plan.words;
+    const built = buildWordClones(sourceInk, targetInk, land, host);
+    if (built) {
+      for (const { clone, sourceBox, targetBox } of built.clones) {
+        timeline.from(
+          clone,
+          {
+            x: sourceBox.x - targetBox.x,
+            y: sourceBox.y - targetBox.y,
+            scale: targetBox.height ? sourceBox.height / targetBox.height : 1,
+            duration,
+            ease,
+          },
+          0,
+        );
       }
+      // Neither end shows its own text while the stand-ins are up. The heading
+      // goes outright; the trigger only loses its ink, so its box can still fade
+      // on its own schedule.
+      gsap.set(heading, { opacity: 0 });
+      gsap.set(origin, { color: 'transparent' });
+      undo.push(() => {
+        built.layer.remove();
+        gsap.set(heading, { clearProps: 'opacity' });
+        gsap.set(origin, { clearProps: 'color' });
+      });
     }
   }
 
@@ -220,6 +253,10 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
 
   const to = box(panel);
   const toRadius = Number.parseFloat(surface(panel).radius) || 0;
+
+  // Before anything is transformed.
+  const plan = measureFlight(trigger, panel, !!config.shareWords, 'open');
+
   freezeContent(content, to);
 
   const tl = Flip.from(state, {
@@ -248,15 +285,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
 
   tl.from(tint, { opacity: 0, duration: ms(isWindow ? TINT_WINDOW : TINT), ease: EASE_FLOW }, 0);
 
-  const cleanupFlight = prepareFlight(tl, {
-    origin: trigger,
-    panel,
-    host: dialog,
-    shareWords: !!config.shareWords,
-    duration: ms(OPEN),
-    ease: EASE_FLOW,
-    phase: 'open',
-  });
+  const cleanupFlight = buildFlight(tl, plan, dialog, ms(OPEN), EASE_FLOW, 'open');
 
   return settle(tl, () => {
     cleanupFlight();
@@ -288,6 +317,8 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
   const to = box(trigger);
   const toSurface = surface(trigger);
   const fromRadius = Number.parseFloat(surface(panel).radius) || 0;
+
+  const plan = measureFlight(trigger, panel, !!config.shareWords, 'close');
 
   freezeContent(content, from);
 
@@ -327,15 +358,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     );
   }
 
-  const cleanupFlight = prepareFlight(tl, {
-    origin: trigger,
-    panel,
-    host: dialog,
-    shareWords: !!config.shareWords,
-    duration: ms(CLOSE),
-    ease,
-    phase: 'close',
-  });
+  const cleanupFlight = buildFlight(tl, plan, dialog, ms(CLOSE), ease, 'close');
 
   return settle(tl, () => {
     cleanupFlight();

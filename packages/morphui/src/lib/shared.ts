@@ -78,17 +78,16 @@ function wordsOf(element: Element): string[] {
  * difference is taken out. Whatever the two fonts' metrics are, ink lands on ink.
  */
 export function buildWordClones(
-  source: Element,
-  target: Element,
+  sourceInk: Box[],
+  targetInk: Box[],
+  land: Element,
   host: HTMLElement,
 ): { layer: HTMLElement; clones: WordClone[] } | null {
-  const sourceInk = measureWordInk(source);
-  const targetInk = measureWordInk(target);
   const count = Math.min(sourceInk.length, targetInk.length);
   if (count === 0) return null;
 
-  const words = wordsOf(target);
-  const style = getComputedStyle(target);
+  const words = wordsOf(land);
+  const style = getComputedStyle(land);
   const layer = document.createElement('div');
   layer.setAttribute('data-morph-word-layer', '');
   layer.setAttribute('aria-hidden', 'true');
@@ -113,7 +112,6 @@ export function buildWordClones(
     ].join(';');
     layer.append(clone);
 
-    // Where this clone's own ink sits while its box is pinned at the origin.
     const ink = measureWordInk(clone)[0] ?? { x: 0, y: 0, width: 0, height: 0 };
     const targetBox = targetInk[i]!;
     clone.style.left = `${targetBox.x - ink.x}px`;
