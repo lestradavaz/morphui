@@ -1,7 +1,15 @@
 import gsap from 'gsap';
 import { Flip } from 'gsap/Flip';
 
-import { EASE_FLOW, EASE_FLOW_CLOSE, EASE_IN_STRONG, EASE_OUT_SOFT, registerMorphEases } from './easing.js';
+import {
+  EASE_FLOW,
+  EASE_FLOW_CLOSE,
+  EASE_IN_OUT_SOFT,
+  EASE_IN_STRONG,
+  EASE_OUT_SOFT,
+  EASE_SHAPE,
+  registerMorphEases,
+} from './easing.js';
 import { box, prefersReducedMotion, slowFactor, surface, type Box } from './measure.js';
 import { buildWordClones, collectItems, measureWordInk, type ItemPair } from './shared.js';
 
@@ -23,6 +31,10 @@ export interface MorphConfig {
 
 const OPEN = 700;
 const CLOSE = 500;
+const SURFACE = 300;
+const FULL_RADIUS = 1200;
+const WINDOW_RADIUS = 1000;
+const WINDOW_START_RADIUS = 64;
 const TRIGGER_HIDE = 160;
 const TRIGGER_SHOW = 300;
 const TRIGGER_SHOW_DELAY = 200;
@@ -66,28 +78,55 @@ function clearAll(...elements: (Element | null | undefined)[]): void {
  * and the radius is divided per axis, which is what `border-radius: Rx / Ry`
  * means. The box grows, the shape never distorts, and nothing leaves the GPU.
  */
+interface ShapeOptions {
+  fromScale: { x: number; y: number };
+  toScale: { x: number; y: number };
+  fromRadius: number;
+  toRadius: number;
+  geoDuration: number;
+  geoEase: string;
+  radiusDuration: number;
+  radiusEase: string;
+}
+
 function driveShape(
   timeline: gsap.core.Timeline,
   panel: HTMLElement,
   content: HTMLElement,
-  fromScale: { x: number; y: number },
-  toScale: { x: number; y: number },
-  radius: number,
-  duration: number,
-  ease: string,
+  options: ShapeOptions,
 ): void {
+  const { fromScale, toScale, fromRadius, toRadius, geoDuration, geoEase, radiusDuration, radiusEase } = options;
+
+  /*
+   * The corners run on their own clock.
+   *
+   * The reference gives the radius a separate beat from the box, and a much
+   * longer one when the panel is going full screen: 1200ms against 700ms, on a
+   * gentler curve, so the corners ease open instead of snapping square. A shared
+   * driver keeps both readings off one elapsed time, which is the only way the
+   * scale compensation stays exact - the radius has to be divided by whatever the
+   * scale is at that instant, not at some other point on a second timeline.
+   */
+  const total = Math.max(geoDuration, radiusDuration);
+  const geo = gsap.parseEase(geoEase);
+  const rad = gsap.parseEase(radiusEase);
   const driver = { t: 0 };
-  const curve = gsap.parseEase(ease);
+
   timeline.to(
     driver,
     {
       t: 1,
-      duration,
+      duration: total,
       ease: 'none',
       onUpdate: () => {
-        const p = curve(driver.t);
-        const sx = lerp(fromScale.x, toScale.x, p) || 1;
-        const sy = lerp(fromScale.y, toScale.y, p) || 1;
+        const elapsed = driver.t * total;
+        const gp = geo(Math.min(1, elapsed / geoDuration));
+        const rp = rad(Math.min(1, elapsed / radiusDuration));
+
+        const sx = lerp(fromScale.x, toScale.x, gp) || 1;
+        const sy = lerp(fromScale.y, toScale.y, gp) || 1;
+        const r = lerp(fromRadius, toRadius, rp);
+
         gsap.set(content, { scaleX: 1 / sx, scaleY: 1 / sy });
         /*
          * Written straight to the element, not through gsap.set.
@@ -98,7 +137,7 @@ function driveShape(
          * wrote the first number to the top-left corner and left the other three
          * on their stylesheet value, so each corner ended up rounded differently.
          */
-        panel.style.borderRadius = `${radius / sx}px / ${radius / sy}px`;
+        panel.style.borderRadius = `${r / sx}px / ${r / sy}px`;
       },
     },
     0,
@@ -267,16 +306,23 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
     toggleClass: isWindow ? 'morph-window-opening' : 'morph-opening',
   });
 
-  driveShape(
-    tl,
-    panel,
-    content,
-    { x: from.width / to.width, y: from.height / to.height },
-    { x: 1, y: 1 },
+  /*
+   * A panel with corners meets the trigger's radius on the surface beat. A
+   * full-screen one has no radius to land on, so the corners take the long beat
+   * and a gentler curve - otherwise the box arrives filling the viewport with its
+   * corners still visibly squaring off.
+   */
+  const fullScreen = toRadius === 0;
+  driveShape(tl, panel, content, {
+    fromScale: { x: from.width / to.width, y: from.height / to.height },
+    toScale: { x: 1, y: 1 },
+    fromRadius: isWindow ? WINDOW_START_RADIUS : Number.parseFloat(fromSurface.radius) || 0,
     toRadius,
-    ms(OPEN),
-    EASE_FLOW,
-  );
+    geoDuration: ms(OPEN),
+    geoEase: EASE_FLOW,
+    radiusDuration: ms(isWindow ? WINDOW_RADIUS : fullScreen ? FULL_RADIUS : SURFACE),
+    radiusEase: isWindow ? EASE_SHAPE : fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
+  });
 
   if (!isWindow) {
     tl.from(panel, { backgroundColor: fromSurface.background, duration: ms(OPEN) / 2.33, ease: EASE_FLOW }, 0);
@@ -334,16 +380,16 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     toggleClass: 'morph-closing',
   });
 
-  driveShape(
-    tl,
-    panel,
-    content,
-    { x: 1, y: 1 },
-    { x: to.width / from.width, y: to.height / from.height },
+  driveShape(tl, panel, content, {
+    fromScale: { x: 1, y: 1 },
+    toScale: { x: to.width / from.width, y: to.height / from.height },
     fromRadius,
-    ms(CLOSE),
-    ease,
-  );
+    toRadius: isWindow ? WINDOW_START_RADIUS : Number.parseFloat(toSurface.radius) || 0,
+    geoDuration: ms(CLOSE),
+    geoEase: ease,
+    radiusDuration: ms(CLOSE),
+    radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
+  });
 
   tl.to(panel, { backgroundColor: toSurface.background, duration: ms(CLOSE), ease }, 0);
   tl.to(tint, { opacity: 0, duration: ms(CLOSE), ease: EASE_IN_STRONG }, 0);
