@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MorphUI — theme preview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../src/themes/all.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    padding: 40px 32px 64px;
+    background: var(--morph-bg);
+    color: var(--morph-text);
+    font-family: "Schibsted Grotesk", var(--morph-font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 240ms var(--morph-ease-out-soft),
+                color 240ms var(--morph-ease-out-soft);
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.035em; line-height: 1; }
+  .lede { margin: 8px 0 0; max-width: 60ch; color: var(--morph-muted); font-size: 15px; }
+
+  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .dots { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: var(--morph-radius-full); background: var(--morph-surface); }
+  .dot {
+    display: grid; place-items: center;
+    width: 44px; height: 44px; padding: 0;
+    border: 0; border-radius: var(--morph-radius-full);
+    background: transparent; cursor: pointer;
+    transition: background-color var(--morph-duration-hover) ease, transform var(--morph-duration-press) var(--morph-ease-out-soft);
+  }
+  .dot span { display: block; width: 20px; height: 20px; border-radius: var(--morph-radius-full); box-shadow: inset 0 0 0 1px rgb(128 128 128 / .35); }
+  .dot[aria-pressed="true"] { background: var(--morph-raised); }
+  .dot:active { transform: scale(0.94); }
+
+  .seg { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: var(--morph-radius-full); background: var(--morph-surface); }
+  .seg button {
+    height: 36px; padding: 0 18px;
+    border: 0; border-radius: var(--morph-radius-full);
+    background: transparent; color: var(--morph-muted);
+    font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background-color var(--morph-duration-hover) ease, color var(--morph-duration-hover) ease;
+  }
+  .seg button[aria-pressed="true"] { background: var(--morph-bg); color: var(--morph-text); box-shadow: var(--morph-elevation-1); }
+
+  .stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .stage { display: flex; flex-direction: column; gap: 14px; padding: 22px; border-radius: var(--morph-radius-md); background: var(--morph-surface); }
+  .stage .frame { display: grid; place-items: center; min-height: 128px; border-radius: var(--morph-radius-sm); background: var(--morph-raised); }
+  .stage h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .stage p { margin: 0; font-size: 14px; color: var(--morph-muted); }
+
+  .pill, .chip {
+    border: 0; font: inherit; font-weight: 500; cursor: pointer;
+    transition: transform var(--morph-duration-press) var(--morph-ease-out-soft),
+                background-color var(--morph-duration-hover) ease;
+  }
+  .pill { height: 48px; padding: 0 26px; border-radius: var(--morph-radius-full); background: var(--morph-accent); color: var(--morph-on-accent); font-size: 15px; }
+  .pill.ghost { background: transparent; color: var(--morph-text); box-shadow: inset 0 0 0 2px var(--morph-border); }
+  .chip { height: 44px; padding: 0 18px; border-radius: var(--morph-radius-xs); background: var(--morph-chip); color: var(--morph-text); font-size: 14px; }
+  .pill:active, .chip:active { transform: scale(0.97); }
+
+  /* Stands in for the shared image a real MorphCard carries. Square, so the
+     radial stops stay circular and nothing clips at the edge. */
+  .art {
+    display: block; width: 116px; height: 116px;
+    border-radius: var(--morph-radius-md);
+    background:
+      radial-gradient(circle at 64% 68%, var(--morph-accent) 0 22%, transparent 22.4%),
+      radial-gradient(circle at 64% 68%, transparent 0 31%, color-mix(in srgb, var(--morph-accent) 34%, transparent) 31.4% 32.6%, transparent 33%),
+      radial-gradient(circle at 28% 26%, var(--morph-muted) 0 6%, transparent 6.4%),
+      var(--morph-chip);
+  }
+
+  .glass {
+    display: flex; align-items: center; gap: 12px;
+    height: 44px; padding: 0 18px;
+    border-radius: var(--morph-radius-full);
+    background: var(--morph-glass);
+    box-shadow: inset 0 0 0 1px var(--morph-glass-ring);
+    backdrop-filter: blur(var(--morph-blur));
+    -webkit-backdrop-filter: blur(var(--morph-blur));
+    font-size: 14px;
+  }
+
+  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .token { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--morph-radius-xs); background: var(--morph-surface); }
+  .token i { display: block; width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgb(128 128 128 / .35); }
+  .token b { display: block; font-size: 12.5px; font-weight: 500; }
+  .token code { display: block; font-family: var(--morph-font-mono); font-size: 11px; color: var(--morph-muted); }
+
+  .rule { height: 1px; background: var(--morph-border); }
+  .note { font-size: 14px; color: var(--morph-muted); }
+
+  :focus-visible { outline: 2px solid var(--morph-accent); outline-offset: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>MorphUI</h1>
+      <p class="lede">Every surface below is painted from custom properties only. Switch theme or mode and nothing re-renders: the variables change and CSS does the rest.</p>
+    </div>
+    <div class="controls">
+      <div class="dots" id="themes" role="group" aria-label="Colour theme"></div>
+      <div class="seg" role="group" aria-label="Colour mode">
+        <button type="button" data-mode="light">Light</button>
+        <button type="button" data-mode="dark">Dark</button>
+        <button type="button" data-mode="system">System</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="rule"></div>
+
+  <section class="stages">
+    <div class="stage">
+      <div class="frame" style="gap: 8px;">
+        <button type="button" class="pill">Create account</button>
+        <button type="button" class="pill ghost">Log in</button>
+      </div>
+      <div>
+        <h2>MorphDialog</h2>
+        <p>Trigger becomes a native dialog. The label flies into the heading.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="frame">
+        <button type="button" class="chip">What is it?</button>
+      </div>
+      <div>
+        <h2>MorphWindow</h2>
+        <p>Scales out of its origin, blurs back into it.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="frame">
+        <span class="art"></span>
+      </div>
+      <div>
+        <h2>MorphCard</h2>
+        <p>Shared image, card to full screen.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="glass" style="align-self: flex-start;">
+    <span>Glass and elevation follow the mode</span>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="readout" id="readout"></div>
+
+  <p class="note" id="curve"></p>
+
+</div>
+
+<script type="module">
+  // Mirrors morphui/src/lib/theme.ts. Written out longhand so this page works
+  // straight off the filesystem, with no build step.
+  const THEMES = ['ink', 'green', 'cobalt', 'terracotta', 'teal', 'crimson', 'plum'];
+  const TOKENS = ['bg', 'surface', 'raised', 'chip', 'border', 'muted', 'text', 'accent', 'on-accent', 'accent-soft'];
+  const root = document.documentElement;
+
+  const dots = document.getElementById('themes');
+  for (const name of THEMES) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'dot';
+    b.dataset.theme = name;
+    b.setAttribute('aria-label', name);
+    b.innerHTML = '<span></span>';
+    dots.append(b);
+  }
+
+  function currentTheme() {
+    return root.getAttribute('data-morph-theme') ?? 'ink';
+  }
+  function currentMode() {
+    return root.getAttribute('data-morph-mode') ?? 'system';
+  }
+
+  function paintSwatches() {
+    // Read each theme's accent by probing an off-screen element carrying that theme.
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.append(probe);
+    for (const b of dots.children) {
+      probe.setAttribute('data-morph-theme', b.dataset.theme);
+      b.querySelector('span').style.background = getComputedStyle(probe).getPropertyValue('--morph-accent').trim();
+    }
+    probe.remove();
+  }
+
+  function sync() {
+    const theme = currentTheme();
+    const mode = currentMode();
+    for (const b of dots.children) b.setAttribute('aria-pressed', String(b.dataset.theme === theme));
+    for (const b of document.querySelectorAll('[data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
+
+    const cs = getComputedStyle(root);
+    document.getElementById('readout').innerHTML = TOKENS.map((t) => {
+      const v = cs.getPropertyValue('--morph-' + t).trim();
+      return `<div class="token"><i style="background:${v}"></i><span><b>${t}</b><code>${v}</code></span></div>`;
+    }).join('');
+
+    const flow = cs.getPropertyValue('--morph-ease-flow').trim();
+    document.getElementById('curve').textContent =
+      `${theme} · ${mode} · --morph-ease-flow is ${flow.length} characters of linear(), carried over from the original components.`;
+    paintSwatches();
+  }
+
+  dots.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-theme]');
+    if (!b) return;
+    if (b.dataset.theme === 'ink') root.removeAttribute('data-morph-theme');
+    else root.setAttribute('data-morph-theme', b.dataset.theme);
+    sync();
+  });
+
+  document.querySelector('.seg').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mode]');
+    if (!b) return;
+    if (b.dataset.mode === 'system') root.removeAttribute('data-morph-mode');
+    else root.setAttribute('data-morph-mode', b.dataset.mode);
+    sync();
+  });
+
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sync);
+  sync();
+</script>
+</body>
+</html>

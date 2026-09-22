@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Morph de ventanas</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Morph de ventanas</h1>
+      <p>Botones y tarjetas que se convierten en ventanas con View Transitions. HTML, CSS y JS sin librerías.</p>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="slow">
+      <span class="switch-track" aria-hidden="true"></span>
+      Cámara lenta ×5
+    </label>
+  </header>
+
+  <main class="bench">
+    <section class="tile tile-auth" aria-labelledby="spec-auth">
+      <div class="stage">
+        <button type="button" class="pill pill-primary" data-morph="auth" data-mode="signup">
+          <span data-morph-words="title">Crear cuenta</span>
+        </button>
+        <button type="button" class="pill pill-outline" data-morph="auth" data-mode="login">
+          <span data-morph-words="title">Iniciar sesión</span>
+        </button>
+      </div>
+      <div class="tile-info">
+        <h2 id="spec-auth">Botón a diálogo</h2>
+        <p>Las palabras del botón viajan al título y el contenedor pasa del color del botón al de la ventana.</p>
+      </div>
+    </section>
+
+    <section class="tile tile-window" aria-labelledby="spec-window">
+      <div class="stage">
+        <button type="button" class="chip" data-morph="about" data-morph-style="calories">¿Qué es?</button>
+      </div>
+      <div class="tile-info">
+        <h2 id="spec-window">Ventana sin elementos compartidos</h2>
+        <p>Variante de Calories: la ventana escala desde el botón, que sigue visible, y se desenfoca al volver.</p>
+      </div>
+    </section>
+
+    <section class="tile tile-cards" aria-labelledby="spec-cards">
+      <div class="tile-info">
+        <h2 id="spec-cards">Tarjeta a pantalla completa</h2>
+        <p>La imagen se comparte entre la tarjeta y la ventana. Toca la tarjeta o su flecha.</p>
+      </div>
+      <div class="cards">
+        <button type="button" class="card" data-morph="feature" data-art="art-a"
+          data-title="Registra en segundos"
+          data-text="Escribe lo que pagaste y queda guardado. Sin formularios largos."
+          aria-label="Abrir: Registra en segundos">
+          <span class="art art-a" data-morph-item="image"></span>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button type="button" class="card" data-morph="feature" data-art="art-b"
+          data-title="Mira el panorama"
+          data-text="Tus cuentas y categorías en una sola vista, sin ruido."
+          aria-label="Abrir: Mira el panorama">
+          <span class="art art-b" data-morph-item="image"></span>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="morph-dialog" id="auth" aria-labelledby="auth-title">
+    <div class="morph-tint" aria-hidden="true"></div>
+    <div class="morph-panel panel-auth">
+      <button type="button" class="icon-button tonal panel-close" data-close aria-label="Cerrar"></button>
+      <div class="auth-body">
+        <span class="app-mark" aria-hidden="true">sb</span>
+        <h2 class="auth-title" id="auth-title" data-morph-words="title">Iniciar sesión</h2>
+        <form class="auth-form">
+          <label class="field">
+            <span>Correo</span>
+            <input type="email" name="email" autocomplete="email" placeholder="nombre@correo.com" required>
+          </label>
+          <label class="field">
+            <span>Contraseña</span>
+            <input type="password" name="password" autocomplete="current-password" placeholder="Mínimo 8 caracteres" minlength="8" required>
+          </label>
+          <button type="submit" class="pill pill-primary auth-submit">Iniciar sesión</button>
+          <p class="auth-note" role="status">Demo local: el formulario no envía datos.</p>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="morph-dialog is-full" id="feature" aria-labelledby="feature-title">
+    <div class="morph-tint" aria-hidden="true"></div>
+    <div class="morph-panel panel-feature">
+      <div class="feature-body">
+        <div class="feature-media">
+          <button type="button" class="icon-button glass" data-close aria-label="Cerrar"></button>
+          <span class="art" data-morph-item="image"></span>
+        </div>
+        <h2 class="feature-title" id="feature-title"></h2>
+        <p class="feature-text"></p>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="morph-dialog is-full" id="about" aria-labelledby="about-title">
+    <div class="morph-tint" aria-hidden="true"></div>
+    <div class="morph-panel panel-about">
+      <div class="about-bar">
+        <button type="button" class="icon-button tonal" data-close aria-label="Cerrar"></button>
+      </div>
+      <div class="about-body">
+        <p class="about-lead">Esta ventana nace del botón que la abrió y vuelve a él al cerrarse.</p>
+        <div class="about-block">
+          <h2 id="about-title">Cómo se mueve</h2>
+          <p>Crece desde el origen mientras se aclara el desenfoque. Al cerrar se redondea, se desenfoca y se encoge hasta el mismo botón.</p>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>

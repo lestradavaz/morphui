@@ -1,0 +1,62 @@
+/*
+ * MorphUI theme - Cobalt
+ * Deep blue. The most legible of the set.
+ *
+ * Applies when data-morph-theme="cobalt" is set on an ancestor, and when no
+ * theme attribute is present at all (see themes/all.css for how the default is
+ * resolved). Force a mode with data-morph-mode="light" or "dark"; without it the
+ * theme follows prefers-color-scheme.
+ */
+
+:where(:root),
+[data-morph-theme="cobalt"] {
+  --morph-bg: #F5F7FA;
+  --morph-surface: #EDF1F6;
+  --morph-raised: #E2E8F0;
+  --morph-chip: #D8E0EA;
+  --morph-border: #D6DEE8;
+  --morph-muted: #58616D;
+  --morph-faint: #848D99;
+  --morph-text: #14181E;
+  --morph-panel: #F5F7FA;
+  --morph-accent: #1C4BA0;
+  --morph-on-accent: #F5F7FA;
+  --morph-accent-soft: #D9E3F5;
+  --morph-on-accent-soft: #123064;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root):not([data-morph-mode="light"]),
+  [data-morph-theme="cobalt"]:not([data-morph-mode="light"]) {
+    --morph-bg: #0D1014;
+    --morph-surface: #16191F;
+    --morph-raised: #202530;
+    --morph-chip: #2B313B;
+    --morph-border: #2B313B;
+    --morph-muted: #8D949F;
+    --morph-faint: #747B86;
+    --morph-text: #E5E8ED;
+    --morph-panel: #191D24;
+    --morph-accent: #7DAEFF;
+    --morph-on-accent: #0A1120;
+    --morph-accent-soft: #1A2740;
+    --morph-on-accent-soft: #B9D2FF;
+  }
+}
+
+:where(:root)[data-morph-mode="dark"],
+[data-morph-theme="cobalt"][data-morph-mode="dark"] {
+  --morph-bg: #0D1014;
+  --morph-surface: #16191F;
+  --morph-raised: #202530;
+  --morph-chip: #2B313B;
+  --morph-border: #2B313B;
+  --morph-muted: #8D949F;
+  --morph-faint: #747B86;
+  --morph-text: #E5E8ED;
+  --morph-panel: #191D24;
+  --morph-accent: #7DAEFF;
+  --morph-on-accent: #0A1120;
+  --morph-accent-soft: #1A2740;
+  --morph-on-accent-soft: #B9D2FF;
+}

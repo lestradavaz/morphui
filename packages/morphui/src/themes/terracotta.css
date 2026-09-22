@@ -1,0 +1,62 @@
+/*
+ * MorphUI theme - Terracotta
+ * Warm clay against warm paper.
+ *
+ * Applies when data-morph-theme="terracotta" is set on an ancestor, and when no
+ * theme attribute is present at all (see themes/all.css for how the default is
+ * resolved). Force a mode with data-morph-mode="light" or "dark"; without it the
+ * theme follows prefers-color-scheme.
+ */
+
+:where(:root),
+[data-morph-theme="terracotta"] {
+  --morph-bg: #FAF7F4;
+  --morph-surface: #F4EFE9;
+  --morph-raised: #EBE4DC;
+  --morph-chip: #E4DBD1;
+  --morph-border: #E1D9CF;
+  --morph-muted: #6B6058;
+  --morph-faint: #978B81;
+  --morph-text: #1C1815;
+  --morph-panel: #FAF7F4;
+  --morph-accent: #9E4426;
+  --morph-on-accent: #FAF7F4;
+  --morph-accent-soft: #F2DED2;
+  --morph-on-accent-soft: #6B2C16;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root):not([data-morph-mode="light"]),
+  [data-morph-theme="terracotta"]:not([data-morph-mode="light"]) {
+    --morph-bg: #12100E;
+    --morph-surface: #1C1917;
+    --morph-raised: #262220;
+    --morph-chip: #322D2A;
+    --morph-border: #322D2A;
+    --morph-muted: #9B928B;
+    --morph-faint: #807771;
+    --morph-text: #EDE8E3;
+    --morph-panel: #1F1B19;
+    --morph-accent: #F0A07A;
+    --morph-on-accent: #2B1409;
+    --morph-accent-soft: #3A241A;
+    --morph-on-accent-soft: #F6C6AC;
+  }
+}
+
+:where(:root)[data-morph-mode="dark"],
+[data-morph-theme="terracotta"][data-morph-mode="dark"] {
+  --morph-bg: #12100E;
+  --morph-surface: #1C1917;
+  --morph-raised: #262220;
+  --morph-chip: #322D2A;
+  --morph-border: #322D2A;
+  --morph-muted: #9B928B;
+  --morph-faint: #807771;
+  --morph-text: #EDE8E3;
+  --morph-panel: #1F1B19;
+  --morph-accent: #F0A07A;
+  --morph-on-accent: #2B1409;
+  --morph-accent-soft: #3A241A;
+  --morph-on-accent-soft: #F6C6AC;
+}

@@ -1,0 +1,62 @@
+/*
+ * MorphUI theme - Ink
+ * The default. No hue: the accent is ink on paper, and inverts to paper on ink.
+ *
+ * Applies when data-morph-theme="ink" is set on an ancestor, and when no
+ * theme attribute is present at all (see themes/all.css for how the default is
+ * resolved). Force a mode with data-morph-mode="light" or "dark"; without it the
+ * theme follows prefers-color-scheme.
+ */
+
+:where(:root),
+[data-morph-theme="ink"] {
+  --morph-bg: #F8F7F5;
+  --morph-surface: #F0EEEA;
+  --morph-raised: #E6E3DE;
+  --morph-chip: #DEDAD4;
+  --morph-border: #DCD8D2;
+  --morph-muted: #625E58;
+  --morph-faint: #8B867E;
+  --morph-text: #171614;
+  --morph-panel: #F8F7F5;
+  --morph-accent: #1B1A17;
+  --morph-on-accent: #F8F7F5;
+  --morph-accent-soft: #E6E3DE;
+  --morph-on-accent-soft: #33302B;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root):not([data-morph-mode="light"]),
+  [data-morph-theme="ink"]:not([data-morph-mode="light"]) {
+    --morph-bg: #101010;
+    --morph-surface: #191918;
+    --morph-raised: #232221;
+    --morph-chip: #2E2D2B;
+    --morph-border: #2E2D2B;
+    --morph-muted: #96938D;
+    --morph-faint: #7C7973;
+    --morph-text: #EDEBE7;
+    --morph-panel: #1C1B1A;
+    --morph-accent: #EDEBE7;
+    --morph-on-accent: #121211;
+    --morph-accent-soft: #2E2D2B;
+    --morph-on-accent-soft: #D8D4CE;
+  }
+}
+
+:where(:root)[data-morph-mode="dark"],
+[data-morph-theme="ink"][data-morph-mode="dark"] {
+  --morph-bg: #101010;
+  --morph-surface: #191918;
+  --morph-raised: #232221;
+  --morph-chip: #2E2D2B;
+  --morph-border: #2E2D2B;
+  --morph-muted: #96938D;
+  --morph-faint: #7C7973;
+  --morph-text: #EDEBE7;
+  --morph-panel: #1C1B1A;
+  --morph-accent: #EDEBE7;
+  --morph-on-accent: #121211;
+  --morph-accent-soft: #2E2D2B;
+  --morph-on-accent-soft: #D8D4CE;
+}

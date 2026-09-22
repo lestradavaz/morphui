@@ -1,0 +1,46 @@
+/*
+ * MorphUI - Tailwind v4 bridge.
+ *
+ * Maps the MorphUI custom properties onto Tailwind's theme namespaces, so
+ * bg-morph-surface, text-morph-muted, rounded-morph-md and ease-morph-flow all
+ * work in your markup.
+ *
+ *   @import "tailwindcss";
+ *   @import "morphui/themes/all.css";
+ *   @import "morphui/tailwind.css";
+ *
+ * `@theme inline` matters here: it makes Tailwind emit var() references rather
+ * than resolving the values at build time. Without `inline`, every utility
+ * would freeze to whichever theme was loaded when you compiled, and switching
+ * data-morph-theme at runtime would do nothing.
+ */
+
+@theme inline {
+  --color-morph-bg: var(--morph-bg);
+  --color-morph-surface: var(--morph-surface);
+  --color-morph-raised: var(--morph-raised);
+  --color-morph-chip: var(--morph-chip);
+  --color-morph-border: var(--morph-border);
+  --color-morph-muted: var(--morph-muted);
+  --color-morph-faint: var(--morph-faint);
+  --color-morph-text: var(--morph-text);
+  --color-morph-panel: var(--morph-panel);
+  --color-morph-accent: var(--morph-accent);
+  --color-morph-on-accent: var(--morph-on-accent);
+  --color-morph-accent-soft: var(--morph-accent-soft);
+  --color-morph-on-accent-soft: var(--morph-on-accent-soft);
+
+  --radius-morph-xs: var(--morph-radius-xs);
+  --radius-morph-sm: var(--morph-radius-sm);
+  --radius-morph-md: var(--morph-radius-md);
+  --radius-morph-lg: var(--morph-radius-lg);
+  --radius-morph-full: var(--morph-radius-full);
+
+  --ease-morph-flow: var(--morph-ease-flow);
+  --ease-morph-flow-close: var(--morph-ease-flow-close);
+  --ease-morph-shape: var(--morph-ease-shape);
+  --ease-morph-blur: var(--morph-ease-blur);
+
+  --font-morph-sans: var(--morph-font-sans);
+  --font-morph-mono: var(--morph-font-mono);
+}

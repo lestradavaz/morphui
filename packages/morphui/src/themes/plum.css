@@ -1,0 +1,62 @@
+/*
+ * MorphUI theme - Plum
+ * Aubergine, not the neon violet every AI product ships.
+ *
+ * Applies when data-morph-theme="plum" is set on an ancestor, and when no
+ * theme attribute is present at all (see themes/all.css for how the default is
+ * resolved). Force a mode with data-morph-mode="light" or "dark"; without it the
+ * theme follows prefers-color-scheme.
+ */
+
+:where(:root),
+[data-morph-theme="plum"] {
+  --morph-bg: #F9F7FA;
+  --morph-surface: #F2EEF4;
+  --morph-raised: #E9E3EC;
+  --morph-chip: #E1DAE5;
+  --morph-border: #DFD8E3;
+  --morph-muted: #635C6A;
+  --morph-faint: #8D8695;
+  --morph-text: #19161B;
+  --morph-panel: #F9F7FA;
+  --morph-accent: #5B2D6B;
+  --morph-on-accent: #F9F7FA;
+  --morph-accent-soft: #EBDEF1;
+  --morph-on-accent-soft: #3E1C4A;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root):not([data-morph-mode="light"]),
+  [data-morph-theme="plum"]:not([data-morph-mode="light"]) {
+    --morph-bg: #110F13;
+    --morph-surface: #1A171C;
+    --morph-raised: #241F27;
+    --morph-chip: #302A33;
+    --morph-border: #302A33;
+    --morph-muted: #98909D;
+    --morph-faint: #7C7581;
+    --morph-text: #EBE7ED;
+    --morph-panel: #1D1920;
+    --morph-accent: #C9A6E8;
+    --morph-on-accent: #22112B;
+    --morph-accent-soft: #331F3D;
+    --morph-on-accent-soft: #E0C9F2;
+  }
+}
+
+:where(:root)[data-morph-mode="dark"],
+[data-morph-theme="plum"][data-morph-mode="dark"] {
+  --morph-bg: #110F13;
+  --morph-surface: #1A171C;
+  --morph-raised: #241F27;
+  --morph-chip: #302A33;
+  --morph-border: #302A33;
+  --morph-muted: #98909D;
+  --morph-faint: #7C7581;
+  --morph-text: #EBE7ED;
+  --morph-panel: #1D1920;
+  --morph-accent: #C9A6E8;
+  --morph-on-accent: #22112B;
+  --morph-accent-soft: #331F3D;
+  --morph-on-accent-soft: #E0C9F2;
+}

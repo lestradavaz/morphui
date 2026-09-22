@@ -1,0 +1,21 @@
+/*
+ * MorphUI - every theme, for runtime switching.
+ *
+ * Set data-morph-theme on <html> to pick one:
+ *   ink (default) - green - cobalt - terracotta - teal - crimson - plum
+ *
+ * Each theme file claims both [data-morph-theme="<name>"] and :where(:root).
+ * The attribute selector carries real specificity and always wins, so an
+ * explicit theme is never ambiguous. The :where(:root) rules all have zero
+ * specificity, so the LAST import decides the default - which is why ink is
+ * imported last. Reorder these lines to change the default.
+ */
+
+@import "../styles/base.css";
+@import "./green.css";
+@import "./cobalt.css";
+@import "./terracotta.css";
+@import "./teal.css";
+@import "./crimson.css";
+@import "./plum.css";
+@import "./ink.css";

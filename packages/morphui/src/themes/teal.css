@@ -1,0 +1,62 @@
+/*
+ * MorphUI theme - Teal
+ * Cool, one step bluer than the original green.
+ *
+ * Applies when data-morph-theme="teal" is set on an ancestor, and when no
+ * theme attribute is present at all (see themes/all.css for how the default is
+ * resolved). Force a mode with data-morph-mode="light" or "dark"; without it the
+ * theme follows prefers-color-scheme.
+ */
+
+:where(:root),
+[data-morph-theme="teal"] {
+  --morph-bg: #F4F8F8;
+  --morph-surface: #EAF1F1;
+  --morph-raised: #DFE9E9;
+  --morph-chip: #D5E2E2;
+  --morph-border: #D3E0E0;
+  --morph-muted: #556261;
+  --morph-faint: #818E8D;
+  --morph-text: #131A1A;
+  --morph-panel: #F4F8F8;
+  --morph-accent: #14585E;
+  --morph-on-accent: #F4F8F8;
+  --morph-accent-soft: #CFE6E7;
+  --morph-on-accent-soft: #0D3B40;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root):not([data-morph-mode="light"]),
+  [data-morph-theme="teal"]:not([data-morph-mode="light"]) {
+    --morph-bg: #0C1112;
+    --morph-surface: #151B1C;
+    --morph-raised: #1F2728;
+    --morph-chip: #2A3334;
+    --morph-border: #2A3334;
+    --morph-muted: #8C9899;
+    --morph-faint: #737E7F;
+    --morph-text: #E3EAEA;
+    --morph-panel: #181F20;
+    --morph-accent: #57C8CE;
+    --morph-on-accent: #06191B;
+    --morph-accent-soft: #163134;
+    --morph-on-accent-soft: #9FE2E6;
+  }
+}
+
+:where(:root)[data-morph-mode="dark"],
+[data-morph-theme="teal"][data-morph-mode="dark"] {
+  --morph-bg: #0C1112;
+  --morph-surface: #151B1C;
+  --morph-raised: #1F2728;
+  --morph-chip: #2A3334;
+  --morph-border: #2A3334;
+  --morph-muted: #8C9899;
+  --morph-faint: #737E7F;
+  --morph-text: #E3EAEA;
+  --morph-panel: #181F20;
+  --morph-accent: #57C8CE;
+  --morph-on-accent: #06191B;
+  --morph-accent-soft: #163134;
+  --morph-on-accent-soft: #9FE2E6;
+}

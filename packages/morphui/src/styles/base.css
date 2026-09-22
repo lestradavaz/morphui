@@ -1,0 +1,74 @@
+/*
+ * MorphUI - base tokens
+ *
+ * Motion, shape and material. None of this changes with the colour theme.
+ *
+ * The two linear() curves are the reference curves the original components were
+ * built against, kept digit for digit. They are two-segment curves, which a
+ * single cubic-bezier() cannot express - hence linear().
+ */
+
+:where(:root) {
+  /* Motion */
+  --morph-ease-flow: linear(0, .0178 2.637%, .0385 5.2003%, .0606 7.4763%, .0841 9.4833%, .1087 11.2398%, .1366 12.8722%, .1656 14.2582%, .1979 15.4959%, .2268 16.3827%, .2587 17.167%, .2937 17.8362%, .3318 18.386%, .3656 18.7545%, .4046 19.0778%, .4439 19.3294%, .5177 19.7271%, .5446 19.8846%, .5737 20.0838%, .6002 20.3035%, .6287 20.5973%, .6568 20.9613%, .6821 21.3692%, .7047 21.8112%, .7334 22.5013%, .7592 23.2688%, .7842 24.1764%, .8063 25.1438%, .8276 26.2522%, .8481 27.5127%, .8678 28.9423%, .8825 30.2602%, .8984 32.0526%, .9128 34.099%, .9385 39.1863%, .9591 45.4372%, .9752 53.02%, .9867 61.7754%, .9944 72.1064%, .9987 84.3099%, 1);
+  --morph-ease-flow-close: linear(0, .0082 2.398%, .0194 4.731%, .0317 6.6541%, .0471 8.5039%, .0644 10.1271%, .0851 11.6412%, .1077 12.9332%, .134 14.0949%, .1584 14.9352%, .186 15.6876%, .2149 16.3022%, .2473 16.8318%, .2784 17.2283%, .3151 17.5933%, .3526 17.8947%, .4267 18.4147%, .458 18.6517%, .4917 18.9475%, .5204 19.2501%, .5536 19.6792%, .584 20.1684%, .6115 20.7125%, .6384 21.3591%, .6667 22.1907%, .6921 23.0936%, .7165 24.1399%, .74 25.3431%, .7605 26.595%, .8046 29.6193%, .8404 32.698%, .8605 34.9202%, .8791 37.3662%, .9116 42.9116%, .9395 49.6389%, .9614 57.252%, .9786 66.1322%, .9906 76.1226%, .9976 87.2312%, 1);
+  --morph-ease-shape: cubic-bezier(.56, .27, 0, 1);
+  --morph-ease-blur: cubic-bezier(.37, .35, 0, 1);
+  --morph-ease-in-strong: cubic-bezier(.5, 0, .75, 0);
+  --morph-ease-out-soft: cubic-bezier(.33, 1, .68, 1);
+  --morph-ease-in-out-soft: cubic-bezier(.65, 0, .35, 1);
+
+  /* Multiplied into every duration. Set to 5 to review a transition frame by frame. */
+  --morph-slow: 1;
+  --morph-duration-open: calc(700ms * var(--morph-slow));
+  --morph-duration-close: calc(500ms * var(--morph-slow));
+  --morph-duration-press: 140ms;
+  --morph-duration-hover: 200ms;
+
+  /* Shape */
+  --morph-radius-xs: 10px;
+  --morph-radius-sm: 16px;
+  --morph-radius-md: 24px;
+  --morph-radius-lg: 34px;
+  --morph-radius-full: 999px;
+
+  /* Material */
+  --morph-blur: 8px;
+  --morph-glass: color-mix(in srgb, var(--morph-bg) 72%, transparent);
+  --morph-glass-ring: rgb(0 0 0 / 0.09);
+  --morph-elevation-1: 0 1px 2px rgb(0 0 0 / 0.07);
+  --morph-elevation-2: 0 24px 58px rgb(0 0 0 / 0.12);
+  --morph-tint: rgb(0 0 0 / 0.10);
+
+  /* Typography - the host stack wins; MorphUI only supplies the fallback chain. */
+  --morph-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --morph-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(:root):not([data-morph-mode="light"]) {
+    --morph-glass: color-mix(in srgb, var(--morph-bg) 60%, transparent);
+    --morph-glass-ring: rgb(255 255 255 / 0.10);
+    --morph-elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.06);
+    --morph-elevation-2: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 30px 70px rgb(0 0 0 / 0.55);
+    --morph-tint: rgb(0 0 0 / 0.20);
+  }
+}
+
+:where(:root)[data-morph-mode="dark"] {
+  --morph-glass: color-mix(in srgb, var(--morph-bg) 60%, transparent);
+  --morph-glass-ring: rgb(255 255 255 / 0.10);
+  --morph-elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  --morph-elevation-2: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 30px 70px rgb(0 0 0 / 0.55);
+  --morph-tint: rgb(0 0 0 / 0.20);
+}
+
+/* Reduced motion shortens the morph to an opacity change. It never becomes
+   "no transition" - the dialog still has to arrive somehow. */
+@media (prefers-reduced-motion: reduce) {
+  :where(:root) {
+    --morph-slow: 1;
+    --morph-duration-open: 150ms;
+    --morph-duration-close: 120ms;
+  }
+}
