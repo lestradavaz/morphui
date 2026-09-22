@@ -10,7 +10,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "legacy": "python3 -m http.server 4180 --directory legacy"
   },
   "devDependencies": {
     "turbo": "^2.11.3",
