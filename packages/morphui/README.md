@@ -1,6 +1,7 @@
 # morphui
 
-Three morphing React primitives built on GSAP Flip.
+Three morphing React primitives. A trigger is measured, the panel is inverted onto
+it and played back - the FLIP technique, animated with GSAP.
 
 ```bash
 pnpm add morphui gsap

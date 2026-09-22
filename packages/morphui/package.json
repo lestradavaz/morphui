@@ -1,7 +1,7 @@
 {
   "name": "morphui",
   "version": "0.0.0",
-  "description": "Three morphing React primitives built on GSAP Flip. Components that transform instead of appearing.",
+  "description": "Three morphing React primitives. Components that transform instead of appearing.",
   "license": "MIT",
   "author": "Emil Estrada",
   "type": "module",

@@ -1,6 +1,6 @@
 # MorphUI
 
-Three morphing React primitives built on GSAP Flip. Components that transform instead of appearing.
+Three morphing React primitives. Components that transform instead of appearing.
 
 | Component | What it does |
 | --- | --- |
