@@ -85,6 +85,30 @@ low chroma — an untinted grey next to a saturated accent reads as a mistake.
 }
 ```
 
+## Shared elements
+
+Mark the same name on both sides and the piece travels between them.
+
+```jsx
+<MorphDialog
+  shareWords
+  trigger={
+    <button>
+      <Clock data-morph-item="icon" />
+      Create account
+    </button>
+  }
+>
+  <Clock data-morph-item="icon" />
+  <h2 data-morph-words>Create account</h2>
+</MorphDialog>
+```
+
+`data-morph-item` moves the real element, so icons and images work and it lands
+on itself with nothing to hand over. `shareWords` flies the trigger's words into
+the element marked `data-morph-words`, one stand-in per word, pairing them in
+order; extra words on either side stay put.
+
 ## Motion
 
 Every duration is `calc(<base> * var(--morph-slow))`. Set `--morph-slow: 5` to

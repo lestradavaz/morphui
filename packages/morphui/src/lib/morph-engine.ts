@@ -1,19 +1,9 @@
 import gsap from 'gsap';
+import { Flip } from 'gsap/Flip';
 
-import {
-  EASE_BLUR,
-  EASE_CSS,
-  EASE_FLOW,
-  EASE_FLOW_CLOSE,
-  EASE_IN_OUT_SOFT,
-  EASE_IN_STRONG,
-  EASE_OUT_SOFT,
-  EASE_SHAPE,
-  flowAt,
-  registerMorphEases,
-} from './easing.js';
-import { box, lerpBox, prefersReducedMotion, slowFactor, surface, type Box } from './measure.js';
-import { measureWords, spawnWordClones, type WordRect } from './words.js';
+import { EASE_FLOW, EASE_FLOW_CLOSE, EASE_IN_STRONG, EASE_OUT_SOFT, registerMorphEases } from './easing.js';
+import { box, prefersReducedMotion, slowFactor, surface, type Box } from './measure.js';
+import { buildWordClones, collectItems } from './shared.js';
 
 export type MorphVariant = 'dialog' | 'window' | 'fullscreen';
 
@@ -27,17 +17,12 @@ export interface MorphParts {
 
 export interface MorphConfig {
   variant: MorphVariant;
-  wordsFrom?: HTMLElement | null;
-  wordsTo?: HTMLElement | null;
+  /** Fly the trigger's words into the element marked `data-morph-words` in the panel. */
+  shareWords?: boolean;
 }
 
-/* Durations in milliseconds, as the reference components use them. */
 const OPEN = 700;
 const CLOSE = 500;
-const SURFACE = 300;
-const FULL_RADIUS = 1200;
-const WINDOW_RADIUS = 1000;
-const CONTENT_CLOSE = 2000;
 const TRIGGER_HIDE = 160;
 const TRIGGER_SHOW = 300;
 const TRIGGER_SHOW_DELAY = 200;
@@ -45,19 +30,19 @@ const TINT = 500;
 const TINT_WINDOW = 200;
 const GENTLE = 150;
 
-/** The content only gets flow(0.25) of the way home before the panel closes over it. */
-const CONTENT_LAG = CLOSE / CONTENT_CLOSE;
-
 const ms = (value: number) => (value / 1000) * slowFactor();
+const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 
 let ready = false;
+let uid = 0;
+
 function ensure(): void {
   if (ready) return;
+  gsap.registerPlugin(Flip);
   registerMorphEases();
   ready = true;
 }
 
-/** A GSAP timeline is thenable but resolves with itself; callers only want completion. */
 async function settle(timeline: gsap.core.Timeline, done: () => void): Promise<void> {
   await timeline;
   done();
@@ -68,24 +53,51 @@ function clearAll(...elements: (Element | null | undefined)[]): void {
 }
 
 /**
- * Pins the panel at a known box and freezes the content at that size.
+ * The double layer.
  *
- * Afterwards the panel clips by animating its own width and height while the
- * content only ever scales, so the content never reflows mid-flight. This is what
- * the browser does for free inside a view transition, where the group clips a
- * snapshot that the new state scales into.
+ * The panel moves on transforms alone - translate and scale, nothing the
+ * compositor has to lay out again. That is the whole reason the reference feels
+ * smoother: a view transition animates the width and height of a *snapshot*, so
+ * no layout runs, while animating width and height on real DOM reflows the panel
+ * and its subtree on every frame.
+ *
+ * Scaling alone would stretch the content and turn the corners into ellipses, so
+ * a second layer undoes it. The content counter-scales by exactly the inverse,
+ * and the radius is divided per axis, which is what `border-radius: Rx / Ry`
+ * means. The box grows, the shape never distorts, and nothing leaves the GPU.
  */
-function stage(panel: HTMLElement, content: HTMLElement, at: Box): void {
-  gsap.set(panel, {
-    position: 'fixed',
-    margin: 0,
-    left: at.x,
-    top: at.y,
-    width: at.width,
-    height: at.height,
-    overflow: 'hidden',
-    transformOrigin: 'top left',
-  });
+function driveShape(
+  timeline: gsap.core.Timeline,
+  panel: HTMLElement,
+  content: HTMLElement,
+  fromScale: { x: number; y: number },
+  toScale: { x: number; y: number },
+  radius: number,
+  duration: number,
+  ease: string,
+): void {
+  const driver = { t: 0 };
+  const curve = gsap.parseEase(ease);
+  timeline.to(
+    driver,
+    {
+      t: 1,
+      duration,
+      ease: 'none',
+      onUpdate: () => {
+        const p = curve(driver.t);
+        const sx = lerp(fromScale.x, toScale.x, p) || 1;
+        const sy = lerp(fromScale.y, toScale.y, p) || 1;
+        gsap.set(content, { scaleX: 1 / sx, scaleY: 1 / sy });
+        gsap.set(panel, { borderRadius: `${radius / sx}px / ${radius / sy}px` });
+      },
+    },
+    0,
+  );
+}
+
+/** Freezes the content at the panel's final box so it never reflows mid-flight. */
+function freezeContent(content: HTMLElement, at: Box): void {
   gsap.set(content, {
     position: 'absolute',
     top: 0,
@@ -96,65 +108,88 @@ function stage(panel: HTMLElement, content: HTMLElement, at: Box): void {
   });
 }
 
+interface FlightOptions {
+  origin: HTMLElement;
+  panel: HTMLElement;
+  host: HTMLElement;
+  shareWords: boolean;
+  duration: number;
+  ease: string;
+  phase: 'open' | 'close';
+}
+
 /**
- * Word stand-ins.
+ * Shared pieces, in whichever direction the panel is going.
  *
- * Two things here are not obvious and both showed up as the same symptom - the
- * label vanishing and the heading only arriving once everything else had settled.
- *
- * The clones must live inside the dialog. `showModal()` puts the dialog in the
- * top layer, which paints above every normal-flow element whatever its z-index,
- * so a layer appended to `document.body` flies its words behind the panel where
- * nobody can see them.
- *
- * And the source text has to go while its stand-ins are up, or the original and
- * the clone sit on the same pixels. The reference gets this for free: giving the
- * words their own transition names lifts them out of the trigger's snapshot, so
- * what fades is a blank pill while the words fly on their own. Painting the
- * source transparent reproduces that - the box still fades, the text leaves.
- *
- * Both sets of rectangles are measured while their elements are at their natural
- * size. Measuring the destination after the panel has been staged reads the
- * heading while it is squeezed down to the trigger's box.
+ * Marked items are real elements, so the one inside the panel is what moves and
+ * its counterpart in the trigger is simply hidden. Words are stand-ins, always
+ * parked at their destination and tweened `from` the origin, so the same call
+ * serves both phases - only which end is which changes.
  */
-function wordFlight(
-  timeline: gsap.core.Timeline,
-  options: {
-    fromWords: WordRect[];
-    toWords: WordRect[];
-    source: HTMLElement | null | undefined;
-    target: HTMLElement | null | undefined;
-    host: HTMLElement;
-    duration: number;
-    ease: string;
-  },
-): (() => void) | null {
-  const { fromWords, toWords, source, target, host, duration, ease } = options;
-  if (fromWords.length === 0 || toWords.length === 0 || !source || !target) return null;
+function prepareFlight(timeline: gsap.core.Timeline, options: FlightOptions): () => void {
+  const { origin, panel, host, shareWords, duration, ease, phase } = options;
+  const opening = phase === 'open';
+  const undo: (() => void)[] = [];
 
-  const { layer, clones, targets, scales } = spawnWordClones(fromWords, toWords);
-  if (clones.length === 0) return null;
+  const items = collectItems(origin, panel);
+  for (const { source, target, sourceBox, targetBox } of items) {
+    const vars: gsap.TweenVars = {
+      x: sourceBox.x - targetBox.x,
+      y: sourceBox.y - targetBox.y,
+      scaleX: targetBox.width ? sourceBox.width / targetBox.width : 1,
+      scaleY: targetBox.height ? sourceBox.height / targetBox.height : 1,
+      transformOrigin: 'left top',
+      duration,
+      ease,
+    };
+    if (opening) timeline.from(target, vars, 0);
+    else timeline.to(target, vars, 0);
+    gsap.set(source, { visibility: 'hidden' });
+  }
+  if (items.length) {
+    undo.push(() => {
+      for (const { source, target } of items) {
+        gsap.set(source, { clearProps: 'visibility' });
+        gsap.set(target, { clearProps: 'transform' });
+      }
+    });
+  }
 
-  host.append(layer);
-  gsap.set(target, { opacity: 0 });
-  gsap.set(source, { color: 'transparent' });
+  if (shareWords) {
+    const heading = panel.querySelector<HTMLElement>('[data-morph-words]');
+    if (heading) {
+      const start = opening ? origin : heading;
+      const land = opening ? heading : origin;
+      const built = buildWordClones(start, land, host);
+      if (built) {
+        for (const { clone, sourceBox, targetBox } of built.clones) {
+          timeline.from(
+            clone,
+            {
+              x: sourceBox.x - targetBox.x,
+              y: sourceBox.y - targetBox.y,
+              scale: targetBox.height ? sourceBox.height / targetBox.height : 1,
+              duration,
+              ease,
+            },
+            0,
+          );
+        }
+        // Neither end shows its own text while the stand-ins are up. The heading
+        // goes outright; the trigger only loses its ink, so its box can still
+        // fade on its own schedule.
+        gsap.set(heading, { opacity: 0 });
+        gsap.set(origin, { color: 'transparent' });
+        undo.push(() => {
+          built.layer.remove();
+          gsap.set(heading, { clearProps: 'opacity' });
+          gsap.set(origin, { clearProps: 'color' });
+        });
+      }
+    }
+  }
 
-  clones.forEach((clone, i) => {
-    const start = fromWords[i]!.box;
-    const end = targets[i]!;
-    timeline.fromTo(
-      clone,
-      { x: 0, y: 0, scale: scales[i]! },
-      { x: end.x - start.x, y: end.y - start.y, scale: 1, duration, ease },
-      0,
-    );
-  });
-
-  return () => {
-    layer.remove();
-    gsap.set(target, { clearProps: 'opacity' });
-    gsap.set(source, { clearProps: 'color' });
-  };
+  return () => undo.forEach((fn) => fn());
 }
 
 export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void> {
@@ -163,112 +198,68 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
   const gentle = prefersReducedMotion();
   const isWindow = config.variant === 'window';
 
+  if (gentle) {
+    dialog.showModal();
+    const tl = gsap.timeline();
+    tl.from(tint, { opacity: 0, duration: ms(GENTLE), ease: 'power2.out' }, 0);
+    tl.from(panel, { opacity: 0, duration: ms(GENTLE), ease: 'power2.out' }, 0);
+    return settle(tl, () => clearAll(panel, tint));
+  }
+
+  // Flip pairs the two elements by id: the trigger's recorded box becomes the
+  // panel's starting box.
+  const id = `morph-${++uid}`;
+  trigger.dataset['flipId'] = id;
+  panel.dataset['flipId'] = id;
+
   const from = box(trigger);
   const fromSurface = surface(trigger);
-  const fromWords = !gentle && config.wordsFrom ? measureWords(config.wordsFrom) : [];
+  const state = Flip.getState(trigger);
 
   dialog.showModal();
 
   const to = box(panel);
-  const toSurface = surface(panel);
-  // Measured before stage() squeezes the panel, or the targets are meaningless.
-  const toWords = !gentle && config.wordsTo ? measureWords(config.wordsTo) : [];
+  const toRadius = Number.parseFloat(surface(panel).radius) || 0;
+  freezeContent(content, to);
 
-  if (gentle) {
-    const tl = gsap.timeline();
-    tl.from(tint, { opacity: 0, duration: ms(GENTLE), ease: EASE_CSS }, 0);
-    tl.from(panel, { opacity: 0, duration: ms(GENTLE), ease: EASE_CSS }, 0);
-    return settle(tl, () => clearAll(panel, tint));
-  }
-
-  stage(panel, content, to);
-
-  /*
-   * The FLIP delta. stage() already pinned the panel at its final box, so the
-   * delta between the two measured rectangles is a subtraction.
-   */
-  const tl = gsap.timeline();
-
-  tl.from(
-    panel,
-    {
-      x: from.x - to.x,
-      y: from.y - to.y,
-      width: from.width,
-      height: from.height,
-      duration: ms(OPEN),
-      ease: EASE_FLOW,
-    },
-    0,
-  );
-
-  tl.from(
-    content,
-    { scaleX: from.width / to.width, scaleY: from.height / to.height, duration: ms(OPEN), ease: EASE_FLOW },
-    0,
-  );
-
-  if (isWindow) {
-    // The window borrows nothing from the trigger. It arrives out of focus and
-    // sharpens, and its corners round in over a much longer beat.
-    tl.from(content, { filter: 'blur(32px)', duration: ms(SURFACE), ease: EASE_BLUR }, 0);
-    tl.from(panel, { borderRadius: '64px', duration: ms(WINDOW_RADIUS), ease: EASE_SHAPE }, 0);
-    tl.from(tint, { opacity: 0, duration: ms(TINT_WINDOW), ease: EASE_CSS }, 0);
-  } else {
-    /*
-     * The panel's content resolves out of the trigger rather than being pasted
-     * on top of it: it runs the full opening beat from transparent and blurred.
-     *
-     * Leaving this out is what makes the transition read as a squashed panel
-     * growing instead of a button becoming a panel - the geometry is identical
-     * either way, so it looks like a motion bug when it is really a missing
-     * cross-fade.
-     */
-    tl.from(
-      content,
-      { opacity: 0, filter: 'blur(8px)', duration: ms(OPEN), ease: EASE_FLOW },
-      0,
-    );
-
-    // The container starts wearing the trigger's fill, radius and shadow.
-    tl.from(
-      panel,
-      {
-        backgroundColor: fromSurface.background,
-        boxShadow: fromSurface.shadow,
-        duration: ms(SURFACE),
-        ease: EASE_FLOW,
-      },
-      0,
-    );
-
-    const fullScreen = Number.parseFloat(toSurface.radius) === 0;
-    tl.from(
-      panel,
-      {
-        borderRadius: fromSurface.radius,
-        duration: ms(fullScreen ? FULL_RADIUS : SURFACE),
-        ease: fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
-      },
-      0,
-    );
-
-    tl.to(trigger, { opacity: 0, duration: ms(TRIGGER_HIDE), ease: EASE_CSS }, 0);
-    tl.from(tint, { opacity: 0, duration: ms(TINT), ease: EASE_FLOW }, 0);
-  }
-
-  const cleanupWords = wordFlight(tl, {
-    fromWords,
-    toWords,
-    source: config.wordsFrom,
-    target: config.wordsTo,
-    host: dialog,
+  const tl = Flip.from(state, {
+    targets: panel,
+    scale: true,
     duration: ms(OPEN),
     ease: EASE_FLOW,
+    toggleClass: isWindow ? 'morph-window-opening' : 'morph-opening',
+  });
+
+  driveShape(
+    tl,
+    panel,
+    content,
+    { x: from.width / to.width, y: from.height / to.height },
+    { x: 1, y: 1 },
+    toRadius,
+    ms(OPEN),
+    EASE_FLOW,
+  );
+
+  if (!isWindow) {
+    tl.from(panel, { backgroundColor: fromSurface.background, duration: ms(OPEN) / 2.33, ease: EASE_FLOW }, 0);
+    tl.to(trigger, { opacity: 0, duration: ms(TRIGGER_HIDE), ease: 'none' }, 0);
+  }
+
+  tl.from(tint, { opacity: 0, duration: ms(isWindow ? TINT_WINDOW : TINT), ease: EASE_FLOW }, 0);
+
+  const cleanupFlight = prepareFlight(tl, {
+    origin: trigger,
+    panel,
+    host: dialog,
+    shareWords: !!config.shareWords,
+    duration: ms(OPEN),
+    ease: EASE_FLOW,
+    phase: 'open',
   });
 
   return settle(tl, () => {
-    cleanupWords?.();
+    cleanupFlight();
     clearAll(panel, content, tint);
   });
 }
@@ -282,144 +273,74 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
   const finish = (): void => {
     dialog.close();
     clearAll(panel, content, tint, trigger);
+    delete trigger.dataset['flipId'];
+    delete panel.dataset['flipId'];
   };
 
   if (gentle) {
     const tl = gsap.timeline();
-    tl.to(panel, { opacity: 0, duration: ms(GENTLE), ease: EASE_CSS }, 0);
-    tl.to(tint, { opacity: 0, duration: ms(GENTLE), ease: EASE_CSS }, 0);
+    tl.to(panel, { opacity: 0, duration: ms(GENTLE), ease: 'power2.in' }, 0);
+    tl.to(tint, { opacity: 0, duration: ms(GENTLE), ease: 'power2.in' }, 0);
     return settle(tl, finish);
   }
 
   const from = box(panel);
-  const fromSurface = surface(panel);
   const to = box(trigger);
   const toSurface = surface(trigger);
-  const fromWords = config.wordsTo ? measureWords(config.wordsTo) : [];
-  const toWords = config.wordsFrom ? measureWords(config.wordsFrom) : [];
+  const fromRadius = Number.parseFloat(surface(panel).radius) || 0;
 
-  stage(panel, content, from);
+  freezeContent(content, from);
 
-  const tl = gsap.timeline();
+  // The trigger is the destination this time, so its box is what Flip records.
+  const state = Flip.getState(trigger);
+  const ease = isWindow ? EASE_FLOW_CLOSE : EASE_FLOW;
 
-  if (isWindow) {
-    tl.to(
-      panel,
-      {
-        x: to.x + to.width / 2 - (from.x + from.width / 2),
-        y: to.y + to.height / 2 - (from.y + from.height / 2),
-        scale: Math.max(to.width / from.width, to.height / from.height),
-        transformOrigin: 'center center',
-        duration: ms(CLOSE),
-        ease: EASE_FLOW_CLOSE,
-      },
-      0,
-    );
-    tl.to(panel, { borderRadius: '400px', duration: ms(CLOSE), ease: EASE_SHAPE }, 0);
-    tl.to(content, { filter: 'blur(32px)', duration: ms(CLOSE), ease: EASE_BLUR }, 0);
-    tl.to(panel, { opacity: 0, duration: ms(CLOSE), ease: EASE_SHAPE }, 0);
-    tl.to(tint, { opacity: 0, duration: ms(CLOSE), ease: EASE_CSS }, 0);
+  const tl = Flip.to(state, {
+    targets: panel,
+    scale: true,
+    duration: ms(CLOSE),
+    ease,
+    toggleClass: 'morph-closing',
+  });
 
-    const cleanupWindowWords = wordFlight(tl, {
-      fromWords,
-      toWords,
-      source: config.wordsTo,
-      target: config.wordsFrom,
-      host: dialog,
-      duration: ms(CLOSE),
-      ease: EASE_FLOW_CLOSE,
-    });
-    return settle(tl, () => {
-      cleanupWindowWords?.();
-      finish();
-    });
-  }
-
-  /*
-   * Container and content come off one clock so they cannot drift.
-   *
-   * The container follows the flow curve all the way home. The content follows
-   * the same curve but only reaches flow(0.25) of the way, so it trails and the
-   * closing container clips it. Two tweens with different eases would look close
-   * and would not stay in lockstep, and the clipping is exactly where drift shows.
-   */
-  const driver = { t: 0 };
-  const flow = gsap.parseEase(EASE_FLOW);
-
-  tl.to(
-    driver,
-    {
-      t: 1,
-      duration: ms(CLOSE),
-      ease: 'none',
-      onUpdate: () => {
-        const container = lerpBox(from, to, flow(driver.t));
-        const trailing = lerpBox(from, to, flow(driver.t * CONTENT_LAG));
-        gsap.set(panel, {
-          x: container.x - from.x,
-          y: container.y - from.y,
-          width: container.width,
-          height: container.height,
-        });
-        gsap.set(content, {
-          x: trailing.x - container.x,
-          y: trailing.y - container.y,
-          scaleX: trailing.width / from.width,
-          scaleY: trailing.height / from.height,
-        });
-      },
-    },
-    0,
-  );
-
-  // The content rounds, defocuses and fades while it trails, so what the closing
-  // container clips is already dissolving rather than a crisp rectangle.
-  tl.to(content, { borderRadius: '400px', duration: ms(CLOSE), ease: EASE_SHAPE }, 0);
-  tl.to(content, { filter: 'blur(32px)', duration: ms(CLOSE), ease: EASE_BLUR }, 0);
-  tl.to(content, { opacity: 0, duration: ms(CLOSE), ease: EASE_SHAPE }, 0);
-
-  tl.to(
+  driveShape(
+    tl,
     panel,
-    {
-      backgroundColor: toSurface.background,
-      borderRadius: toSurface.radius,
-      boxShadow: toSurface.shadow,
-      duration: ms(CLOSE),
-      ease: EASE_FLOW,
-    },
-    0,
+    content,
+    { x: 1, y: 1 },
+    { x: to.width / from.width, y: to.height / from.height },
+    fromRadius,
+    ms(CLOSE),
+    ease,
   );
 
+  tl.to(panel, { backgroundColor: toSurface.background, duration: ms(CLOSE), ease }, 0);
   tl.to(tint, { opacity: 0, duration: ms(CLOSE), ease: EASE_IN_STRONG }, 0);
 
-  // The trigger returns underneath the shrinking panel, not with it.
-  tl.fromTo(
-    trigger,
-    { opacity: 0 },
-    { opacity: 1, duration: ms(TRIGGER_SHOW), ease: EASE_OUT_SOFT },
-    ms(TRIGGER_SHOW_DELAY),
-  );
+  if (!isWindow) {
+    // The trigger comes back underneath the shrinking panel, not with it.
+    tl.fromTo(
+      trigger,
+      { opacity: 0 },
+      { opacity: 1, duration: ms(TRIGGER_SHOW), ease: EASE_OUT_SOFT },
+      ms(TRIGGER_SHOW_DELAY),
+    );
+  }
 
-  const cleanupWords = wordFlight(tl, {
-    fromWords,
-    toWords,
-    source: config.wordsTo,
-    target: config.wordsFrom,
+  const cleanupFlight = prepareFlight(tl, {
+    origin: trigger,
+    panel,
     host: dialog,
+    shareWords: !!config.shareWords,
     duration: ms(CLOSE),
-    ease: EASE_FLOW,
+    ease,
+    phase: 'close',
   });
 
   return settle(tl, () => {
-    cleanupWords?.();
+    cleanupFlight();
     finish();
   });
 }
 
-export const MORPH_TIMING = {
-  open: OPEN,
-  close: CLOSE,
-  surface: SURFACE,
-  contentLag: CONTENT_LAG,
-  contentReach: () => flowAt(CONTENT_LAG),
-} as const;
+export const MORPH_TIMING = { open: OPEN, close: CLOSE } as const;

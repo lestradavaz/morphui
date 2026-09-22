@@ -83,3 +83,41 @@
 html:has(.morph-dialog[open]) {
   overflow: hidden;
 }
+
+/*
+ * The appearance layer.
+ *
+ * Geometry stays in JavaScript, everything else lives here, which is how the
+ * reference split the work: the script moves the box, the stylesheet decides how
+ * the content resolves. The engine toggles these classes on the panel for the
+ * length of the transition.
+ */
+
+.morph-opening .morph-panel-content {
+  animation: morph-content-in var(--morph-duration-open) var(--morph-ease-flow) both;
+}
+
+.morph-window-opening .morph-panel-content {
+  animation: morph-blur-in calc(var(--morph-duration-open) * 3 / 7) var(--morph-ease-blur) both;
+}
+
+.morph-closing .morph-panel-content {
+  animation:
+    morph-round-out var(--morph-duration-close) var(--morph-ease-shape) both,
+    morph-blur-out var(--morph-duration-close) var(--morph-ease-blur) both,
+    morph-fade-out var(--morph-duration-close) var(--morph-ease-shape) both;
+}
+
+@keyframes morph-content-in { from { opacity: 0; filter: blur(8px); } }
+@keyframes morph-blur-in { from { filter: blur(32px); } }
+@keyframes morph-round-out { to { border-radius: 400px; } }
+@keyframes morph-blur-out { to { filter: blur(32px); } }
+@keyframes morph-fade-out { to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-opening .morph-panel-content,
+  .morph-window-opening .morph-panel-content,
+  .morph-closing .morph-panel-content {
+    animation: none;
+  }
+}

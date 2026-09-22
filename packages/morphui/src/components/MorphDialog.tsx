@@ -80,14 +80,7 @@ export function MorphDialog({
     return { trigger, dialog, panel, content, tint };
   }, []);
 
-  const config = useCallback(() => {
-    const panel = panelRef.current;
-    return {
-      variant,
-      wordsFrom: shareWords ? triggerRef.current : null,
-      wordsTo: shareWords ? panel?.querySelector<HTMLElement>('[data-morph-words]') ?? null : null,
-    };
-  }, [shareWords, variant]);
+  const config = useCallback(() => ({ variant, shareWords }), [shareWords, variant]);
 
   const open = useCallback(async () => {
     const p = parts();
