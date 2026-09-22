@@ -3,6 +3,7 @@ import { Flip } from 'gsap/Flip';
 
 import {
   EASE_FLOW,
+  EASE_CSS,
   EASE_FLOW_CLOSE,
   EASE_IN_OUT_SOFT,
   EASE_IN_STRONG,
@@ -158,7 +159,14 @@ function anchorContent(content: HTMLElement): void {
 
 interface FlightPlan {
   items: ItemPair[];
-  words: { sourceInk: Box[]; targetInk: Box[]; land: HTMLElement; heading: HTMLElement; origin: HTMLElement } | null;
+  words: {
+    sourceInk: Box[];
+    targetInk: Box[];
+    source: HTMLElement;
+    land: HTMLElement;
+    heading: HTMLElement;
+    origin: HTMLElement;
+  } | null;
 }
 
 /**
@@ -189,6 +197,7 @@ function measureFlight(
     words: {
       sourceInk: measureWordInk(start),
       targetInk: measureWordInk(land),
+      source: start,
       land,
       heading,
       origin,
@@ -232,16 +241,35 @@ function buildFlight(
   }
 
   if (plan.words) {
-    const { sourceInk, targetInk, land, heading, origin } = plan.words;
-    const built = buildWordClones(sourceInk, targetInk, land, host);
+    const { sourceInk, targetInk, source, land, heading, origin } = plan.words;
+    const built = buildWordClones(sourceInk, targetInk, source, land, host);
     if (built) {
-      for (const { clone, sourceBox, targetBox } of built.clones) {
+      for (const pair of built.pairs) {
+        const { sourceBox, targetBox } = pair;
+        const grow = targetBox.height ? sourceBox.height / targetBox.height : 1;
+
+        // Both ride the same box. The outgoing one starts at its natural size and
+        // is carried up to the destination's; the incoming one starts shrunk to
+        // the origin's and resolves to its own.
+        timeline.to(
+          pair.out,
+          {
+            x: targetBox.x - sourceBox.x,
+            y: targetBox.y - sourceBox.y,
+            scale: grow ? 1 / grow : 1,
+            opacity: 0,
+            duration,
+            ease,
+          },
+          0,
+        );
         timeline.from(
-          clone,
+          pair.in,
           {
             x: sourceBox.x - targetBox.x,
             y: sourceBox.y - targetBox.y,
-            scale: targetBox.height ? sourceBox.height / targetBox.height : 1,
+            scale: grow,
+            opacity: 0,
             duration,
             ease,
           },
@@ -325,8 +353,22 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
   });
 
   if (!isWindow) {
-    tl.from(panel, { backgroundColor: fromSurface.background, duration: ms(OPEN) / 2.33, ease: EASE_FLOW }, 0);
-    tl.to(trigger, { opacity: 0, duration: ms(TRIGGER_HIDE), ease: 'none' }, 0);
+    /*
+     * The panel wears the trigger's fill AND its shadow for the first beat. The
+     * shadow was missing, which is why the panel arrived already sitting on its
+     * own elevation instead of growing into it.
+     *
+     * A trigger with no shadow reports `none`, which cannot be interpolated, so
+     * it becomes a transparent shadow of zero size - the same thing, in a form
+     * that can be tweened.
+     */
+    const fromShadow = fromSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : fromSurface.shadow;
+    tl.from(
+      panel,
+      { backgroundColor: fromSurface.background, boxShadow: fromShadow, duration: ms(SURFACE), ease: EASE_FLOW },
+      0,
+    );
+    tl.to(trigger, { opacity: 0, duration: ms(TRIGGER_HIDE), ease: EASE_CSS }, 0);
   }
 
   tl.from(tint, { opacity: 0, duration: ms(isWindow ? TINT_WINDOW : TINT), ease: EASE_FLOW }, 0);

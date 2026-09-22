@@ -7,8 +7,11 @@ export interface ItemPair {
   targetBox: Box;
 }
 
-export interface WordClone {
-  clone: HTMLElement;
+export interface WordPair {
+  /** Styled like the origin. Fades out as it travels. */
+  out: HTMLElement;
+  /** Styled like the destination. Fades in over the same path. */
+  in: HTMLElement;
   sourceBox: Box;
   targetBox: Box;
 }
@@ -77,64 +80,92 @@ function wordsOf(element: Element): string[] {
  * So each clone is parked at the origin, its own ink is measured, and the
  * difference is taken out. Whatever the two fonts' metrics are, ink lands on ink.
  */
+function cloneStyle(model: Element): string {
+  const style = getComputedStyle(model);
+  return [
+    'position:fixed',
+    'left:0',
+    'top:0',
+    'margin:0',
+    'padding:0',
+    'white-space:pre',
+    'transform-origin:left top',
+    'will-change:transform,opacity',
+    // Two stand-ins for the same word overlap for the whole trip. Plain opacity
+    // would dip at the halfway point, where both sit at 50% and the word visibly
+    // thins out. Additive blending keeps the total constant, which is what the
+    // browser does for a shared element and what makes the swap read as one
+    // word changing rather than two words trading places.
+    'mix-blend-mode:plus-lighter',
+    `font:${style.font}`,
+    `letter-spacing:${style.letterSpacing}`,
+    `color:${style.color}`,
+  ].join(';');
+}
+
+/**
+ * Two stand-ins per word, one wearing each end's typography.
+ *
+ * A shared element in a view transition is a pair: the old snapshot and the new
+ * one, both riding the same box, cross-fading as they go. A single clone in the
+ * destination's font cannot do that - it arrives already looking like where it
+ * landed, so the change of size and weight happens instantly at the start
+ * instead of resolving across the trip.
+ */
 export function buildWordClones(
   sourceInk: Box[],
   targetInk: Box[],
+  source: Element,
   land: Element,
   host: HTMLElement,
-): { layer: HTMLElement; clones: WordClone[] } | null {
+): { layer: HTMLElement; pairs: WordPair[] } | null {
   const count = Math.min(sourceInk.length, targetInk.length);
   if (count === 0) return null;
 
   const words = wordsOf(land);
-  const style = getComputedStyle(land);
+  const outCss = cloneStyle(source);
+  const inCss = cloneStyle(land);
+
   const layer = document.createElement('div');
   layer.setAttribute('data-morph-word-layer', '');
   layer.setAttribute('aria-hidden', 'true');
+  // Keeps the additive blending between each word's own pair, instead of letting
+  // it spill onto whatever is behind the panel.
+  layer.style.isolation = 'isolate';
 
-  /*
-   * Three passes, so the browser only lays out once.
-   *
-   * Appending a clone, measuring it, then positioning it reads the DOM between
-   * two writes, which forces a synchronous layout - once per word. That showed up
-   * as a single 32ms frame against a 17.7ms worst case for the reference, and a
-   * dropped frame at the instant a transition starts is felt even when every
-   * frame after it is perfect.
-   *
-   * So: build them all, measure them all, place them all.
-   */
-  const pending: { clone: HTMLElement; targetBox: Box; sourceBox: Box }[] = [];
+  // Build everything, then measure everything, then place everything: reading
+  // between two writes forces a synchronous layout once per element.
+  const pending: { out: HTMLElement; in: HTMLElement; sourceBox: Box; targetBox: Box }[] = [];
   for (let i = 0; i < count; i++) {
-    const clone = document.createElement('span');
-    clone.textContent = words[i] ?? '';
-    clone.style.cssText = [
-      'position:fixed',
-      'left:0',
-      'top:0',
-      'margin:0',
-      'padding:0',
-      'white-space:pre',
-      'transform-origin:left top',
-      'will-change:transform',
-      `font:${style.font}`,
-      `letter-spacing:${style.letterSpacing}`,
-      `color:${style.color}`,
-    ].join(';');
-    layer.append(clone);
-    pending.push({ clone, targetBox: targetInk[i]!, sourceBox: sourceInk[i]! });
+    const text = words[i] ?? '';
+    const out = document.createElement('span');
+    out.textContent = text;
+    out.style.cssText = outCss;
+    const into = document.createElement('span');
+    into.textContent = text;
+    into.style.cssText = inCss;
+    layer.append(out, into);
+    pending.push({ out, in: into, sourceBox: sourceInk[i]!, targetBox: targetInk[i]! });
   }
 
   host.append(layer);
 
-  // One flush for every clone, rather than one per clone.
-  const inks = pending.map(({ clone }) => measureWordInk(clone)[0] ?? { x: 0, y: 0, width: 0, height: 0 });
+  const inks = pending.flatMap(({ out, in: into }) => [
+    measureWordInk(out)[0] ?? { x: 0, y: 0, width: 0, height: 0 },
+    measureWordInk(into)[0] ?? { x: 0, y: 0, width: 0, height: 0 },
+  ]);
 
-  const clones: WordClone[] = pending.map(({ clone, targetBox, sourceBox }, i) => {
-    const ink = inks[i]!;
-    clone.style.left = `${targetBox.x - ink.x}px`;
-    clone.style.top = `${targetBox.y - ink.y}px`;
-    return { clone, sourceBox, targetBox };
+  const pairs: WordPair[] = pending.map((entry, i) => {
+    const outInk = inks[i * 2]!;
+    const inInk = inks[i * 2 + 1]!;
+    // Each lands by its ink, not its box: a line box carries leading the glyphs
+    // do not, so placing by box drops the text a few pixels.
+    entry.out.style.left = `${entry.sourceBox.x - outInk.x}px`;
+    entry.out.style.top = `${entry.sourceBox.y - outInk.y}px`;
+    entry.in.style.left = `${entry.targetBox.x - inInk.x}px`;
+    entry.in.style.top = `${entry.targetBox.y - inInk.y}px`;
+    return entry;
   });
 
-  return { layer, clones };
+  return { layer, pairs };
 }

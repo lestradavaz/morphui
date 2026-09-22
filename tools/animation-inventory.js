@@ -69,9 +69,23 @@
 
   const gsap = window.__gsap;
   if (gsap) {
-    console.log('GSAP build. Open the panel, then run __inventory()');
+    /*
+     * GSAP drops a tween from the global timeline as soon as it finishes, so
+     * reading after the animation returns an empty list. Sample every frame
+     * while it runs instead, and dedupe.
+     */
+    const seen = new Map();
+    let raf = 0;
+    const sample = () => {
+      for (const row of fromGsap(gsap)) seen.set(`${row.target}|${row.properties}|${row['duration ms']}`, row);
+      raf = requestAnimationFrame(sample);
+    };
+    raf = requestAnimationFrame(sample);
+
+    console.log('Recording. Open the panel, wait for it to settle, then run __inventory()');
     window.__inventory = () => {
-      const rows = fromGsap(gsap);
+      cancelAnimationFrame(raf);
+      const rows = [...seen.values()].sort((a, b) => a.target.localeCompare(b.target));
       console.table(rows);
       return rows;
     };
