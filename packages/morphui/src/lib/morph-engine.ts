@@ -99,40 +99,61 @@ function stage(panel: HTMLElement, content: HTMLElement, at: Box): void {
 /**
  * Word stand-ins.
  *
- * Both sets of rectangles must be measured while their elements are at their
- * natural size. Measuring the destination after the panel has been staged reads
- * the heading while it is squeezed to the trigger's box, and every word then
- * flies to the wrong place.
+ * Two things here are not obvious and both showed up as the same symptom - the
+ * label vanishing and the heading only arriving once everything else had settled.
+ *
+ * The clones must live inside the dialog. `showModal()` puts the dialog in the
+ * top layer, which paints above every normal-flow element whatever its z-index,
+ * so a layer appended to `document.body` flies its words behind the panel where
+ * nobody can see them.
+ *
+ * And the source text has to go while its stand-ins are up, or the original and
+ * the clone sit on the same pixels. The reference gets this for free: giving the
+ * words their own transition names lifts them out of the trigger's snapshot, so
+ * what fades is a blank pill while the words fly on their own. Painting the
+ * source transparent reproduces that - the box still fades, the text leaves.
+ *
+ * Both sets of rectangles are measured while their elements are at their natural
+ * size. Measuring the destination after the panel has been staged reads the
+ * heading while it is squeezed down to the trigger's box.
  */
 function wordFlight(
   timeline: gsap.core.Timeline,
-  fromWords: WordRect[],
-  toWords: WordRect[],
-  reveal: HTMLElement | null | undefined,
-  duration: number,
-  ease: string,
+  options: {
+    fromWords: WordRect[];
+    toWords: WordRect[];
+    source: HTMLElement | null | undefined;
+    target: HTMLElement | null | undefined;
+    host: HTMLElement;
+    duration: number;
+    ease: string;
+  },
 ): (() => void) | null {
-  if (fromWords.length === 0 || toWords.length === 0 || !reveal) return null;
+  const { fromWords, toWords, source, target, host, duration, ease } = options;
+  if (fromWords.length === 0 || toWords.length === 0 || !source || !target) return null;
 
   const { layer, clones, targets, scales } = spawnWordClones(fromWords, toWords);
   if (clones.length === 0) return null;
-  document.body.append(layer);
-  gsap.set(reveal, { opacity: 0 });
+
+  host.append(layer);
+  gsap.set(target, { opacity: 0 });
+  gsap.set(source, { color: 'transparent' });
 
   clones.forEach((clone, i) => {
-    const target = targets[i]!;
     const start = fromWords[i]!.box;
+    const end = targets[i]!;
     timeline.fromTo(
       clone,
       { x: 0, y: 0, scale: scales[i]! },
-      { x: target.x - start.x, y: target.y - start.y, scale: 1, duration, ease },
+      { x: end.x - start.x, y: end.y - start.y, scale: 1, duration, ease },
       0,
     );
   });
 
   return () => {
     layer.remove();
-    gsap.set(reveal, { clearProps: 'opacity' });
+    gsap.set(target, { clearProps: 'opacity' });
+    gsap.set(source, { clearProps: 'color' });
   };
 }
 
@@ -236,7 +257,15 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
     tl.from(tint, { opacity: 0, duration: ms(TINT), ease: EASE_FLOW }, 0);
   }
 
-  const cleanupWords = wordFlight(tl, fromWords, toWords, config.wordsTo, ms(OPEN), EASE_FLOW);
+  const cleanupWords = wordFlight(tl, {
+    fromWords,
+    toWords,
+    source: config.wordsFrom,
+    target: config.wordsTo,
+    host: dialog,
+    duration: ms(OPEN),
+    ease: EASE_FLOW,
+  });
 
   return settle(tl, () => {
     cleanupWords?.();
@@ -291,7 +320,15 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     tl.to(panel, { opacity: 0, duration: ms(CLOSE), ease: EASE_SHAPE }, 0);
     tl.to(tint, { opacity: 0, duration: ms(CLOSE), ease: EASE_CSS }, 0);
 
-    const cleanupWindowWords = wordFlight(tl, fromWords, toWords, config.wordsFrom, ms(CLOSE), EASE_FLOW_CLOSE);
+    const cleanupWindowWords = wordFlight(tl, {
+      fromWords,
+      toWords,
+      source: config.wordsTo,
+      target: config.wordsFrom,
+      host: dialog,
+      duration: ms(CLOSE),
+      ease: EASE_FLOW_CLOSE,
+    });
     return settle(tl, () => {
       cleanupWindowWords?.();
       finish();
@@ -363,7 +400,15 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     ms(TRIGGER_SHOW_DELAY),
   );
 
-  const cleanupWords = wordFlight(tl, fromWords, toWords, config.wordsFrom, ms(CLOSE), EASE_FLOW);
+  const cleanupWords = wordFlight(tl, {
+    fromWords,
+    toWords,
+    source: config.wordsTo,
+    target: config.wordsFrom,
+    host: dialog,
+    duration: ms(CLOSE),
+    ease: EASE_FLOW,
+  });
 
   return settle(tl, () => {
     cleanupWords?.();

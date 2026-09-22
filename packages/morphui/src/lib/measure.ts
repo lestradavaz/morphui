@@ -18,9 +18,25 @@ export function box(element: Element): Box {
 
 export function surface(element: Element): Surface {
   const style = getComputedStyle(element);
+  const rect = element.getBoundingClientRect();
+  const declared = Number.parseFloat(style.borderTopLeftRadius) || 0;
+
+  /*
+   * A pill declares a radius far larger than it can paint - `999px` on a 52px
+   * tall button renders as 26px, because the browser clamps it to half the
+   * shorter side.
+   *
+   * Animating the declared value is therefore wrong in exactly one direction:
+   * as the box grows, the clamp stops biting and the painted corners balloon
+   * toward 999px while the declared value is on its way down. The panel reaches
+   * full size with its corners still visibly opening out. Carrying the clamped
+   * value instead means the animation starts from what the eye already sees.
+   */
+  const radius = Math.min(declared, rect.width / 2, rect.height / 2);
+
   return {
     background: style.backgroundColor,
-    radius: style.borderTopLeftRadius,
+    radius: `${radius}px`,
     shadow: style.boxShadow,
   };
 }
