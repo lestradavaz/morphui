@@ -37,7 +37,9 @@
       }
       return {
         target: describeTarget(e),
-        properties: [...new Set(frames.filter(Boolean).join(',').split(','))].join(' '),
+        properties:
+          [...new Set(frames.filter(Boolean).join(',').split(','))].join(' ') ||
+          (a.animationName ? `@${a.animationName}` : ''),
         'duration ms': round(timing.duration),
         'delay ms': round(timing.delay),
         easing: String(timing.easing).slice(0, 44),
@@ -77,7 +79,15 @@
     const seen = new Map();
     let raf = 0;
     const sample = () => {
-      for (const row of fromGsap(gsap)) seen.set(`${row.target}|${row.properties}|${row['duration ms']}`, row);
+      // GSAP tweens AND the browser's own animations. Half of this port's
+      // choreography is CSS driven by a class the engine toggles, and a
+      // GSAP-only listing is blind to it - which is exactly the row that looked
+      // missing when the two inventories were first compared.
+      const rows = [
+        ...fromGsap(gsap).map((r) => ({ ...r, via: 'gsap' })),
+        ...fromWebAnimations().map((r) => ({ ...r, via: 'css' })),
+      ];
+      for (const row of rows) seen.set(`${row.via}|${row.target}|${row.properties}|${row['duration ms']}`, row);
       raf = requestAnimationFrame(sample);
     };
     raf = requestAnimationFrame(sample);
