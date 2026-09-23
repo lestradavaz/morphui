@@ -1,0 +1,27 @@
+---
+import SiteHeader from '@/components/SiteHeader.astro';
+import SiteFooter from '@/components/SiteFooter.astro';
+import '@fontsource-variable/schibsted-grotesk';
+import '@/styles/global.css';
+interface Props { title?: string; description?: string; noindex?: boolean }
+const { title, description = 'Morphing React components with shared elements, considered motion, and seven adaptable themes. Built with GSAP. Yours to make your own.', noindex = false } = Astro.props;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+const pageTitle = title ? `${title} · morphui` : 'morphui · Interfaces that stay connected';
+---
+<!doctype html>
+<html lang="en" data-morph-theme="ink" data-morph-mode="light">
+  <head>
+    <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{pageTitle}</title><meta name="description" content={description}/>
+    <meta name="robots" content={noindex || !Astro.site ? 'noindex, nofollow' : 'index, follow'}/>
+    {canonical && <link rel="canonical" href={canonical}/>}
+    <meta property="og:title" content={pageTitle}/><meta property="og:description" content={description}/><meta property="og:type" content="website"/>
+    {canonical && <meta property="og:url" content={canonical}/>}
+    <meta property="og:site_name" content="morphui"/><meta name="twitter:card" content="summary"/>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+    <script is:inline>
+      (()=>{let mode='system';try{mode=localStorage.getItem('morphui-site-mode')||'system';}catch{}if(!['light','dark','system'].includes(mode))mode='system';document.documentElement.dataset.siteMode=mode;document.documentElement.dataset.morphMode=mode==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode;})();
+    </script>
+  </head>
+  <body><a class="skip-link" href="#main">Skip to content</a><SiteHeader/><slot/><SiteFooter/></body>
+</html>

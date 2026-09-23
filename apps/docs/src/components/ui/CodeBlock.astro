@@ -1,0 +1,29 @@
+---
+import { Code } from 'astro:components';
+import Icon from './Icon.astro';
+interface Props { code: string; lang?: 'tsx' | 'jsx' | 'css' | 'bash' | 'html'; label?: string }
+const { code, lang = 'tsx', label = 'Example' } = Astro.props;
+---
+<div class="code-block" data-code-block>
+  <div class="code-heading"><span>{label}</span><button class="copy-button" type="button" data-copy-code aria-label={`Copy ${label}`}><Icon name="copy" size={16}/><span>Copy</span></button></div>
+  <Code code={code} lang={lang} themes={{ light: 'github-light', dark: 'github-dark' }} wrap={false} />
+  <span class="sr-only" role="status" data-copy-status></span>
+</div>
+<script>
+  document.addEventListener('click', async event => {
+    const button = (event.target as Element)?.closest<HTMLButtonElement>('[data-copy-code]');
+    if (!button) return;
+    const block = button.closest('[data-code-block]')!;
+    const code = block.querySelector('code')!;
+    const status = block.querySelector('[data-copy-status]')!;
+    try {
+      await navigator.clipboard.writeText(code.textContent ?? '');
+      button.querySelector('span')!.textContent = 'Copied'; status.textContent = 'Code copied';
+      window.setTimeout(() => { button.querySelector('span')!.textContent = 'Copy'; status.textContent = ''; }, 1800);
+    } catch {
+      const range = document.createRange(); range.selectNodeContents(code);
+      const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+      status.textContent = 'Code selected. Use your keyboard to copy.';
+    }
+  });
+</script>

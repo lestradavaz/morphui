@@ -5,7 +5,7 @@ Three morphing React primitives. Components that transform instead of appearing.
 | Component | What it does |
 | --- | --- |
 | `MorphDialog` | A trigger becomes a native `<dialog>`. The trigger label can fly into the heading, and the trigger fill becomes the panel surface. |
-| `MorphWindow` | No shared element. The window scales out of its origin, which stays visible, and blurs back down into it on close. |
+| `MorphWindow` | The window shares its label with a marked heading and returns it on close. An unshared variant keeps the trigger visible. |
 | `MorphCard` | The image is the shared element between a card and its full-screen view. Corner radius interpolates across the transition. |
 
 MIT licensed. Works in JavaScript and TypeScript, in React and Next.js.
@@ -14,7 +14,7 @@ MIT licensed. Works in JavaScript and TypeScript, in React and Next.js.
 
 ```
 packages/morphui     the published npm package
-apps/docs            the documentation site            (not built yet)
+apps/docs            the Astro documentation site
 legacy/              the original vanilla HTML/CSS/JS the components came from
 ```
 
@@ -26,8 +26,11 @@ with GSAP Flip so it behaves the same across browsers.
 
 ```bash
 pnpm install
-pnpm build          # turbo -> packages/morphui
+pnpm build          # package, playground and documentation
 pnpm typecheck
+pnpm --filter @morphui/docs dev    # http://localhost:4321
+pnpm test:motion
+pnpm test:docs
 ```
 
 To look at the themes without any build step:

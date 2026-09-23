@@ -1,0 +1,22 @@
+---
+import Search from './docs/Search';
+const current = Astro.url.pathname;
+---
+<header class="site-header">
+  <div class="header-inner">
+    <a class="wordmark" href="/" aria-label="MorphUI home"><span class="brand-symbol" aria-hidden="true"><span></span><span></span></span>morphui</a>
+    <nav class="desktop-nav" aria-label="Main navigation"><a href="/#components" aria-current={current.startsWith('/docs/morph-') ? 'page' : undefined}>Components</a><a href="/docs/installation" aria-current={current === '/docs/installation' ? 'page' : undefined}>Documentation</a></nav>
+    <div class="header-tools"><Search client:load /><label class="site-mode-label"><span class="sr-only">Site appearance</span><select id="site-mode" aria-label="Site appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div>
+  </div>
+</header>
+<script>
+  const select = document.getElementById('site-mode') as HTMLSelectElement;
+  select.value = document.documentElement.dataset.siteMode ?? 'system';
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const apply = () => {
+    document.documentElement.dataset.morphMode = select.value === 'system' ? (media.matches ? 'dark' : 'light') : select.value;
+    document.documentElement.dataset.siteMode = select.value;
+  };
+  select.addEventListener('change', () => {apply();try{localStorage.setItem('morphui-site-mode', select.value);}catch{}});
+  media.addEventListener('change', apply);
+</script>

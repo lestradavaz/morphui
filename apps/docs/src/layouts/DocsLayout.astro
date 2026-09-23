@@ -1,0 +1,22 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { navigation } from '@/core/data/catalog';
+interface Props { title: string; description: string; headings: { slug: string; text: string }[] }
+const { title, description, headings } = Astro.props;
+const current = Astro.url.pathname;
+const pages = navigation.flatMap(group=>group.links);
+const index = pages.findIndex(page=>page.href === current);
+const previous = pages[index-1]; const next = pages[index+1];
+---
+<BaseLayout title={title} description={description}>
+  <div class="docs-shell">
+    <aside class="docs-sidebar"><nav aria-label="Documentation">{navigation.map(group=><div class="nav-group"><p>{group.label}</p>{group.links.map(link=><a href={link.href} aria-current={link.href===current?'page':undefined}>{link.label}</a>)}</div>)}</nav><a class="sidebar-license" href="/license.txt">Open source. MIT licensed.</a></aside>
+    <main id="main" class="docs-main">
+      <details class="mobile-docs-nav"><summary>Documentation menu <span aria-hidden="true">⌄</span></summary><nav aria-label="Mobile documentation">{pages.map(page=><a href={page.href} aria-current={page.href===current?'page':undefined}>{page.label}</a>)}</nav></details>
+      <div class="doc-heading"><a class="breadcrumb" href="/">morphui <span aria-hidden="true">/</span> Documentation</a><h1>{title}</h1><p>{description}</p></div>
+      <slot/>
+      <nav class="doc-pagination" aria-label="Previous and next pages">{previous ? <a href={previous.href}><span>Previous</span>{previous.label}</a> : <span/>}{next && <a href={next.href}><span>Next</span>{next.label}</a>}</nav>
+    </main>
+    <aside class="docs-toc"><nav aria-label="On this page"><p>On this page</p>{headings.map(heading=><a href={`#${heading.slug}`}>{heading.text}</a>)}</nav></aside>
+  </div>
+</BaseLayout>
