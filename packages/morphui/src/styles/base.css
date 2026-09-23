@@ -47,8 +47,20 @@
   --morph-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* Re-resolve material and timing tokens within a scoped preview or theme. */
+[data-morph-theme] {
+  --morph-duration-open: calc(700ms * var(--morph-slow));
+  --morph-duration-close: calc(500ms * var(--morph-slow));
+  --morph-glass: color-mix(in srgb, var(--morph-bg) 72%, transparent);
+  --morph-glass-ring: rgb(0 0 0 / 0.09);
+  --morph-elevation-1: 0 1px 2px rgb(0 0 0 / 0.07);
+  --morph-elevation-2: 0 24px 58px rgb(0 0 0 / 0.12);
+  --morph-tint: rgb(0 0 0 / 0.10);
+}
+
 @media (prefers-color-scheme: dark) {
-  :where(:root):not([data-morph-mode="light"]) {
+  :where(:root):not([data-morph-mode="light"]),
+  [data-morph-theme]:not([data-morph-mode="light"]) {
     --morph-glass: color-mix(in srgb, var(--morph-bg) 60%, transparent);
     --morph-glass-ring: rgb(255 255 255 / 0.10);
     --morph-elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -57,7 +69,8 @@
   }
 }
 
-:where(:root)[data-morph-mode="dark"] {
+:where(:root)[data-morph-mode="dark"],
+[data-morph-theme][data-morph-mode="dark"] {
   --morph-glass: color-mix(in srgb, var(--morph-bg) 60%, transparent);
   --morph-glass-ring: rgb(255 255 255 / 0.10);
   --morph-elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -68,7 +81,7 @@
 /* Reduced motion shortens the morph to an opacity change. It never becomes
    "no transition" - the dialog still has to arrive somehow. */
 @media (prefers-reduced-motion: reduce) {
-  :where(:root) {
+  :where(:root), [data-morph-theme] {
     --morph-slow: 1;
     --morph-duration-open: 150ms;
     --morph-duration-close: 120ms;

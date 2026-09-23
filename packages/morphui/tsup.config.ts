@@ -7,7 +7,8 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: 'es2022',
-  treeshake: true,
+  // esbuild tree-shakes; a second Rollup pass strips the client directive.
+  treeshake: false,
   // Next.js App Router needs the directive preserved on the client entry.
   banner: { js: "'use client';" },
   // Peer dependencies stay external so the host app supplies a single instance.

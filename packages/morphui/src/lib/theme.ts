@@ -32,7 +32,7 @@ const isTheme = (value: string): value is MorphTheme =>
   (MORPH_THEMES as readonly string[]).includes(value);
 
 function target(el?: Element | null): HTMLElement | null {
-  if (el instanceof HTMLElement) return el;
+  if (typeof HTMLElement !== 'undefined' && el instanceof HTMLElement) return el;
   return typeof document === 'undefined' ? null : document.documentElement;
 }
 

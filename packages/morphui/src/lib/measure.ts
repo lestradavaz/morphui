@@ -54,9 +54,9 @@ export function isMeasurable(element: Element | null | undefined): element is El
 }
 
 /** Reads `--morph-slow`, the multiplier that stretches every duration. */
-export function slowFactor(): number {
+export function slowFactor(element?: Element): number {
   if (typeof document === 'undefined') return 1;
-  const raw = getComputedStyle(document.documentElement).getPropertyValue('--morph-slow');
+  const raw = getComputedStyle(element ?? document.documentElement).getPropertyValue('--morph-slow');
   const value = Number.parseFloat(raw);
   return Number.isFinite(value) && value > 0 ? value : 1;
 }

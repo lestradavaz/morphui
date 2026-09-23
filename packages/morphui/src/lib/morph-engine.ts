@@ -47,7 +47,6 @@ const CONTENT_CLOSE = 2000;
 /** The content only gets flow(0.25) of the way home before the panel closes over it. */
 const CONTENT_LAG = CLOSE / CONTENT_CLOSE;
 
-const ms = (value: number) => (value / 1000) * slowFactor();
 const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 
 let ready = false;
@@ -314,6 +313,7 @@ function buildFlight(
 export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void> {
   ensure();
   const { trigger, dialog, panel, content, tint } = parts;
+  const ms = (value: number) => (value / 1000) * slowFactor(panel);
   const gentle = prefersReducedMotion();
   const isWindow = config.variant === 'window';
 
@@ -405,6 +405,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
 export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void> {
   ensure();
   const { trigger, dialog, panel, content, tint } = parts;
+  const ms = (value: number) => (value / 1000) * slowFactor(panel);
   const gentle = prefersReducedMotion();
   const isWindow = config.variant === 'window';
 
