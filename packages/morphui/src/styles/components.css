@@ -140,25 +140,18 @@ html:has(.morph-dialog[open]) {
 }
 
 /*
- * Coming on is the engine's call, not a duration's: the chrome appears once the
- * panel is big enough to hold it, which is a different moment for a card than
- * for a pill, so its opacity is written frame by frame alongside the geometry.
+ * The chrome's opacity is the engine's call in both directions, not a duration's:
+ * it resolves as the panel grows and leaves as the panel goes, and either way it
+ * is held back while the panel is too small to hold it - a different moment for a
+ * card than for a pill. An animation here would win over that for as long as it
+ * ran, which is exactly the length of the transition it has to respect.
  *
- * Leaving is a beat of its own. The fit alone would keep a card's button at full
- * strength until the last frames, since the card it returns to has room for it
- * the whole way, and the button would blink out with the panel. An animation
- * takes it off earlier, and takes precedence over the engine's opacity for as
- * long as it runs. Not on the flow ease: that curve is all but over by a third
- * of its duration, which reads as a cut rather than a fade.
+ * What is left is the one thing opacity does not cover: a button on its way out
+ * should not still be taking clicks.
  */
-/* A sibling selector, because the class is on the panel and the layer is next to
-   it rather than inside it. */
 .morph-closing ~ .morph-panel-chrome {
-  animation: morph-chrome-out calc(var(--morph-duration-close) / 2) var(--morph-ease-in-out-soft) both;
   pointer-events: none;
 }
-
-@keyframes morph-chrome-out { to { opacity: 0; } }
 
 @keyframes morph-content-in { from { opacity: 0; filter: blur(8px); } }
 @keyframes morph-blur-in { from { filter: blur(32px); } }
@@ -169,8 +162,7 @@ html:has(.morph-dialog[open]) {
 @media (prefers-reduced-motion: reduce) {
   .morph-opening .morph-panel-content,
   .morph-window-opening .morph-panel-content,
-  .morph-closing .morph-panel-content,
-  .morph-closing ~ .morph-panel-chrome {
+  .morph-closing .morph-panel-content {
     animation: none;
   }
 }

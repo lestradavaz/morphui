@@ -87,7 +87,7 @@ interface ShapeOptions {
   /** Closing only: makes the content trail the container that is clipping it. */
   lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
   /** A layer outside the panel, kept over whatever box the panel is showing. */
-  chrome?: { el: HTMLElement; from: Box; to: Box; need: Box; resolves: boolean };
+  chrome?: { el: HTMLElement; from: Box; to: Box; need: Box; leaving: boolean };
 }
 
 function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
@@ -136,15 +136,28 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
     const fits = Math.max(0, Math.min(1, (room - 1) / 0.5));
 
     /*
-     * Room decides whether the chrome may be seen at all; the panel's own
-     * progress decides how much of it is. The reference puts the close button
-     * inside the panel's snapshot, so it resolves on `morph-content-in` with
-     * everything else - which is why it is never seen crisp on top of the
-     * trigger, and why it reads as arriving in its place rather than flying
-     * there. This is that beat, on the same curve, without the blur: the chrome
-     * has to stay legible where the content behind it is still dissolving.
+     * Room decides whether the chrome may be seen at all; the panel's own beat
+     * decides how much of it is. The reference puts the close button inside the
+     * panel's snapshot, so it resolves on `morph-content-in` going out and on
+     * `morph-fade-out` coming back, with everything else - which is why it is
+     * never seen crisp on top of the trigger in either direction, and why it
+     * reads as arriving in its place rather than flying there. These are those
+     * beats, on the same curves, without the blur: the chrome has to stay
+     * legible where the content behind it is still dissolving.
+     *
+     * Both are multiplied by the room, rather than one taking over from the
+     * other. A stylesheet animation would win over what is written here for as
+     * long as it ran, and the panel would be back to the size of its trigger
+     * with a button still fading on top of it.
+     *
+     * The beat is the panel's progress and not a duration of its own, which
+     * matters most on the way out. The geometry is front-loaded: a card is most
+     * of the way home in a third of the close, and a button leaving on its own
+     * clock would still be at half strength by then, sitting at full size on
+     * something that is nearly a card again. Read from the progress it goes when
+     * the panel goes.
      */
-    frameChrome(chrome.el, visible, fits * (chrome.resolves ? progress : 1));
+    frameChrome(chrome.el, visible, fits * (chrome.leaving ? 1 - progress : progress));
   };
 
   placeChrome(0);
@@ -457,7 +470,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
     geoEase: EASE_FLOW,
     radiusDuration: ms(isWindow ? WINDOW_RADIUS : fullScreen ? FULL_RADIUS : SURFACE),
     radiusEase: isWindow ? EASE_SHAPE : fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
-    ...(chrome && need ? { chrome: { el: chrome, from, to, need, resolves: true } } : {}),
+    ...(chrome && need ? { chrome: { el: chrome, from, to, need, leaving: false } } : {}),
   });
 
   if (borrowsSurface) {
@@ -546,7 +559,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
     ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
-    ...(chrome && need ? { chrome: { el: chrome, from, to, need, resolves: false } } : {}),
+    ...(chrome && need ? { chrome: { el: chrome, from, to, need, leaving: true } } : {}),
   });
 
   const toShadow = toSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : toSurface.shadow;

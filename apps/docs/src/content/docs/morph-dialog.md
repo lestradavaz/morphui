@@ -35,7 +35,7 @@ A close button in the corner belongs in `chrome`, not in the children. Children 
 </MorphDialog>
 ```
 
-Position it against the panel — `position: absolute` with your own insets, read from the corner the viewer sees. The layer takes no clicks of its own; only the button does. It resolves on the panel's own beat, the same one the content is on, so it reads as arriving in its place rather than flying there — and it waits for the panel to be large enough to hold it, so it is never drawn crisply on top of the trigger it grew out of.
+Position it against the panel — `position: absolute` with your own insets, read from the corner the viewer sees. The layer takes no clicks of its own; only the button does. It follows the panel's own beat in both directions, so it reads as arriving in its place rather than flying there, and is gone again before the panel lands — and it waits for the panel to be large enough to hold it, so it is never drawn crisply on top of the trigger it grew out of.
 
 ## Full-screen variant
 
