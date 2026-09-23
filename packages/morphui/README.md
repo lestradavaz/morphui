@@ -4,8 +4,13 @@ Three morphing React primitives. A trigger is measured, the panel is inverted on
 it and played back - the FLIP technique, animated with GSAP.
 
 ```bash
+npm install morphui gsap
 pnpm add morphui gsap
+yarn add morphui gsap
+bun add morphui gsap
 ```
+
+One package, published once — every manager reads the same registry.
 
 GSAP is a peer dependency on purpose. Two copies of GSAP in one app means plugins
 registered on one instance are invisible to the other, so MorphUI uses yours.

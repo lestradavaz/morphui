@@ -60,6 +60,7 @@ select option {color:var(--morph-text);background:var(--morph-bg);}
 .hero-install-note a {text-underline-offset:4px;}
 /* The hero shows the line a developer came to paste, so it sits directly under
    the description and the buttons follow it rather than precede it. */
+.install-command.is-compact .install-toolbar {padding:7px 12px;}
 .install-command.is-compact .install-code {padding:14px 15px;}
 .install-command.is-compact .install-code code {font-size:12px;}
 .demo-caption {font-size:12px;color:var(--morph-muted);text-align:center;margin-top:16px;}

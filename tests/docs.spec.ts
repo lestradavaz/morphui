@@ -88,16 +88,22 @@ test('installation downloads a real tarball and copies the selected command', as
   expect(bytes.byteLength).toBeGreaterThan(10000);
 });
 
-test('the hero carries a copyable install command', async ({ page, context }) => {
+test('the hero carries a copyable install command for every package manager', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read','clipboard-write']);
   await page.goto('/');
   await hydrate(page);
   // The hero command is the reason a developer lands here, so it has to be the
   // real line and not a decorative one.
-  await expect(page.locator('.hero-install .install-code code')).toHaveText('npm install ./morphui-0.0.0.tgz gsap');
-  await expect(page.locator('.hero-install .install-toolbar')).toHaveCount(0);
+  const code = page.locator('.hero-install .install-code code');
+  await expect(code).toHaveText('npm install ./morphui-0.0.0.tgz gsap');
+  // One package on one registry: every manager installs the same thing, so the
+  // hero offers the choice rather than picking one and hiding the rest.
+  for (const [manager, expected] of [['pnpm','pnpm add ./morphui-0.0.0.tgz gsap'],['yarn','yarn add ./morphui-0.0.0.tgz gsap'],['bun','bun add ./morphui-0.0.0.tgz gsap']] as const) {
+    await page.locator('.hero-install').getByRole('button',{name:manager,exact:true}).click();
+    await expect(code).toHaveText(expected);
+  }
   await page.locator('.hero-install').getByRole('button',{name:'Copy',exact:true}).click();
-  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe('npm install ./morphui-0.0.0.tgz gsap');
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe('bun add ./morphui-0.0.0.tgz gsap');
   await expect(page.locator('.hero-install .copy-feedback')).toHaveText('Copied');
 });
 
