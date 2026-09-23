@@ -64,19 +64,48 @@ function visualCopy(model: HTMLElement): HTMLElement {
   return copy;
 }
 
-function clippedRadius(element: HTMLElement, rect: Box): number {
-  let radius = Number.parseFloat(surface(element).radius) || 0;
-  // A full-bleed image often gets its corners from the card, not its own style.
+/** Top-left, top-right, bottom-right, bottom-left, in that order. */
+type Corners = [number, number, number, number];
+
+const CORNERS = [
+  { name: 'borderTopLeftRadius', edges: ['left', 'top'] },
+  { name: 'borderTopRightRadius', edges: ['right', 'top'] },
+  { name: 'borderBottomRightRadius', edges: ['right', 'bottom'] },
+  { name: 'borderBottomLeftRadius', edges: ['left', 'bottom'] },
+] as const;
+
+const edgeOf = (r: { x: number; y: number; width: number; height: number }, edge: string): number =>
+  edge === 'left' ? r.x : edge === 'right' ? r.x + r.width : edge === 'top' ? r.y : r.y + r.height;
+
+/**
+ * The corners the element is actually painted with, corner by corner.
+ *
+ * A full-bleed image usually has no radius of its own: the card around it does,
+ * and clips. Which of the image's corners that rounds depends on which of its
+ * edges the card shares - an image across the top of a card with a caption under
+ * it is rounded at the top and square at the bottom.
+ *
+ * Asking for all four edges to line up, as this did, throws the card's radius
+ * away the moment anything else sits inside it, and the image then flies square
+ * while the card it came from is visibly round.
+ */
+function clippedCorners(element: HTMLElement, rect: Box): Corners {
+  const own = getComputedStyle(element);
+  const corners = CORNERS.map((c) => Number.parseFloat(own[c.name]) || 0) as Corners;
+
   for (let parent = element.parentElement; parent; parent = parent.parentElement) {
     const style = getComputedStyle(parent);
     if (!/(hidden|clip)/.test(style.overflow)) continue;
     const bounds = parent.getBoundingClientRect();
-    if (Math.abs(bounds.x - rect.x) < 1 && Math.abs(bounds.y - rect.y) < 1 &&
-        Math.abs(bounds.width - rect.width) < 1 && Math.abs(bounds.height - rect.height) < 1) {
-      radius = Math.max(radius, Number.parseFloat(surface(parent).radius) || 0);
-    }
+    CORNERS.forEach((corner, i) => {
+      const shared = corner.edges.every((edge) => Math.abs(edgeOf(bounds, edge) - edgeOf(rect, edge)) < 1);
+      if (shared) corners[i] = Math.max(corners[i]!, Number.parseFloat(style[corner.name]) || 0);
+    });
   }
-  return radius;
+
+  // Whatever is declared, a corner is painted no larger than the box allows.
+  const limit = Math.min(rect.width, rect.height) / 2;
+  return corners.map((r) => Math.min(r, limit)) as Corners;
 }
 
 /** Independent visual layer; originals keep their React ownership and layout. */
@@ -85,8 +114,8 @@ export function buildItemFlight(pair: ItemPair, host: HTMLElement, opening: bool
   const to = opening ? pair.targetBox : pair.sourceBox;
   const source = opening ? pair.source : pair.target;
   const target = opening ? pair.target : pair.source;
-  const fromRadius = clippedRadius(source, from);
-  const toRadius = clippedRadius(target, to);
+  const fromCorners = clippedCorners(source, from);
+  const toCorners = clippedCorners(target, to);
   const layer = document.createElement('div');
   layer.setAttribute('data-morph-item-layer', '');
   layer.setAttribute('aria-hidden', 'true');
@@ -118,11 +147,23 @@ export function buildItemFlight(pair: ItemPair, host: HTMLElement, opening: bool
   return {
     from, to, outgoing, incoming,
     setProgress(progress: number) {
-      const radius = fromRadius + (toRadius - fromRadius) * progress;
       const width = from.width + (to.width - from.width) * progress;
       const height = from.height + (to.height - from.height) * progress;
-      outgoing.style.borderRadius = `${radius * from.width / width}px / ${radius * from.height / height}px`;
-      incoming.style.borderRadius = `${radius * to.width / width}px / ${radius * to.height / height}px`;
+      const live = fromCorners.map((r, i) => r + (toCorners[i]! - r) * progress);
+
+      /*
+       * Each copy is drawn at its own size and scaled to the flight's, so the
+       * radius it is given has to be divided back by that scale to paint the
+       * one wanted on screen. Per axis, hence the two-value form: the corners
+       * would otherwise go oval as soon as the two scales differ.
+       */
+      const write = (el: HTMLElement, rect: Box) => {
+        const x = live.map((r) => `${r * rect.width / width}px`).join(' ');
+        const y = live.map((r) => `${r * rect.height / height}px`).join(' ');
+        el.style.borderRadius = `${x} / ${y}`;
+      };
+      write(outgoing, from);
+      write(incoming, to);
     },
     cleanup() {
       for (const { element, value, priority } of saved) {

@@ -41,6 +41,8 @@ const WINDOW_START_RADIUS = 64;
 const TRIGGER_HIDE = 160;
 const TRIGGER_SHOW = 300;
 const TRIGGER_SHOW_DELAY = 200;
+/** The last stretch of a close, where the panel hands the surface back. */
+const HANDOVER = 180;
 const TINT = 500;
 const TINT_WINDOW = 200;
 const GENTLE = 150;
@@ -578,6 +580,20 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
       { opacity: 1, duration: ms(TRIGGER_SHOW), ease: EASE_OUT_SOFT },
       ms(TRIGGER_SHOW_DELAY),
     );
+
+    /*
+     * And the panel gets out of the way rather than being switched off.
+     *
+     * Underneath it the trigger has already faded back in, so without this the
+     * whole of it - label, icon, whatever it holds - is revealed in the single
+     * frame the dialog closes, which reads as a pop at the end of an otherwise
+     * continuous movement. The fade above is spent entirely behind an opaque
+     * panel and never seen.
+     *
+     * The panel is wearing the trigger's own fill and shadow by now, so what
+     * crosses over is only what the two have that is different: the contents.
+     */
+    tl.to(panel, { opacity: 0, duration: ms(HANDOVER), ease: EASE_OUT_SOFT }, ms(CLOSE - HANDOVER));
   }
 
   const cleanupFlight = buildFlight(tl, plan, dialog, ms(CLOSE), EASE_FLOW, 'close');
