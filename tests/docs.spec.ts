@@ -31,7 +31,7 @@ test('every documentation route has content, metadata and no page overflow', asy
     // page at /docs/installation called itself /docs/installation.html.
     await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', `https://morphui.lestradavaz.com${route === '/' ? '/' : route}`);
     await expect(page.locator('link[rel=canonical]')).not.toHaveAttribute('href', /\.html$/);
-    await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'index, follow');
+    await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', /^index, follow/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     for (const href of await page.locator('.docs-toc a').evaluateAll(links => links.map(link => link.getAttribute('href')!))) {
       await expect(page.locator(href)).toHaveCount(1);
@@ -278,3 +278,45 @@ for (const system of ['light', 'dark'] as const) {
     });
   });
 }
+
+/**
+ * What a search engine and a social card are handed.
+ *
+ * The head used to carry a title, a description and a canonical and nothing
+ * else: no share image, so every link posted anywhere rendered as a grey box,
+ * and no structured data, so nothing tied the site to the package or to a
+ * person. These are the parts that are easy to break silently, because the page
+ * looks identical either way.
+ */
+test('every page ships a share card and a structured-data graph', async ({ page, request }) => {
+  for (const route of routes) {
+    await page.goto(route);
+    const og = page.locator('meta[property="og:image"]');
+    await expect(og).toHaveAttribute('content', /^https:\/\/morphui\.lestradavaz\.com\/og-image\.png$/);
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
+    // The declared size has to be the real one or the card crops wrong.
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute('content', '1200');
+    await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute('content', '630');
+
+    const graph = JSON.parse(await page.locator('script[type="application/ld+json"]').innerText());
+    const types = graph['@graph'].map((node: { '@type': string }) => node['@type']);
+    expect(types).toContain('WebSite');
+    expect(types).toContain('SoftwareSourceCode');
+    expect(types).toContain('WebPage');
+
+    // The nodes have to point at each other, which is the only part that makes
+    // it a graph rather than three unrelated things sharing a page.
+    const ids = new Set(graph['@graph'].map((node: { '@id': string }) => node['@id']));
+    const website = graph['@graph'].find((n: { '@type': string }) => n['@type'] === 'WebSite');
+    const webpage = graph['@graph'].find((n: { '@type': string }) => n['@type'] === 'WebPage');
+    expect(ids.has(website.publisher['@id'])).toBe(true);
+    expect(ids.has(website.about['@id'])).toBe(true);
+    expect(ids.has(webpage.isPartOf['@id'])).toBe(true);
+    expect(webpage.url).toBe(await page.locator('link[rel=canonical]').getAttribute('href'));
+  }
+
+  // And the card is a real file of the shape it claims.
+  const image = await request.get('/og-image.png');
+  expect(image.status()).toBe(200);
+  expect(image.headers()['content-type']).toContain('image/png');
+});

@@ -7,8 +7,13 @@ const current = Astro.url.pathname;
 const pages = navigation.flatMap(group=>group.links);
 const index = pages.findIndex(page=>page.href === current);
 const previous = pages[index-1]; const next = pages[index+1];
+/* The trail the page already draws above its heading, said once more in a form
+   a search result can show as a path rather than a bare URL. Two levels, not
+   three: the sidebar groups are labels with no page behind them, and a crumb
+   pointing at the URL of the crumb after it is not a trail. */
+const breadcrumbs = [{ name: title, path: current }];
 ---
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} breadcrumbs={breadcrumbs}>
   <div class="docs-shell">
     <aside class="docs-sidebar"><nav aria-label="Documentation">{navigation.map(group=><div class="nav-group"><p>{group.label}</p>{group.links.map(link=><a href={link.href} aria-current={link.href===current?'page':undefined}>{link.label}</a>)}</div>)}</nav><a class="sidebar-license" href="/license.txt">Open source. MIT licensed.</a></aside>
     <main id="main" class="docs-main">

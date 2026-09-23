@@ -11,7 +11,7 @@ motion, install a small library, and adapt components without rewriting the engi
 
 ## Product Purpose
 
-MorphUI is an MIT-licensed library of three morphing primitives. Its documentation
+MorphUI is an MIT-licensed library of morphing components. Its documentation
 lets developers experience each component, read the matching API and copy a working
 example. Motion quality and ease of customization are the main product benefits.
 

@@ -1,7 +1,7 @@
 # morphui
 
-Three morphing React primitives. A trigger is measured, the panel is inverted onto
-it and played back - the FLIP technique, animated with GSAP.
+Morphing React components. A trigger is measured, the panel is inverted onto it
+and played back - the FLIP technique, animated with GSAP.
 
 ```bash
 npm install @lestradavaz/morph-ui gsap
@@ -262,7 +262,7 @@ change. It never becomes no transition at all — the dialog still has to arrive
 ## Status
 
 `0.0.0`. Nothing is published to npm yet, so the install line above is what it
-will be rather than what it is. The three components and the theme layer run in
+will be rather than what it is. The components and the theme layer run in
 the playground and in the documentation site.
 
 MIT © Luis Estrada

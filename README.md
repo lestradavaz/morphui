@@ -1,6 +1,6 @@
 # MorphUI
 
-Three morphing React primitives. Components that transform instead of appearing.
+Morphing React components. Interfaces that transform instead of appearing.
 
 | Component | What it does |
 | --- | --- |

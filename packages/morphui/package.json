@@ -1,7 +1,7 @@
 {
   "name": "@lestradavaz/morph-ui",
   "version": "0.1.0",
-  "description": "Three morphing React primitives. Components that transform instead of appearing.",
+  "description": "React components that transform instead of appearing. Shared elements, considered motion, seven themes. Built with GSAP.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lestradavaz/morphui.git",
