@@ -20,6 +20,12 @@ test('every documentation route has content, metadata and no page overflow', asy
     await expect(page.locator('h1')).toBeVisible();
     await expect(page.locator('meta[name=description]')).toHaveAttribute('content', /\S+/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    // The canonical has to match the URL the page is served at, and the sitemap
+    // has to agree. It previously declared the emitted filename instead, so a
+    // page at /docs/installation called itself /docs/installation.html.
+    await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', `https://morphui.lestradavaz.com${route === '/' ? '/' : route}`);
+    await expect(page.locator('link[rel=canonical]')).not.toHaveAttribute('href', /\.html$/);
+    await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'index, follow');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     for (const href of await page.locator('.docs-toc a').evaluateAll(links => links.map(link => link.getAttribute('href')!))) {
       await expect(page.locator(href)).toHaveCount(1);

@@ -26,15 +26,19 @@ build scoped to `apps/docs` has no package to point at.
 
 | Variable | Required | Effect |
 | --- | --- | --- |
-| `SITE_URL` | **yes** | Absolute URL, e.g. `https://morphui.dev`. Sets canonical links, `og:url` and the sitemap. |
+| `SITE_URL` | no | Absolute URL. Defaults to `https://morphui.lestradavaz.com`. |
 | `PORT` | no | Port nginx listens on. Default `80`. |
 | `SITE_ROOT` | no | Directory to serve. Defaults to the built site. |
 
-`SITE_URL` is not optional in practice. Without it Astro has no site, so every
-page is built with `noindex, nofollow` and `robots.txt` is generated as
-`Disallow: /`. The site would deploy and look correct while being invisible to
-search engines. It must be set at **build** time, not just at runtime, because
-the tag is baked into the HTML.
+Nothing has to be set for the production deploy. `SITE_URL` exists so a preview
+or a second host can be built without the canonical links pointing at production.
+
+It must be read at **build** time, not runtime: the canonical tag, `og:url` and
+the sitemap are baked into the HTML and `robots.txt`. Astro treats a build with
+no site as "not for indexing", so every page would ship `noindex, nofollow` and
+`robots.txt` would be `Disallow: /` — the site would deploy and look correct
+while being invisible to search engines. That is why the origin is a default in
+`astro.config.mjs` rather than an empty value.
 
 ## What the build runs
 
