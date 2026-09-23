@@ -145,3 +145,67 @@ test('a close request during the opening animation is honoured, not swallowed', 
   await page.getByRole('button',{name:'Close window',exact:true}).click();
   await expect(page.locator('.morph-dialog[open]')).toHaveCount(0);
 });
+
+/**
+ * Panel chrome keeps its own shape and its corner.
+ *
+ * Everything inside the panel carries the panel's non-uniform scale, so a close
+ * button in the corner used to render 18 by 12 at the start of a dialog and
+ * squash back down on the way out. The engine undoes that scale for the chrome
+ * layer; this reads the button while the panel is still moving, which is the
+ * only place the regression is visible.
+ */
+test('the close button holds its size and its corner for the whole flight', async ({ page }) => {
+  await page.goto('/docs/morph-card');
+  await hydrate(page);
+  await page.getByRole('button',{name:'Slow motion',exact:true}).click();
+
+  const read = () => page.locator('.morph-dialog[open] .morph-panel').evaluate(panel => {
+    const closer = panel.querySelector('.demo-close')!;
+    const p = panel.getBoundingClientRect(), c = closer.getBoundingClientRect();
+    let seen = 1;
+    for (let el: Element | null = closer; el; el = el.parentElement) seen *= Number(getComputedStyle(el).opacity);
+    return { panel: p.width, w: Math.round(c.width), h: Math.round(c.height), top: Math.round(c.y - p.y), right: Math.round(p.x + p.width - c.x - c.width), seen };
+  });
+
+  await page.getByRole('button',{name:'Open A study in motion',exact:true}).click();
+  for (let i = 0; i < 6; i++) {
+    await page.waitForTimeout(400);
+    const at = await read();
+    expect(at.w).toBe(38);
+    expect(at.h).toBe(38);
+    expect(at.top).toBe(18);
+    expect(at.right).toBe(18);
+  }
+  // On by the time the panel has grown into itself, never a growing speck.
+  expect((await read()).seen).toBeCloseTo(1, 1);
+
+  /*
+   * The full-screen corners run a 1200ms beat against the box's 700ms, so the
+   * opening promise is still pending long after the panel has stopped moving,
+   * and a close asked for before it resolves is queued rather than run. The
+   * corners are what to watch, then: the box drops its transform when it lands,
+   * but the radius is written inline until the whole transition is cleared.
+   */
+  await page.waitForFunction(() => {
+    const panel = document.querySelector<HTMLElement>('.morph-dialog[open] .morph-panel');
+    return !!panel && !panel.style.borderRadius;
+  }, undefined, { timeout: 15_000 });
+
+  await page.getByRole('button',{name:'Close story',exact:true}).click();
+  const leaving: { panel: number; seen: number }[] = [];
+  for (let i = 0; i < 4; i++) {
+    await page.waitForTimeout(400);
+    const at = await read();
+    expect(at.w).toBe(38);
+    expect(at.h).toBe(38);
+    expect(at.top).toBe(18);
+    expect(at.right).toBe(18);
+    leaving.push({ panel: at.panel, seen: at.seen });
+  }
+  // Still there as the panel starts back, and gone before it arrives: the button
+  // leaves on its own beat rather than riding the box down to the card's size.
+  expect(leaving[0]!.seen).toBeGreaterThan(0.3);
+  expect(leaving.some(at => at.seen < 0.05)).toBe(true);
+  await expect(page.locator('.morph-dialog[open]')).toHaveCount(0, { timeout: 15_000 });
+});

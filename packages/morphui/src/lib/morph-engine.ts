@@ -22,6 +22,8 @@ export interface MorphParts {
   panel: HTMLElement;
   content: HTMLElement;
   tint: HTMLElement;
+  /** The layer holding the panel's chrome, when the panel was given any. */
+  chrome?: HTMLElement | null;
 }
 
 export interface MorphConfig {
@@ -84,13 +86,15 @@ interface ShapeOptions {
   radiusEase: string;
   /** Closing only: makes the content trail the container that is clipping it. */
   lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
+  /** A layer that undoes the panel's scale, sized to the panel's visible box. */
+  counter?: { el: HTMLElement; width: number; height: number };
 }
 
 function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
   const {
     fromScale, toScale, fromRadius, toRadius,
     geoDuration, geoEase, radiusDuration, radiusEase,
-    lag,
+    lag, counter,
   } = options;
 
   /*
@@ -108,6 +112,17 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
   const rad = gsap.parseEase(radiusEase);
   const driver = { t: 0 };
 
+  // The first frame belongs to the starting scale as much as any other, and the
+  // timeline does not necessarily render one before the browser paints.
+  if (counter) {
+    gsap.set(counter.el, {
+      width: counter.width * fromScale.x,
+      height: counter.height * fromScale.y,
+      scaleX: 1 / fromScale.x,
+      scaleY: 1 / fromScale.y,
+    });
+  }
+
   timeline.to(
     driver,
     {
@@ -122,6 +137,31 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
         const sx = lerp(fromScale.x, toScale.x, gp) || 1;
         const sy = lerp(fromScale.y, toScale.y, gp) || 1;
         const r = lerp(fromRadius, toRadius, rp);
+
+        if (counter) {
+          /*
+           * The panel's scale is undone for its chrome.
+           *
+           * Everything inside the panel carries the panel's transform, and that
+           * transform is non-uniform: at the first frame of a dialog the box is
+           * the trigger's, so a 32px round button renders 18 by 12. Squashed on
+           * the way out, too small to see on the way in.
+           *
+           * Undoing the scale makes the button its own size again, but the layer
+           * it sits in would then cover the panel's untransformed box - a corner
+           * inset would land outside what is actually on screen. So the layer is
+           * given the panel's visible size in layout pixels and scaled back by
+           * the same amount, which cancels to exactly the box being shown. An
+           * inset is then read in real pixels from the corner the viewer sees,
+           * and holds there for the whole flight.
+           */
+          gsap.set(counter.el, {
+            width: counter.width * sx,
+            height: counter.height * sy,
+            scaleX: 1 / sx,
+            scaleY: 1 / sy,
+          });
+        }
 
         if (lag) {
           /*
@@ -167,11 +207,11 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
 
 /*
  * The panel's layout box never changes any more - only its transform does - so
- * the content cannot reflow and does not need pinning. It only needs the same
- * origin as the panel, so the two scale about the same corner.
+ * the layers inside it cannot reflow and do not need pinning. They only need the
+ * same origin as the panel, so everything scales about the same corner.
  */
-function anchorContent(content: HTMLElement): void {
-  gsap.set(content, { transformOrigin: 'top left' });
+function anchorLayer(layer: HTMLElement | null | undefined): void {
+  if (layer) gsap.set(layer, { transformOrigin: 'top left' });
 }
 
 interface FlightPlan {
@@ -312,7 +352,7 @@ function buildFlight(
 
 export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void> {
   ensure();
-  const { trigger, dialog, panel, content, tint } = parts;
+  const { trigger, dialog, panel, content, tint, chrome } = parts;
   const ms = (value: number) => (value / 1000) * slowFactor(panel);
   const gentle = prefersReducedMotion();
   const isWindow = config.variant === 'window';
@@ -345,7 +385,8 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
   const sharesContent = !!plan.words || plan.items.length > 0;
   const borrowsSurface = !isWindow || sharesContent;
 
-  anchorContent(content);
+  anchorLayer(content);
+  anchorLayer(chrome);
 
   const tl = Flip.from(state, {
     targets: panel,
@@ -371,6 +412,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
     geoEase: EASE_FLOW,
     radiusDuration: ms(isWindow ? WINDOW_RADIUS : fullScreen ? FULL_RADIUS : SURFACE),
     radiusEase: isWindow ? EASE_SHAPE : fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
+    ...(chrome ? { counter: { el: chrome, width: to.width, height: to.height } } : {}),
   });
 
   if (borrowsSurface) {
@@ -398,20 +440,20 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
 
   return settle(tl, () => {
     cleanupFlight();
-    clearAll(panel, content, tint);
+    clearAll(panel, content, tint, chrome);
   });
 }
 
 export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void> {
   ensure();
-  const { trigger, dialog, panel, content, tint } = parts;
+  const { trigger, dialog, panel, content, tint, chrome } = parts;
   const ms = (value: number) => (value / 1000) * slowFactor(panel);
   const gentle = prefersReducedMotion();
   const isWindow = config.variant === 'window';
 
   const finish = (): void => {
     dialog.close();
-    clearAll(panel, content, tint, trigger);
+    clearAll(panel, content, tint, trigger, chrome);
     delete trigger.dataset['flipId'];
     delete panel.dataset['flipId'];
   };
@@ -431,7 +473,8 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
   const plan = measureFlight(trigger, panel, !!config.shareWords, 'close');
   const borrowsSurface = !isWindow || !!plan.words || plan.items.length > 0;
 
-  anchorContent(content);
+  anchorLayer(content);
+  anchorLayer(chrome);
 
   // The trigger is the destination this time, so its box is what Flip records.
   const state = Flip.getState(trigger);
@@ -455,6 +498,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
     ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
+    ...(chrome ? { counter: { el: chrome, width: from.width, height: from.height } } : {}),
   });
 
   const toShadow = toSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : toSurface.shadow;

@@ -56,8 +56,9 @@ export interface MorphDialogProps {
    *
    * The difference is visible for the length of the transition: the content is
    * faded in and blurred, and the engine transforms it, so anything inside
-   * `children` arrives late and shifts when that transform is cleared. Chrome is
-   * there from the first frame, in the place it will stay.
+   * `children` arrives late and shifts when that transform is cleared. Chrome
+   * holds its place and its own shape throughout, since the engine undoes the
+   * panel's scale for it, and only takes a short beat to come on.
    *
    * Position it against the panel (`position: absolute` with your own insets).
    * `MorphClose` works here as well as in `children`, because it closes through
@@ -86,6 +87,7 @@ export function MorphDialog({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const chromeRef = useRef<HTMLDivElement | null>(null);
   const tintRef = useRef<HTMLDivElement | null>(null);
   const inFlight = useRef<Promise<void> | null>(null);
   const pendingClose = useRef(false);
@@ -101,7 +103,9 @@ export function MorphDialog({
     const content = contentRef.current;
     const tint = tintRef.current;
     if (!trigger || !dialog || !panel || !content || !tint) return null;
-    return { trigger, dialog, panel, content, tint };
+    // The chrome layer is absent unless the panel was given any, and the engine
+    // treats it as optional for exactly that reason.
+    return { trigger, dialog, panel, content, tint, chrome: chromeRef.current };
   }, []);
 
   const config = useCallback(() => ({ variant, shareWords }), [shareWords, variant]);
@@ -195,7 +199,11 @@ export function MorphDialog({
           ref={panelRef}
           className={['morph-panel', panelClassName].filter(Boolean).join(' ')}
         >
-          {mounted && chrome ? <div className="morph-panel-chrome">{chrome}</div> : null}
+          {mounted && chrome ? (
+            <div ref={chromeRef} className="morph-panel-chrome">
+              {chrome}
+            </div>
+          ) : null}
           <div ref={contentRef} className="morph-panel-content">
             {mounted ? children : null}
           </div>
