@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import {
+  MorphCard,
   MorphClose,
   MorphDialog,
+  MorphWindow,
   MORPH_THEMES,
   setMorphMode,
   setMorphTheme,
@@ -115,6 +117,50 @@ export function App() {
               </p>
             </div>
           </MorphDialog>
+        </div>
+      </section>
+
+      <section className="stage">
+        <div className="row" style={{ justifyContent: 'center' }}>
+          <MorphWindow
+            trigger={<button type="button" className="chip">What is it?</button>}
+            aria-label="About the morph"
+          >
+            <div className="sheet" style={{ maxWidth: 560 }}>
+              <MorphClose>
+                <button type="button" className="closer" aria-label="Close">&times;</button>
+              </MorphClose>
+              <h2>Grows out of its origin</h2>
+              <p style={{ margin: 0, color: 'var(--morph-muted)' }}>
+                The trigger never leaves. This window borrows nothing from it: it arrives out of
+                focus and sharpens, then blurs and shrinks back into the button that is still
+                sitting there.
+              </p>
+            </div>
+          </MorphWindow>
+
+          <MorphCard
+            aria-label="Open the card"
+            card={
+              <button type="button" className="card" aria-label="Open the card">
+                <span className="art" data-morph-item="art" />
+              </button>
+            }
+          >
+            <div className="feature">
+              <span className="art art-full" data-morph-item="art" />
+              <div className="sheet" style={{ maxWidth: 680, margin: '0 auto' }}>
+                <MorphClose>
+                  <button type="button" className="closer" aria-label="Close">&times;</button>
+                </MorphClose>
+                <h2>The image is the shared element</h2>
+                <p style={{ margin: 0, color: 'var(--morph-muted)' }}>
+                  Marked <code>data-morph-item</code> on both sides, so the real element travels
+                  between the card and the full-screen view rather than cross-fading.
+                </p>
+              </div>
+            </div>
+          </MorphCard>
         </div>
       </section>
     </div>

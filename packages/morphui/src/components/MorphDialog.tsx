@@ -38,8 +38,14 @@ export interface MorphDialogProps {
    * Mark the heading with `data-morph-words`.
    */
   shareWords?: boolean;
-  /** `dialog` keeps a centred panel; `fullscreen` fills the viewport. */
-  variant?: Extract<MorphVariant, 'dialog' | 'fullscreen'>;
+  /**
+   * `dialog` keeps a centred panel and hands the trigger's surface over to it.
+   * `fullscreen` fills the viewport. `window` grows out of a trigger that stays
+   * put and borrows nothing from it.
+   *
+   * MorphWindow and MorphCard are this component with a variant already chosen.
+   */
+  variant?: MorphVariant;
   /** Clicking the tint closes the panel. */
   dismissOnTintClick?: boolean;
   className?: string;

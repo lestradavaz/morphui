@@ -103,10 +103,25 @@ interface ShapeOptions {
   radiusEase: string;
   /** Closing only: makes the content trail the container that is clipping it. */
   lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
+  /**
+   * Shared elements, with the panel geometry needed to place them.
+   *
+   * A marked element lives inside the panel, so it already carries the panel's
+   * transform. Tweening it with boxes measured in page coordinates applies that
+   * scale a second time - on a card whose art fills it, 0.16 by 0.16 lands at
+   * 0.026, forty times too small. Its own transform has to be the remainder: the
+   * box it should occupy, with the panel's transform divided back out.
+   */
+  items?: { el: HTMLElement; from: Box; to: Box }[];
+  panel?: { start: Box; end: Box; natural: Box };
 }
 
 function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
-  const { fromScale, toScale, fromRadius, toRadius, geoDuration, geoEase, radiusDuration, radiusEase, lag } = options;
+  const {
+    fromScale, toScale, fromRadius, toRadius,
+    geoDuration, geoEase, radiusDuration, radiusEase,
+    lag, items, panel: panelGeo,
+  } = options;
 
   /*
    * The corners run on their own clock.
@@ -162,6 +177,25 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
             scaleX: lag.from.width ? trailing.width / lag.from.width / sx : 1,
             scaleY: lag.from.height ? trailing.height / lag.from.height / sy : 1,
           });
+        }
+
+        if (items && items.length && panelGeo) {
+          const panelNow = lerpBox(panelGeo.start, panelGeo.end, gp);
+          const px = panelGeo.natural.width ? panelNow.width / panelGeo.natural.width : 1;
+          const py = panelGeo.natural.height ? panelNow.height / panelGeo.natural.height : 1;
+          for (const item of items) {
+            const want = lerpBox(item.from, item.to, gp);
+            // Where the element would land if it only rode the panel.
+            const carriedX = panelNow.x + px * (item.to.x - panelGeo.natural.x);
+            const carriedY = panelNow.y + py * (item.to.y - panelGeo.natural.y);
+            gsap.set(item.el, {
+              x: (want.x - carriedX) / px,
+              y: (want.y - carriedY) / py,
+              scaleX: item.to.width ? want.width / item.to.width / px : 1,
+              scaleY: item.to.height ? want.height / item.to.height / py : 1,
+              transformOrigin: 'left top',
+            });
+          }
         }
 
         /*
@@ -249,20 +283,9 @@ function buildFlight(
   const opening = phase === 'open';
   const undo: (() => void)[] = [];
 
-  for (const { source, target, sourceBox, targetBox } of plan.items) {
-    const vars: gsap.TweenVars = {
-      x: sourceBox.x - targetBox.x,
-      y: sourceBox.y - targetBox.y,
-      scaleX: targetBox.width ? sourceBox.width / targetBox.width : 1,
-      scaleY: targetBox.height ? sourceBox.height / targetBox.height : 1,
-      transformOrigin: 'left top',
-      duration,
-      ease,
-    };
-    if (opening) timeline.from(target, vars, 0);
-    else timeline.to(target, vars, 0);
-    gsap.set(source, { visibility: 'hidden' });
-  }
+  // The tweening happens in driveShape, which knows the panel's transform and can
+  // divide it back out. Here the counterpart in the trigger just gets out of the way.
+  for (const { source } of plan.items) gsap.set(source, { visibility: 'hidden' });
   if (plan.items.length) {
     undo.push(() => {
       for (const { source, target } of plan.items) {
@@ -382,6 +405,8 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
     geoEase: EASE_FLOW,
     radiusDuration: ms(isWindow ? WINDOW_RADIUS : fullScreen ? FULL_RADIUS : SURFACE),
     radiusEase: isWindow ? EASE_SHAPE : fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
+    items: plan.items.map((i) => ({ el: i.target, from: i.sourceBox, to: i.targetBox })),
+    panel: { start: from, end: to, natural: to },
   });
 
   if (!isWindow) {
@@ -464,6 +489,8 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
     ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
+    items: plan.items.map((i) => ({ el: i.target, from: i.targetBox, to: i.sourceBox })),
+    panel: { start: from, end: to, natural: from },
   });
 
   const toShadow = toSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : toSurface.shadow;
