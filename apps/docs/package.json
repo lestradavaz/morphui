@@ -16,7 +16,7 @@
     "@tailwindcss/vite": "4.3.3",
     "tailwindcss": "4.3.3",
     "@fontsource-variable/schibsted-grotesk": "^5.2.8",
-    "morphui": "workspace:*",
+    "@lestradavaz/morph-ui": "workspace:*",
     "gsap": "^3.15.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

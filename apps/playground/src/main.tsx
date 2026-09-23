@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import 'morphui/themes/all.css';
+import '@lestradavaz/morph-ui/themes/all.css';
 import './playground.css';
 
 import gsap from 'gsap';

@@ -4,10 +4,10 @@ Three morphing React primitives. A trigger is measured, the panel is inverted on
 it and played back - the FLIP technique, animated with GSAP.
 
 ```bash
-npm install morphui gsap
-pnpm add morphui gsap
-yarn add morphui gsap
-bun add morphui gsap
+npm install @lestradavaz/morph-ui gsap
+pnpm add @lestradavaz/morph-ui gsap
+yarn add @lestradavaz/morph-ui gsap
+bun add @lestradavaz/morph-ui gsap
 ```
 
 One package, published once — every manager reads the same registry.
@@ -21,17 +21,21 @@ Import the styles once, then render a component. Each one wraps your own element
 and changes nothing about it, so your classes and styles survive.
 
 ```css
-@import "morphui/styles.css";
+@import "@lestradavaz/morph-ui/styles.css";
 ```
 
 ```jsx
-import { MorphDialog, MorphClose } from 'morphui';
+import { MorphDialog, MorphClose } from "@lestradavaz/morph-ui";
 
 <MorphDialog trigger={<button type="button">Create account</button>}>
-  <MorphClose><button type="button" aria-label="Close">Close</button></MorphClose>
+  <MorphClose>
+    <button type="button" aria-label="Close">
+      Close
+    </button>
+  </MorphClose>
   <h2>Create account</h2>
   <p>Anything you like.</p>
-</MorphDialog>
+</MorphDialog>;
 ```
 
 `MorphWindow` grows out of a trigger that stays where it is. `MorphCard` opens a
@@ -55,7 +59,9 @@ button should look like. Wrap yours in `MorphClose` and it closes the panel,
 after calling whatever `onClick` you already had:
 
 ```jsx
-<MorphClose><button type="button">Done</button></MorphClose>
+<MorphClose>
+  <button type="button">Done</button>
+</MorphClose>
 ```
 
 Anywhere deeper in the tree, use the hook:
@@ -63,7 +69,9 @@ Anywhere deeper in the tree, use the hook:
 ```jsx
 const close = useMorphClose();
 
-<button type="button" onClick={close}>Done</button>
+<button type="button" onClick={close}>
+  Done
+</button>;
 ```
 
 Escape and, unless `dismissOnTintClick={false}`, clicking the tint close it too.
@@ -135,16 +143,16 @@ and takes nothing back.
 `MorphDialog` and `MorphWindow` take a `trigger`; `MorphCard` takes `card`. Both
 are your own element.
 
-| Prop | Type | Default | |
-| --- | --- | --- | --- |
-| `trigger` / `card` | `ReactElement` | — | Required. MorphUI adds a ref and an `onClick` and nothing else. |
-| `variant` | `'dialog' \| 'fullscreen' \| 'window'` | `'dialog'` | `MorphWindow` and `MorphCard` set this for you. |
-| `shareWords` | `boolean` | `false` | `true` for `MorphWindow`. |
-| `dismissOnTintClick` | `boolean` | `true` | Clicking the tint closes the panel. |
-| `chrome` | `ReactNode` | — | Panel furniture, the close button above all. Its own layer over the panel, at its own size and corner throughout. |
-| `onOpenChange` | `(open: boolean) => void` | — | Fires when the transition settles, not when it starts. |
-| `className` / `panelClassName` | `string` | — | On the dialog element and on the panel inside it. |
-| `aria-label` | `string` | — | Without it, the panel is labelled by its heading. |
+| Prop                           | Type                                   | Default    |                                                                                                                   |
+| ------------------------------ | -------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| `trigger` / `card`             | `ReactElement`                         | —          | Required. MorphUI adds a ref and an `onClick` and nothing else.                                                   |
+| `variant`                      | `'dialog' \| 'fullscreen' \| 'window'` | `'dialog'` | `MorphWindow` and `MorphCard` set this for you.                                                                   |
+| `shareWords`                   | `boolean`                              | `false`    | `true` for `MorphWindow`.                                                                                         |
+| `dismissOnTintClick`           | `boolean`                              | `true`     | Clicking the tint closes the panel.                                                                               |
+| `chrome`                       | `ReactNode`                            | —          | Panel furniture, the close button above all. Its own layer over the panel, at its own size and corner throughout. |
+| `onOpenChange`                 | `(open: boolean) => void`              | —          | Fires when the transition settles, not when it starts.                                                            |
+| `className` / `panelClassName` | `string`                               | —          | On the dialog element and on the panel inside it.                                                                 |
+| `aria-label`                   | `string`                               | —          | Without it, the panel is labelled by its heading.                                                                 |
 
 ## Styles
 
@@ -153,20 +161,20 @@ Pick one of three setups.
 **One theme, no switching.** Ships the base tokens plus Ink:
 
 ```css
-@import "morphui/styles.css";
+@import "@lestradavaz/morph-ui/styles.css";
 ```
 
 **A different single theme.** Base plus the one you want:
 
 ```css
-@import "morphui/styles/base.css";
-@import "morphui/themes/terracotta.css";
+@import "@lestradavaz/morph-ui/styles/base.css";
+@import "@lestradavaz/morph-ui/themes/terracotta.css";
 ```
 
 **Every theme, switchable at runtime.** All seven, about 1.5 KB gzipped:
 
 ```css
-@import "morphui/themes/all.css";
+@import "@lestradavaz/morph-ui/themes/all.css";
 ```
 
 ### Tailwind v4
@@ -176,8 +184,8 @@ Add the bridge after the themes to get `bg-morph-surface`, `text-morph-muted`,
 
 ```css
 @import "tailwindcss";
-@import "morphui/themes/all.css";
-@import "morphui/tailwind.css";
+@import "@lestradavaz/morph-ui/themes/all.css";
+@import "@lestradavaz/morph-ui/tailwind.css";
 ```
 
 The bridge uses `@theme inline`, so Tailwind emits `var()` references instead of
@@ -190,21 +198,25 @@ do nothing.
 Two independent axes, both attributes on an ancestor — normally `<html>`:
 
 ```html
-<html data-morph-theme="plum" data-morph-mode="dark">
+<html data-morph-theme="plum" data-morph-mode="dark"></html>
 ```
 
-| Attribute | Values | Omitted |
-| --- | --- | --- |
-| `data-morph-theme` | `ink` `green` `cobalt` `terracotta` `teal` `crimson` `plum` | Ink |
-| `data-morph-mode` | `light` `dark` | Follows `prefers-color-scheme` |
+| Attribute          | Values                                                      | Omitted                        |
+| ------------------ | ----------------------------------------------------------- | ------------------------------ |
+| `data-morph-theme` | `ink` `green` `cobalt` `terracotta` `teal` `crimson` `plum` | Ink                            |
+| `data-morph-mode`  | `light` `dark`                                              | Follows `prefers-color-scheme` |
 
 You can set them yourself, or use the helpers:
 
 ```ts
-import { setMorphTheme, setMorphMode, MORPH_THEMES } from 'morphui';
+import {
+  setMorphTheme,
+  setMorphMode,
+  MORPH_THEMES,
+} from "@lestradavaz/morph-ui";
 
-setMorphTheme('terracotta');
-setMorphMode('system');
+setMorphTheme("terracotta");
+setMorphMode("system");
 ```
 
 Any element with `data-morph-theme` re-resolves the material and timing tokens
@@ -218,10 +230,10 @@ low chroma — an untinted grey next to a saturated accent reads as a mistake.
 
 ```css
 [data-morph-theme="acme"] {
-  --morph-accent: #0F62FE;
-  --morph-on-accent: #FFFFFF;
-  --morph-accent-soft: #D0E2FF;
-  --morph-muted: #5A6472;
+  --morph-accent: #0f62fe;
+  --morph-on-accent: #ffffff;
+  --morph-accent-soft: #d0e2ff;
+  --morph-muted: #5a6472;
 }
 ```
 
@@ -231,7 +243,9 @@ Every duration is `calc(<base> * var(--morph-slow))`. Set `--morph-slow: 5` to
 step through a transition while you tune it:
 
 ```css
-:root { --morph-slow: 5; }
+:root {
+  --morph-slow: 5;
+}
 ```
 
 The two opening and closing curves are `linear()` functions carried over from the
@@ -251,4 +265,4 @@ change. It never becomes no transition at all — the dialog still has to arrive
 will be rather than what it is. The three components and the theme layer run in
 the playground and in the documentation site.
 
-MIT © Emil Estrada
+MIT © Luis Estrada

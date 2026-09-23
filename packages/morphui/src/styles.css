@@ -4,14 +4,14 @@
  * Base tokens plus the Ink theme. Import this when your app uses one theme and
  * you do not need to switch at runtime:
  *
- *   @import "morphui/styles.css";
+ *   @import "@lestradavaz/morph-ui/styles.css";
  *
  * For a different single theme, import base plus that theme instead:
  *
- *   @import "morphui/styles/base.css";
- *   @import "morphui/themes/terracotta.css";
+ *   @import "@lestradavaz/morph-ui/styles/base.css";
+ *   @import "@lestradavaz/morph-ui/themes/terracotta.css";
  *
- * For runtime switching across all seven, use morphui/themes/all.css.
+ * For runtime switching across all seven, use @lestradavaz/morph-ui/themes/all.css.
  */
 
 @import "./styles/base.css";

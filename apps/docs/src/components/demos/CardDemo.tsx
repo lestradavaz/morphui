@@ -1,4 +1,4 @@
-import { MorphCard, MorphClose } from 'morphui';
+import { MorphCard, MorphClose } from '@lestradavaz/morph-ui';
 import './demo.css';
 
 export default function CardDemo() {

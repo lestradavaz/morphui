@@ -20,5 +20,5 @@ export default defineConfig({
   markdown: { shikiConfig: { themes: { light: 'github-light', dark: 'github-dark' } } },
   build: { format: 'file' },
   integrations: [react(), sitemap({ filter: page => !/\/(404|robots\.txt)(\.html)?$/.test(page) })],
-  vite: { plugins: [tailwindcss()], ssr: { noExternal: ['morphui', 'gsap'] } },
+  vite: { plugins: [tailwindcss()], ssr: { noExternal: ['@lestradavaz/morph-ui', 'gsap'] } },
 });

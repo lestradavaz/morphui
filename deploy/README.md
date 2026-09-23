@@ -18,7 +18,7 @@ deploy/start.sh          writes the config from the environment, runs nginx
 | Port | whatever you set in `PORT`, `80` by default |
 | Domain | your hostname, TLS through Dokploy's Traefik |
 
-The build path has to be the repository root. The site imports the `morphui`
+The build path has to be the repository root. The site imports the `@lestradavaz/morph-ui`
 package from the workspace and packs it into a tarball during its build, so a
 build scoped to `apps/docs` has no package to point at.
 
@@ -49,7 +49,7 @@ pnpm build                    # turbo: package, then the site
 
 `pnpm build` at the root builds `packages/morphui` first, then the docs site,
 which runs `astro build` and packs the built package into
-`public/downloads/morphui-0.0.0.tgz` so the installation page has something real
+`public/downloads/lestradavaz-morph-ui-0.1.0.tgz` so the installation page has something real
 to hand out. That tarball lands in the image along with the rest of the site.
 
 ## How requests are served

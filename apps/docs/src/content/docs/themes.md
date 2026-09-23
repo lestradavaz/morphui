@@ -9,11 +9,11 @@ order: 2
 For a single theme, import the base styles and your chosen palette. This sets the application's default colors.
 
 ```css
-@import 'morphui/styles/base.css';
-@import 'morphui/themes/plum.css';
+@import '@lestradavaz/morph-ui/styles/base.css';
+@import '@lestradavaz/morph-ui/themes/plum.css';
 ```
 
-To switch between all presets, import `morphui/themes/all.css` and set a theme attribute on the document or a specific preview container.
+To switch between all presets, import `@lestradavaz/morph-ui/themes/all.css` and set a theme attribute on the document or a specific preview container.
 
 ```html
 <div data-morph-theme="plum" data-morph-mode="dark">
@@ -34,7 +34,7 @@ Within a nested theme scope, set its mode explicitly if it should differ from th
 The helpers update attributes on the document by default. Pass an element as the second argument to target a specific container.
 
 ```tsx
-import { setMorphTheme, setMorphMode } from 'morphui';
+import { setMorphTheme, setMorphMode } from '@lestradavaz/morph-ui';
 
 // Call from an event handler or effect.
 setMorphTheme('terracotta');

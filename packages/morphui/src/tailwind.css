@@ -6,8 +6,8 @@
  * work in your markup.
  *
  *   @import "tailwindcss";
- *   @import "morphui/themes/all.css";
- *   @import "morphui/tailwind.css";
+ *   @import "@lestradavaz/morph-ui/themes/all.css";
+ *   @import "@lestradavaz/morph-ui/tailwind.css";
  *
  * `@theme inline` matters here: it makes Tailwind emit var() references rather
  * than resolving the values at build time. Without `inline`, every utility

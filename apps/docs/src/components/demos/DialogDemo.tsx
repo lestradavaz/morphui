@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MorphDialog, MorphClose } from 'morphui';
+import { MorphDialog, MorphClose } from '@lestradavaz/morph-ui';
 import './demo.css';
 
 export default function DialogDemo() {

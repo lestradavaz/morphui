@@ -6,7 +6,7 @@ A Vite harness for developing the components. Not published.
 pnpm --filter @morphui/playground dev   # http://localhost:5180
 ```
 
-`vite.config.ts` aliases `morphui` to the package **source**, not its build
+`vite.config.ts` aliases `@lestradavaz/morph-ui` to the package **source**, not its build
 output. Without that alias the playground serves a stale `dist/` and every source
 change looks like it did nothing.
 

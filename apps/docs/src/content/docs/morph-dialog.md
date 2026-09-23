@@ -16,7 +16,7 @@ The preview below the title is the packaged component. Its example and styleshee
 Wrap a button in MorphClose or use `useMorphClose()`. Escape and clicking the backdrop use the same closing transition.
 
 ```jsx
-import { useMorphClose } from 'morphui';
+import { useMorphClose } from '@lestradavaz/morph-ui';
 
 function DoneButton() {
   const close = useMorphClose();

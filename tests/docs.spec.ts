@@ -1,4 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+
+/* Read from the manifest, not written out: a rename or a version bump must not
+   need the assertions edited to keep passing. */
+const pkg = JSON.parse(readFileSync(new URL('../packages/morphui/package.json', import.meta.url), 'utf8')) as { name: string; version: string };
+const tarball = `${pkg.name.replace('@', '').replace('/', '-')}-${pkg.version}.tgz`;
 const routes = ['/','/docs/installation','/docs/themes','/docs/motion','/docs/morph-dialog','/docs/morph-window','/docs/morph-card'];
 
 /**
@@ -82,10 +88,10 @@ test('installation downloads a real tarball and copies the selected command', as
   await page.goto('/docs/installation');
   await hydrate(page);
   await page.getByRole('button',{name:'pnpm',exact:true}).click();
-  await expect(page.locator('.install-code code')).toHaveText('pnpm add ./morphui-0.0.0.tgz gsap');
+  await expect(page.locator('.install-code code')).toHaveText(`pnpm add ./${tarball} gsap`);
   await page.locator('.install-code').getByRole('button',{name:'Copy',exact:true}).click();
   await expect(page.locator('.copy-feedback')).toHaveText('Copied');
-  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe('pnpm add ./morphui-0.0.0.tgz gsap');
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`pnpm add ./${tarball} gsap`);
   const url = await page.getByRole('link',{name:'Download package'}).getAttribute('href');
   const response = await request.get(url!);
   expect(response.status()).toBe(200);
@@ -101,15 +107,15 @@ test('the hero carries a copyable install command for every package manager', as
   // The hero command is the reason a developer lands here, so it has to be the
   // real line and not a decorative one.
   const code = page.locator('.hero-install .install-code code');
-  await expect(code).toHaveText('npm install ./morphui-0.0.0.tgz gsap');
+  await expect(code).toHaveText(`npm install ./${tarball} gsap`);
   // One package on one registry: every manager installs the same thing, so the
   // hero offers the choice rather than picking one and hiding the rest.
-  for (const [manager, expected] of [['pnpm','pnpm add ./morphui-0.0.0.tgz gsap'],['yarn','yarn add ./morphui-0.0.0.tgz gsap'],['bun','bun add ./morphui-0.0.0.tgz gsap']] as const) {
+  for (const [manager, expected] of [['pnpm',`pnpm add ./${tarball} gsap`],['yarn',`yarn add ./${tarball} gsap`],['bun',`bun add ./${tarball} gsap`]] as const) {
     await page.locator('.hero-install').getByRole('button',{name:manager,exact:true}).click();
     await expect(code).toHaveText(expected);
   }
   await page.locator('.hero-install').getByRole('button',{name:'Copy',exact:true}).click();
-  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe('bun add ./morphui-0.0.0.tgz gsap');
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`bun add ./${tarball} gsap`);
   await expect(page.locator('.hero-install .copy-feedback')).toHaveText('Copied');
 });
 

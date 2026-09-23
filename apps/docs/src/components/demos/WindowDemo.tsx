@@ -1,4 +1,4 @@
-import { MorphWindow, MorphClose } from 'morphui';
+import { MorphWindow, MorphClose } from '@lestradavaz/morph-ui';
 import './demo.css';
 
 export default function WindowDemo() {

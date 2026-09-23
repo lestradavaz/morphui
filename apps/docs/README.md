@@ -11,7 +11,7 @@ pnpm --filter @morphui/docs dev
 # http://localhost:4321
 ```
 
-The script builds and packs `morphui` before starting Astro. The installation page
+The script builds and packs `@lestradavaz/morph-ui` before starting Astro. The installation page
 links to that exact local tarball. No npm publication is performed.
 
 ```bash

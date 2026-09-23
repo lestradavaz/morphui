@@ -1,6 +1,6 @@
 @import 'tailwindcss';
-@import 'morphui/themes/all.css';
-@import 'morphui/tailwind.css';
+@import '@lestradavaz/morph-ui/themes/all.css';
+@import '@lestradavaz/morph-ui/tailwind.css';
 
 @theme { --font-sans: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif; }
 * { box-sizing:border-box; }

@@ -9,7 +9,7 @@ import {
   setMorphTheme,
   type MorphMode,
   type MorphTheme,
-} from 'morphui';
+} from '@lestradavaz/morph-ui';
 
 export function App() {
   const [theme, setTheme] = useState<MorphTheme>('ink');

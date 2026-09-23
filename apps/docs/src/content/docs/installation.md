@@ -15,13 +15,13 @@ This is a local pre-release. Download the package above, move the archive into y
 Import the package styles once, in your application entry or root layout. Ink is the default theme and follows the system appearance.
 
 ```js
-import 'morphui/styles.css';
+import '@lestradavaz/morph-ui/styles.css';
 ```
 
 For access to all seven themes, use this import instead:
 
 ```js
-import 'morphui/themes/all.css';
+import '@lestradavaz/morph-ui/themes/all.css';
 ```
 
 ## With Tailwind CSS 4
@@ -30,8 +30,8 @@ MorphUI ships its structural CSS. Tailwind is optional for consuming the compone
 
 ```css
 @import 'tailwindcss';
-@import 'morphui/themes/all.css';
-@import 'morphui/tailwind.css';
+@import '@lestradavaz/morph-ui/themes/all.css';
+@import '@lestradavaz/morph-ui/tailwind.css';
 ```
 
 You can now use utilities such as `bg-morph-accent`, `text-morph-on-accent`, and `rounded-morph-md`. The utilities read the active theme's variables at runtime.
@@ -41,7 +41,7 @@ You can now use utilities such as `bg-morph-accent`, `text-morph-on-accent`, and
 Supply a button and the content it opens. Mark the heading with `data-morph-words` to connect it to the button label.
 
 ```jsx
-import { MorphDialog, MorphClose } from 'morphui';
+import { MorphDialog, MorphClose } from '@lestradavaz/morph-ui';
 
 export default function Example() {
   return (
@@ -73,7 +73,7 @@ For the App Router, put the interactive example in a client component. Import th
 ```tsx
 'use client';
 
-import { MorphDialog, MorphClose } from 'morphui';
+import { MorphDialog, MorphClose } from '@lestradavaz/morph-ui';
 ```
 
 Keep callbacks, state and event handlers inside the client component. You do not need to disable server rendering for the entire page.
