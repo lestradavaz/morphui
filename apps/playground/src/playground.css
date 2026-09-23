@@ -44,7 +44,7 @@ h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.035em; lin
 .ghost { height: 52px; padding: 0 28px; border-radius: var(--morph-radius-full); background: transparent; color: var(--morph-text); box-shadow: inset 0 0 0 2px var(--morph-border); font-size: 16px; }
 .pill:active, .ghost:active { transform: scale(0.97); }
 
-.sheet { display: flex; flex-direction: column; gap: 18px; padding: 28px 32px 36px; }
+.sheet { position: relative; display: flex; flex-direction: column; gap: 18px; padding: 76px 32px 36px; }
 .mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--morph-radius-sm); background: var(--morph-accent); color: var(--morph-on-accent); font-size: 15px; font-weight: 600; }
 .sheet h2 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.03em; }
 .field { display: flex; flex-direction: column; gap: 6px; }
@@ -55,14 +55,14 @@ h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.035em; lin
 }
 .field input::placeholder { color: var(--morph-faint); }
 .closer {
-  display: grid; place-items: center; width: 40px; height: 40px; margin-left: auto;
+  display: grid; place-items: center; width: 40px; height: 40px; position: absolute; top: 20px; right: 20px;
   padding: 0; border: 0; border-radius: 999px;
   background: var(--morph-raised); color: var(--morph-muted); font-size: 17px; cursor: pointer;
 }
 
 :focus-visible { outline: 2px solid var(--morph-accent); outline-offset: 3px; }
 
-/* The window's trigger: a chip that stays put while the window grows out of it. */
+/* The window trigger shares its label with the panel heading. */
 .chip {
   height: 48px; padding: 0 20px; border: 0;
   border-radius: var(--morph-radius-xs);
@@ -93,3 +93,6 @@ h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.035em; lin
 
 .feature { display: flex; flex-direction: column; min-height: 100%; }
 .art-full { flex-shrink: 0; height: 46vh; }
+
+.morph-panel-content > .sheet { position: static; }
+.feature > .sheet { position: static; }

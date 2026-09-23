@@ -130,11 +130,10 @@ export function App() {
               <MorphClose>
                 <button type="button" className="closer" aria-label="Close">&times;</button>
               </MorphClose>
-              <h2>Grows out of its origin</h2>
+              <h2 data-morph-words>What is it?</h2>
               <p style={{ margin: 0, color: 'var(--morph-muted)' }}>
-                The trigger never leaves. This window borrows nothing from it: it arrives out of
-                focus and sharpens, then blurs and shrinks back into the button that is still
-                sitting there.
+                The label travels from the button to this heading and returns on close. The
+                surrounding content resolves from blur while the shared words stay in focus.
               </p>
             </div>
           </MorphWindow>
@@ -155,8 +154,8 @@ export function App() {
                 </MorphClose>
                 <h2>The image is the shared element</h2>
                 <p style={{ margin: 0, color: 'var(--morph-muted)' }}>
-                  Marked <code>data-morph-item</code> on both sides, so the real element travels
-                  between the card and the full-screen view rather than cross-fading.
+                  Marked <code>data-morph-item</code> on both sides, so the image travels
+                  between the card and the full-screen view in both directions.
                 </p>
               </div>
             </div>

@@ -104,10 +104,17 @@ Mark the same name on both sides and the piece travels between them.
 </MorphDialog>
 ```
 
-`data-morph-item` moves the real element, so icons and images work and it lands
-on itself with nothing to hand over. `shareWords` flies the trigger's words into
-the element marked `data-morph-words`, one stand-in per word, pairing them in
-order; extra words on either side stay put.
+`data-morph-item` uses visual copies in a separate layer inside the dialog.
+The pair travels and cross-fades between the measured endpoints, unaffected by
+the panel content's blur, fade or closing lag. The original nodes stay in place
+and become visible again when the transition finishes.
+
+`shareWords` pairs the trigger label and `data-morph-words` heading word by word.
+Use the same label at both ends. For a trigger containing an icon, mark its label
+with `data-morph-words` too, so only that text is measured.
+
+`MorphWindow` enables `shareWords` by default when its heading is marked. Set
+`shareWords={false}` to keep the unshared window with a persistent trigger.
 
 ## Motion
 
@@ -127,7 +134,7 @@ change. It never becomes no transition at all — the dialog still has to arrive
 
 ## Status
 
-`0.0.0`. The theme layer is done and verified. The three components are next, and
-nothing is published to npm yet.
+`0.0.0`. The three components and theme layer are available in the playground.
+Nothing is published to npm yet.
 
 MIT © Emil Estrada

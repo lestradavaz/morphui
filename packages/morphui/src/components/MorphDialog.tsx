@@ -41,7 +41,8 @@ export interface MorphDialogProps {
   /**
    * `dialog` keeps a centred panel and hands the trigger's surface over to it.
    * `fullscreen` fills the viewport. `window` grows out of a trigger that stays
-   * put and borrows nothing from it.
+   * put when there is no shared content. Marked words or items connect the
+   * trigger to the window in both directions.
    *
    * MorphWindow and MorphCard are this component with a variant already chosen.
    */

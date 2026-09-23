@@ -12,7 +12,7 @@ import {
   registerMorphEases,
 } from './easing.js';
 import { box, lerpBox, prefersReducedMotion, slowFactor, surface, type Box } from './measure.js';
-import { buildWordClones, collectItems, measureWordInk, type ItemPair } from './shared.js';
+import { buildItemFlight, buildWordClones, collectItems, measureWordInk, type ItemPair } from './shared.js';
 
 export type MorphVariant = 'dialog' | 'window' | 'fullscreen';
 
@@ -70,27 +70,9 @@ function clearAll(...elements: (Element | null | undefined)[]): void {
 }
 
 /**
- * The double layer.
- *
- * The panel moves on transforms alone - translate and scale, nothing the
- * compositor has to lay out again. That is the whole reason the reference feels
- * smoother: a view transition animates the width and height of a *snapshot*, so
- * no layout runs, while animating width and height on real DOM reflows the panel
- * and its subtree on every frame.
- *
- * Scaling non-uniformly turns the corners into ellipses, so the radius is divided
- * per axis - which is what `border-radius: Rx / Ry` means. That is the whole job
- * of the second layer: preserve the container's shape.
- *
- * It deliberately does NOT hold the content at its natural size. The reference
- * scales the content right along with the container, from
- * `scale(from.w/to.w, from.h/to.h)` up to `scale(1, 1)`, so the panel shows all
- * of its content in miniature and grows. Cancelling that scale instead leaves the
- * content full size inside a tiny frame, so what you see through the opening
- * panel is the top-left corner of the form at 100% rather than the whole thing
- * shrunk down. The reference's content is stretched too, on exactly the same
- * axes; it just never reads that way, because it spends the stretched part of the
- * beat at `opacity: 0` behind an 8px blur.
+ * Transform the panel and compensate its corner radius per axis. Content follows
+ * the panel on entry; on exit it trails behind the clipping surface. Shared
+ * words and images travel separately in the dialog's top layer.
  */
 interface ShapeOptions {
   fromScale: { x: number; y: number };
@@ -103,24 +85,13 @@ interface ShapeOptions {
   radiusEase: string;
   /** Closing only: makes the content trail the container that is clipping it. */
   lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
-  /**
-   * Shared elements, with the panel geometry needed to place them.
-   *
-   * A marked element lives inside the panel, so it already carries the panel's
-   * transform. Tweening it with boxes measured in page coordinates applies that
-   * scale a second time - on a card whose art fills it, 0.16 by 0.16 lands at
-   * 0.026, forty times too small. Its own transform has to be the remainder: the
-   * box it should occupy, with the panel's transform divided back out.
-   */
-  items?: { el: HTMLElement; from: Box; to: Box }[];
-  panel?: { start: Box; end: Box; natural: Box };
 }
 
 function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
   const {
     fromScale, toScale, fromRadius, toRadius,
     geoDuration, geoEase, radiusDuration, radiusEase,
-    lag, items, panel: panelGeo,
+    lag,
   } = options;
 
   /*
@@ -177,25 +148,6 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
             scaleX: lag.from.width ? trailing.width / lag.from.width / sx : 1,
             scaleY: lag.from.height ? trailing.height / lag.from.height / sy : 1,
           });
-        }
-
-        if (items && items.length && panelGeo) {
-          const panelNow = lerpBox(panelGeo.start, panelGeo.end, gp);
-          const px = panelGeo.natural.width ? panelNow.width / panelGeo.natural.width : 1;
-          const py = panelGeo.natural.height ? panelNow.height / panelGeo.natural.height : 1;
-          for (const item of items) {
-            const want = lerpBox(item.from, item.to, gp);
-            // Where the element would land if it only rode the panel.
-            const carriedX = panelNow.x + px * (item.to.x - panelGeo.natural.x);
-            const carriedY = panelNow.y + py * (item.to.y - panelGeo.natural.y);
-            gsap.set(item.el, {
-              x: (want.x - carriedX) / px,
-              y: (want.y - carriedY) / py,
-              scaleX: item.to.width ? want.width / item.to.width / px : 1,
-              scaleY: item.to.height ? want.height / item.to.height / py : 1,
-              transformOrigin: 'left top',
-            });
-          }
         }
 
         /*
@@ -255,8 +207,9 @@ function measureFlight(
   if (!heading) return { items, words: null };
 
   const opening = phase === 'open';
-  const start = opening ? origin : heading;
-  const land = opening ? heading : origin;
+  const label = origin.querySelector<HTMLElement>('[data-morph-words]') ?? origin;
+  const start = opening ? label : heading;
+  const land = opening ? heading : label;
 
   return {
     items,
@@ -266,7 +219,7 @@ function measureFlight(
       source: start,
       land,
       heading,
-      origin,
+      origin: label,
     },
   };
 }
@@ -283,16 +236,24 @@ function buildFlight(
   const opening = phase === 'open';
   const undo: (() => void)[] = [];
 
-  // The tweening happens in driveShape, which knows the panel's transform and can
-  // divide it back out. Here the counterpart in the trigger just gets out of the way.
-  for (const { source } of plan.items) gsap.set(source, { visibility: 'hidden' });
-  if (plan.items.length) {
-    undo.push(() => {
-      for (const { source, target } of plan.items) {
-        gsap.set(source, { clearProps: 'visibility' });
-        gsap.set(target, { clearProps: 'transform' });
-      }
-    });
+  for (const item of plan.items) {
+    const flight = buildItemFlight(item, host, opening);
+    const { from, to, outgoing, incoming } = flight;
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    timeline.to(outgoing, {
+      x: dx, y: dy, scaleX: to.width / from.width, scaleY: to.height / from.height,
+      opacity: 0, duration, ease,
+    }, 0);
+    timeline.fromTo(incoming, {
+      x: -dx, y: -dy, scaleX: from.width / to.width, scaleY: from.height / to.height,
+      opacity: 0,
+    }, { x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1, duration, ease }, 0);
+    const progress = { value: 0 };
+    const renderRadius = () => flight.setProgress(progress.value);
+    timeline.to(progress, { value: 1, duration, ease, onUpdate: renderRadius }, 0);
+    renderRadius();
+    undo.push(flight.cleanup);
   }
 
   if (plan.words) {
@@ -301,7 +262,8 @@ function buildFlight(
     if (built) {
       for (const pair of built.pairs) {
         const { sourceBox, targetBox } = pair;
-        const grow = targetBox.height ? sourceBox.height / targetBox.height : 1;
+        const growX = targetBox.width ? sourceBox.width / targetBox.width : 1;
+        const growY = targetBox.height ? sourceBox.height / targetBox.height : 1;
 
         // Both ride the same box. The outgoing one starts at its natural size and
         // is carried up to the destination's; the incoming one starts shrunk to
@@ -311,7 +273,8 @@ function buildFlight(
           {
             x: targetBox.x - sourceBox.x,
             y: targetBox.y - sourceBox.y,
-            scale: grow ? 1 / grow : 1,
+            scaleX: growX ? 1 / growX : 1,
+            scaleY: growY ? 1 / growY : 1,
             opacity: 0,
             duration,
             ease,
@@ -323,7 +286,8 @@ function buildFlight(
           {
             x: sourceBox.x - targetBox.x,
             y: sourceBox.y - targetBox.y,
-            scale: grow,
+            scaleX: growX,
+            scaleY: growY,
             opacity: 0,
             duration,
             ease,
@@ -378,6 +342,8 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
 
   // Before anything is transformed.
   const plan = measureFlight(trigger, panel, !!config.shareWords, 'open');
+  const sharesContent = !!plan.words || plan.items.length > 0;
+  const borrowsSurface = !isWindow || sharesContent;
 
   anchorContent(content);
 
@@ -399,17 +365,15 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
   driveShape(tl, panel, {
     fromScale: { x: from.width / to.width, y: from.height / to.height },
     toScale: { x: 1, y: 1 },
-    fromRadius: isWindow ? WINDOW_START_RADIUS : Number.parseFloat(fromSurface.radius) || 0,
+    fromRadius: borrowsSurface ? Number.parseFloat(fromSurface.radius) || 0 : WINDOW_START_RADIUS,
     toRadius,
     geoDuration: ms(OPEN),
     geoEase: EASE_FLOW,
     radiusDuration: ms(isWindow ? WINDOW_RADIUS : fullScreen ? FULL_RADIUS : SURFACE),
     radiusEase: isWindow ? EASE_SHAPE : fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
-    items: plan.items.map((i) => ({ el: i.target, from: i.sourceBox, to: i.targetBox })),
-    panel: { start: from, end: to, natural: to },
   });
 
-  if (!isWindow) {
+  if (borrowsSurface) {
     /*
      * The panel wears the trigger's fill AND its shadow for the first beat. The
      * shadow was missing, which is why the panel arrived already sitting on its
@@ -464,6 +428,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
   const fromRadius = Number.parseFloat(surface(panel).radius) || 0;
 
   const plan = measureFlight(trigger, panel, !!config.shareWords, 'close');
+  const borrowsSurface = !isWindow || !!plan.words || plan.items.length > 0;
 
   anchorContent(content);
 
@@ -483,14 +448,12 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     fromScale: { x: 1, y: 1 },
     toScale: { x: to.width / from.width, y: to.height / from.height },
     fromRadius,
-    toRadius: isWindow ? WINDOW_START_RADIUS : Number.parseFloat(toSurface.radius) || 0,
+    toRadius: borrowsSurface ? Number.parseFloat(toSurface.radius) || 0 : WINDOW_START_RADIUS,
     geoDuration: ms(CLOSE),
     geoEase: ease,
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
     ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
-    items: plan.items.map((i) => ({ el: i.target, from: i.targetBox, to: i.sourceBox })),
-    panel: { start: from, end: to, natural: from },
   });
 
   const toShadow = toSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : toSurface.shadow;
@@ -501,7 +464,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
   );
   tl.to(tint, { opacity: 0, duration: ms(CLOSE), ease: EASE_IN_STRONG }, 0);
 
-  if (!isWindow) {
+  if (borrowsSurface) {
     // The trigger comes back underneath the shrinking panel, not with it.
     tl.fromTo(
       trigger,
@@ -511,7 +474,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     );
   }
 
-  const cleanupFlight = buildFlight(tl, plan, dialog, ms(CLOSE), ease, 'close');
+  const cleanupFlight = buildFlight(tl, plan, dialog, ms(CLOSE), EASE_FLOW, 'close');
 
   return settle(tl, () => {
     cleanupFlight();

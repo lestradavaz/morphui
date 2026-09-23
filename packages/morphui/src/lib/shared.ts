@@ -1,4 +1,4 @@
-import type { Box } from './measure.js';
+import { surface, type Box } from './measure.js';
 
 export interface ItemPair {
   source: HTMLElement;
@@ -21,9 +21,8 @@ const rectOf = (r: DOMRect): Box => ({ x: r.left, y: r.top, width: r.width, heig
 /**
  * Elements marked `data-morph-item="name"` on both sides travel as one piece.
  *
- * The real destination element is what moves: it starts parked on the source's
- * box and animates to its own. Nothing is cloned, so icons, images and text all
- * behave, and the element lands on itself with nothing to hand over to.
+ * Measure both endpoints before Flip transforms the panel. Their visual copies
+ * travel in the dialog's top layer, outside the content's fade, blur and lag.
  */
 export function collectItems(origin: Element, panel: Element): ItemPair[] {
   const pairs: ItemPair[] = [];
@@ -40,6 +39,99 @@ export function collectItems(origin: Element, panel: Element): ItemPair[] {
     });
   }
   return pairs;
+}
+
+/** Copy the resolved appearance, including styles inherited from either theme. */
+function visualCopy(model: HTMLElement): HTMLElement {
+  const copy = model.cloneNode(true) as HTMLElement;
+  const originals = [model, ...model.querySelectorAll<HTMLElement>('*')];
+  const copies = [copy, ...copy.querySelectorAll<HTMLElement>('*')];
+  originals.forEach((original, index) => {
+    const node = copies[index]!;
+    const style = getComputedStyle(original);
+    node.removeAttribute('id');
+    node.removeAttribute('data-morph-item');
+    node.removeAttribute('data-morph-words');
+    for (const property of style) node.style.setProperty(property, style.getPropertyValue(property));
+    node.style.animation = 'none';
+    node.style.transition = 'none';
+  });
+  Object.assign(copy.style, {
+    position: 'absolute', inset: '0', width: '100%', height: '100%',
+    minWidth: '0', minHeight: '0', maxWidth: 'none', maxHeight: 'none',
+    margin: '0', transform: 'none', visibility: 'visible', opacity: '1',
+  });
+  return copy;
+}
+
+function clippedRadius(element: HTMLElement, rect: Box): number {
+  let radius = Number.parseFloat(surface(element).radius) || 0;
+  // A full-bleed image often gets its corners from the card, not its own style.
+  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+    const style = getComputedStyle(parent);
+    if (!/(hidden|clip)/.test(style.overflow)) continue;
+    const bounds = parent.getBoundingClientRect();
+    if (Math.abs(bounds.x - rect.x) < 1 && Math.abs(bounds.y - rect.y) < 1 &&
+        Math.abs(bounds.width - rect.width) < 1 && Math.abs(bounds.height - rect.height) < 1) {
+      radius = Math.max(radius, Number.parseFloat(surface(parent).radius) || 0);
+    }
+  }
+  return radius;
+}
+
+/** Independent visual layer; originals keep their React ownership and layout. */
+export function buildItemFlight(pair: ItemPair, host: HTMLElement, opening: boolean) {
+  const from = opening ? pair.sourceBox : pair.targetBox;
+  const to = opening ? pair.targetBox : pair.sourceBox;
+  const source = opening ? pair.source : pair.target;
+  const target = opening ? pair.target : pair.source;
+  const fromRadius = clippedRadius(source, from);
+  const toRadius = clippedRadius(target, to);
+  const layer = document.createElement('div');
+  layer.setAttribute('data-morph-item-layer', '');
+  layer.setAttribute('aria-hidden', 'true');
+  layer.inert = true;
+  layer.style.isolation = 'isolate';
+
+  const wrap = (model: HTMLElement, rect: Box, role: string) => {
+    const wrapper = document.createElement('div');
+    wrapper.dataset.morphFlight = role;
+    Object.assign(wrapper.style, {
+      position: 'fixed', left: `${rect.x}px`, top: `${rect.y}px`,
+      width: `${rect.width}px`, height: `${rect.height}px`, overflow: 'hidden',
+      transformOrigin: 'top left', mixBlendMode: 'plus-lighter',
+      willChange: 'transform, opacity',
+    });
+    wrapper.append(visualCopy(model));
+    layer.append(wrapper);
+    return wrapper;
+  };
+  const outgoing = wrap(source, from, 'outgoing');
+  const incoming = wrap(target, to, 'incoming');
+  const saved = [pair.source, pair.target].map((element) => ({
+    element, value: element.style.getPropertyValue('visibility'),
+    priority: element.style.getPropertyPriority('visibility'),
+  }));
+  for (const { element } of saved) element.style.visibility = 'hidden';
+  host.append(layer);
+
+  return {
+    from, to, outgoing, incoming,
+    setProgress(progress: number) {
+      const radius = fromRadius + (toRadius - fromRadius) * progress;
+      const width = from.width + (to.width - from.width) * progress;
+      const height = from.height + (to.height - from.height) * progress;
+      outgoing.style.borderRadius = `${radius * from.width / width}px / ${radius * from.height / height}px`;
+      incoming.style.borderRadius = `${radius * to.width / width}px / ${radius * to.height / height}px`;
+    },
+    cleanup() {
+      for (const { element, value, priority } of saved) {
+        if (value) element.style.setProperty('visibility', value, priority);
+        else element.style.removeProperty('visibility');
+      }
+      layer.remove();
+    },
+  };
 }
 
 /** The ink box of every word in an element, measured without touching its DOM. */
@@ -162,8 +254,10 @@ export function buildWordClones(
     // do not, so placing by box drops the text a few pixels.
     entry.out.style.left = `${entry.sourceBox.x - outInk.x}px`;
     entry.out.style.top = `${entry.sourceBox.y - outInk.y}px`;
+    entry.out.style.transformOrigin = `${outInk.x}px ${outInk.y}px`;
     entry.in.style.left = `${entry.targetBox.x - inInk.x}px`;
     entry.in.style.top = `${entry.targetBox.y - inInk.y}px`;
+    entry.in.style.transformOrigin = `${inInk.x}px ${inInk.y}px`;
     return entry;
   });
 

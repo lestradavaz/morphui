@@ -11,9 +11,11 @@
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules",
-    "legacy": "python3 -m http.server 4180 --directory legacy"
+    "legacy": "python3 -m http.server 4180 --directory legacy",
+    "test:motion": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "turbo": "^2.11.3",
     "typescript": "^5.9.3"
   }
