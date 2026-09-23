@@ -1,0 +1,13 @@
+.morph-expand { position: relative; width: 126px; height: 48px; max-width: 100%; overflow: hidden; border-radius: var(--morph-radius-full); background: var(--morph-accent); color: var(--morph-on-accent); box-shadow: var(--morph-elevation-1); isolation: isolate; }
+.morph-expand-trigger { position: absolute; z-index: 1; inset: 0 auto 0 0; display: flex; align-items: center; gap: 10px; width: max-content; height: 48px; padding: 0 15px 0 11px; border: 0; border-radius: inherit; background: transparent; color: inherit; font: inherit; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; }
+.morph-expand[data-open='true'] .morph-expand-trigger { width: 48px; padding: 0 12px; }
+.morph-expand-icon { display: grid; flex: 0 0 24px; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: color-mix(in srgb, currentColor 18%, transparent); font-size: 19px; font-weight: 400; line-height: 1; transition: transform var(--morph-duration-slide) var(--morph-ease-out-soft); }
+.morph-expand[data-open='true'] .morph-expand-icon { transform: rotate(90deg); }
+.morph-expand-label { transition: opacity var(--morph-duration-hover) var(--morph-ease-out-soft), transform var(--morph-duration-hover) var(--morph-ease-out-soft); }
+.morph-expand[data-open='true'] .morph-expand-label { opacity: 0; transform: translateX(-8px); }
+.morph-expand-actions { position: absolute; left: 48px; top: 4px; height: 40px; display: flex; align-items: center; gap: 2px; opacity: 0; transform: translateX(-10px); pointer-events: none; transition: opacity var(--morph-duration-slide) var(--morph-ease-out-soft), transform var(--morph-duration-slide) var(--morph-ease-out-soft); }
+.morph-expand[data-open='true'] .morph-expand-actions { opacity: 1; transform: translateX(0); pointer-events: auto; transition-delay: 70ms; }
+.morph-expand-actions button { height: 38px; padding: 0 10px; border: 0; border-radius: var(--morph-radius-full); background: transparent; color: inherit; font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.morph-expand-trigger:focus-visible, .morph-expand-actions button:focus-visible { outline: 2px solid var(--morph-on-accent); outline-offset: -3px; }
+@media (hover: hover) and (pointer: fine) { .morph-expand-actions button:hover { background: color-mix(in srgb, currentColor 18%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .morph-expand-label, .morph-expand-icon, .morph-expand-actions { transition: none; } }

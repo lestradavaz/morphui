@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: 'morph.spec.ts',
+  testMatch: ['morph.spec.ts', 'playground-trials.spec.ts'],
   workers: 1,
   timeout: 30_000,
   use: { baseURL: 'http://localhost:5180', trace: 'retain-on-failure' },

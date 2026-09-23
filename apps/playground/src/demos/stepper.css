@@ -1,0 +1,9 @@
+.morph-stepper { position: relative; display: block; width: 216px; height: 48px; isolation: isolate; }
+.morph-stepper-btn, .morph-stepper-display { position: absolute; top: 0; height: 48px; border-radius: var(--morph-radius-full); background: var(--morph-raised); color: var(--morph-text); }
+.morph-stepper-btn { width: 48px; display: grid; place-items: center; border: 0; font: inherit; font-size: 21px; cursor: pointer; transition: background var(--morph-duration-hover) var(--morph-ease-out-soft); }
+.morph-stepper-btn:disabled { pointer-events: none; }
+.morph-stepper-btn:focus-visible { outline: 2px solid var(--morph-accent); outline-offset: 3px; }
+.morph-stepper-display { display: grid; place-items: center; overflow: hidden; font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; user-select: none; }
+.morph-stepper-digit { position: absolute; inset: 0; display: grid; place-items: center; }
+@media (hover: hover) and (pointer: fine) { .morph-stepper-btn:not(:disabled):hover { background: color-mix(in srgb, var(--morph-raised) 88%, white); } }
+@media (prefers-reduced-motion: reduce) { .morph-stepper-btn { transition: none; } }

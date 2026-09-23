@@ -1,0 +1,22 @@
+.morph-select-trigger { display: flex; align-items: center; gap: 14px; min-width: 240px; height: 52px; padding: 0 18px; border: 1px solid var(--morph-border); border-radius: var(--morph-radius-xs); background: var(--morph-bg); color: var(--morph-text); font: inherit; font-size: 14px; cursor: pointer; }
+.morph-select-trigger > span:first-child { font-weight: 500; }
+.morph-select-trigger-current { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+.morph-select-trigger-current .morph-select-swatch { width: 14px; height: 14px; }
+.morph-select-trigger-value { color: var(--morph-muted); }
+.morph-select-chevron { width: 8px; height: 8px; flex: 0 0 8px; margin: -4px 2px 0 2px; border-right: 1.5px solid var(--morph-muted); border-bottom: 1.5px solid var(--morph-muted); transform: rotate(45deg); transition: transform var(--morph-duration-slide) var(--morph-ease-out-soft); }
+.morph-select-trigger[aria-expanded='true'] .morph-select-chevron { transform: translateY(4px) rotate(225deg); }
+.morph-select-trigger:active { transform: scale(.98); }
+.morph-select-panel { width: min(380px, 100%); height: auto; max-height: min(480px, calc(100dvh - 48px)); }
+.morph-select-content { padding: 30px 20px 20px; }
+.morph-select-content h2 { margin: 0; font-size: 22px; letter-spacing: -.025em; }
+.morph-select-content p { margin: 4px 0 22px; color: var(--morph-muted); font-size: 14px; }
+.morph-select-options { display: grid; gap: 4px; }
+.morph-select-option { display: flex; align-items: center; gap: 12px; width: 100%; height: 52px; padding: 0 14px; border: 0; border-radius: var(--morph-radius-xs); background: transparent; color: var(--morph-text); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+.morph-select-option[aria-pressed='true'] { background: var(--morph-accent-soft); }
+.morph-select-option-check { margin-left: auto; }
+.morph-select-swatch { width: 18px; height: 18px; border-radius: 50%; background: var(--morph-accent); box-shadow: inset 0 0 0 1px var(--morph-border); }
+.morph-select-swatch[data-finish='cobalt'] { background: #4b64a7; }
+.morph-select-swatch[data-finish='terracotta'] { background: #b2654e; }
+.morph-select-swatch[data-finish='teal'] { background: #397f80; }
+.morph-select-close { position: absolute; top: 16px; right: 16px; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: var(--morph-raised); color: var(--morph-text); font: inherit; font-size: 22px; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .morph-select-option:hover { background: var(--morph-raised); } }

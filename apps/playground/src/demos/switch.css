@@ -1,0 +1,102 @@
+/* ── MorphSwitch ──────────────────────────────── */
+
+.morph-switch {
+  --morph-switch-width: 44px;
+  --morph-switch-height: 24px;
+  --morph-switch-thumb: 20px;
+  --morph-switch-travel: 20px;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: var(--morph-switch-width);
+  height: var(--morph-switch-height);
+  padding: 2px;
+  border: 0;
+  border-radius: var(--morph-radius-full);
+  background: var(--morph-border);
+  cursor: pointer;
+  transition: background var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-switch[aria-checked='true'] {
+  background: var(--morph-accent);
+}
+
+/* ── Thumb ── */
+
+.morph-switch-thumb {
+  display: block;
+  width: var(--morph-switch-thumb);
+  height: var(--morph-switch-thumb);
+  border-radius: var(--morph-radius-full);
+  background: var(--morph-bg);
+  transform: translateX(0) scaleX(1);
+  transition: transform var(--morph-duration-slide) var(--morph-ease-in-out-soft);
+  pointer-events: none;
+}
+
+.morph-switch[aria-checked='true'] .morph-switch-thumb {
+  transform: translateX(var(--morph-switch-travel)) scaleX(1);
+}
+
+/* ── Press squish ── */
+
+.morph-switch:active .morph-switch-thumb {
+  transform: translateX(0) scaleX(1.12);
+}
+
+.morph-switch[aria-checked='true']:active .morph-switch-thumb {
+  transform: translateX(var(--morph-switch-travel)) scaleX(1.12);
+}
+
+/* ── Focus ── */
+
+.morph-switch:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 3px;
+}
+
+/* ── Disabled ── */
+
+.morph-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Hover (gated) ── */
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-switch:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+}
+
+/* ── Reduced motion ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-switch-thumb {
+    transition-duration: 0ms;
+  }
+}
+
+/* ── Demo layout ── */
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.switch-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--morph-text);
+  user-select: none;
+  cursor: pointer;
+}
+
+.switch-label-disabled {
+  color: var(--morph-muted);
+  cursor: not-allowed;
+}

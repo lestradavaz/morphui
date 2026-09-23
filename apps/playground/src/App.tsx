@@ -10,6 +10,39 @@ import {
   type MorphMode,
   type MorphTheme,
 } from '@lestradavaz/morph-ui';
+import { ButtonDemo } from './demos/ButtonDemo';
+import { SwitchDemo } from './demos/SwitchDemo';
+import { CheckboxDemo } from './demos/CheckboxDemo';
+import { TabsDemo } from './demos/TabsDemo';
+import { RadioDemo } from './demos/RadioDemo';
+import { StepperDemo } from './demos/StepperDemo';
+import { InputDemo } from './demos/InputDemo';
+import { CtaDemo } from './demos/CtaDemo';
+import { SelectDemo } from './demos/SelectDemo';
+import { ExpandDemo } from './demos/ExpandDemo';
+import { ComboboxDemo } from './demos/ComboboxDemo';
+import { MultiSelectDemo } from './demos/MultiSelectDemo';
+import { TooltipDemo } from './demos/TooltipDemo';
+import { PopoverDemo } from './demos/PopoverDemo';
+import { ContextMenuDemo } from './demos/ContextMenuDemo';
+
+const trials = [
+  { id: 'button', name: 'Button', description: 'Press, hover, loading, and disabled states.', component: ButtonDemo },
+  { id: 'switch', name: 'Switch', description: 'A compact state change with a tactile thumb.', component: SwitchDemo },
+  { id: 'checkbox', name: 'Checkbox', description: 'A drawn check with native form semantics.', component: CheckboxDemo },
+  { id: 'tabs', name: 'Tabs', description: 'An indicator that follows the selected view.', component: TabsDemo },
+  { id: 'radio', name: 'Radio group', description: 'A single choice with a shared selection surface.', component: RadioDemo },
+  { id: 'stepper', name: 'Adaptive stepper', description: 'Numbers roll in the direction of the change.', component: StepperDemo },
+  { id: 'input', name: 'Input', description: 'Validation feedback without shifting the form.', component: InputDemo },
+  { id: 'cta', name: 'CTA buttons', description: 'Action feedback and a deliberate hold gesture.', component: CtaDemo },
+  { id: 'select', name: 'Select', description: 'The trigger becomes a focused choice panel.', component: SelectDemo },
+  { id: 'expand', name: 'Expandable control', description: 'A compact action unfolds into a toolbar.', component: ExpandDemo },
+  { id: 'combobox', name: 'Combobox', description: 'Search and choose a workspace from a morphing list.', component: ComboboxDemo },
+  { id: 'multi-select', name: 'Multi select', description: 'Search, add, and remove choices without losing context.', component: MultiSelectDemo },
+  { id: 'tooltip', name: 'Tooltip', description: 'A quiet hint for pointer and keyboard focus.', component: TooltipDemo },
+  { id: 'popover', name: 'Popover', description: 'A compact control unfolds into settings.', component: PopoverDemo },
+  { id: 'context-menu', name: 'Context menu', description: 'File actions emerge from the pointer or keyboard target.', component: ContextMenuDemo },
+] as const;
 
 export function App() {
   const [theme, setTheme] = useState<MorphTheme>('ink');
@@ -34,10 +67,7 @@ export function App() {
     <div className="wrap">
       <header>
         <h1>MorphUI playground</h1>
-        <p className="lede">
-          Open a panel and watch where the trigger goes. Turn on slow motion to read the content
-          lagging behind the closing container.
-        </p>
+        <p className="lede">Try the morphing components and the next wave of controls. Switch themes, modes, or slow motion to inspect each transition.</p>
       </header>
 
       <div className="row">
@@ -73,6 +103,11 @@ export function App() {
       </div>
 
       <div className="rule" />
+
+      <div className="playground-heading">
+        <h2>Existing morphs</h2>
+        <p>Open a panel to see how the trigger, content, and shared elements travel together.</p>
+      </div>
 
       <section className="stage">
         <div className="row" style={{ justifyContent: 'center' }}>
@@ -165,6 +200,22 @@ export function App() {
           </MorphCard>
         </div>
       </section>
+
+      <div className="playground-heading playground-heading--trials">
+        <h2>Component trials</h2>
+        <p>Working playground prototypes. These are being tested before joining the package API.</p>
+      </div>
+      <nav className="trial-nav" aria-label="Component trials">
+        {trials.map(({ id, name }) => <a key={id} href={`#${id}`}>{name}</a>)}
+      </nav>
+      <div className="trial-list">
+        {trials.map(({ id, name, description, component: Demo }) => (
+          <article className="trial" id={id} key={id}>
+            <div className="trial-heading"><h3>{name}</h3><p>{description}</p></div>
+            <Demo />
+          </article>
+        ))}
+      </div>
     </div>
   );
 }

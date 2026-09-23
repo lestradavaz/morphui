@@ -1,0 +1,35 @@
+/*
+ * The surface the anchored morph is applied to - the counterpart of
+ * `.morph-panel`. It is laid out at the box it rests at, and carried between
+ * boxes by a transform rather than by reflowing, which is what lets its content
+ * travel with it instead of being pinned and faded in beside it.
+ *
+ * No border, for the same reason the dialog panel has none: a transform scales
+ * painted border widths along with everything else, so a 1px ring becomes 0.2px
+ * on one axis and 0.8px on the other halfway through a morph and thickens back
+ * as it lands. It reads as the edge wobbling. The elevation carries the edge
+ * instead - and in dark themes `--morph-elevation-2` already draws a hairline
+ * ring of its own.
+ */
+.morph-anchored {
+  position: fixed;
+  z-index: 9500;
+  overflow: hidden;
+  border-radius: var(--morph-radius-sm);
+  background: var(--morph-bg);
+  color: var(--morph-text);
+  box-shadow: var(--morph-elevation-2);
+  transform-origin: top left;
+}
+
+/*
+ * Carries the surface's transform, so it must never reflow: a box that is being
+ * scaled is not a box that can be resized. The appearance layer in the package's
+ * stylesheet does the rest, on the anchored clock.
+ */
+.morph-anchored__content {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+}

@@ -1,0 +1,12 @@
+.morph-popover-trigger { background: var(--morph-bg); }
+@media (hover: hover) and (pointer: fine) { .morph-popover-trigger:not(:disabled):hover { background: var(--morph-bg); } }
+.morph-popover-trigger .morph-button__content { gap: 12px; }
+.morph-popover-content { padding: 17px 17px 0; }
+.morph-popover-content h3 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.015em; }
+.morph-popover-content > p { margin: 3px 0 13px; color: var(--morph-muted); font-size: 12px; line-height: 1.4; }
+.morph-popover-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 51px; border-top: 1px solid var(--morph-border); }
+.morph-popover-row > div { display: grid; gap: 2px; }
+.morph-popover-row strong { font-size: 13px; font-weight: 500; }
+.morph-popover-row span { color: var(--morph-muted); font-size: 11px; }
+.morph-popover-footer { display: flex; justify-content: flex-end; align-items: center; height: 46px; margin-top: 2px; border-top: 1px solid var(--morph-border); }
+.morph-popover-footer button { height: 30px; padding: 0 13px; border: 0; border-radius: 8px; background: var(--morph-accent); color: var(--morph-on-accent); font: inherit; font-size: 12px; cursor: pointer; }

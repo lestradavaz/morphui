@@ -1,0 +1,92 @@
+/* ── MorphTabs ────────────────────────────────────── */
+
+.morph-tabs-bar {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  padding: 4px;
+  border-radius: var(--morph-radius-sm);
+  background: var(--morph-chip);
+}
+
+/* ── Indicator pill ───────────────────────────────── */
+
+.morph-tabs-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  background: var(--morph-surface);
+  border-radius: var(--morph-radius-xs);
+  box-shadow: var(--morph-elevation-1);
+  z-index: 0;
+  pointer-events: none;
+  /* width & x set by GSAP */
+}
+
+/* ── Tab button ───────────────────────────────────── */
+
+.morph-tabs-tab {
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--morph-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--morph-duration-press) var(--morph-ease-out-soft),
+    color var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-tabs-tab[aria-selected='true'] {
+  color: var(--morph-text);
+}
+
+.morph-tabs-tab:active {
+  transform: scale(0.97);
+}
+
+.morph-tabs-tab:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: -2px;
+  border-radius: var(--morph-radius-xs);
+}
+
+/* ── Hover (pointer devices only) ─────────────────── */
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-tabs-tab:not([aria-selected='true']):hover {
+    color: var(--morph-text);
+  }
+
+  .morph-tabs-tab:hover:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ── Content panel ────────────────────────────────── */
+
+.morph-tabs-panel {
+  min-height: 80px;
+  padding: 16px 0;
+}
+
+
+/* ── Reduced motion ───────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-tabs-tab {
+    transition: color var(--morph-duration-hover) var(--morph-ease-out-soft);
+  }
+
+  .morph-tabs-tab:active {
+    transform: none;
+  }
+
+}

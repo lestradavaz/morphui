@@ -1,0 +1,47 @@
+.morph-multi-field { width: min(320px, 100%); }
+.morph-multi-field-label { display: block; margin-bottom: 8px; color: var(--morph-muted); font-size: 13px; font-weight: 500; }
+.morph-multi-trigger { display: flex; align-items: center; gap: 6px; width: 100%; height: 52px; padding: 6px 7px 6px 10px; border: 1px solid var(--morph-border); border-radius: var(--morph-radius-xs); background: var(--morph-bg); }
+.morph-multi-chips { display: flex; flex: 1; align-items: center; gap: 5px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.morph-multi-chips::-webkit-scrollbar { display: none; }
+.morph-multi-placeholder { padding-left: 2px; color: var(--morph-faint); font-size: 13px; white-space: nowrap; }
+
+/*
+ * A chosen topic is a button, so it is built out of one: the ripple, the press
+ * scale, the focus ring and the hover step all come from MorphButton, and this
+ * only says what a chip in a field looks like. It used to be a bare button with
+ * a keyframed entrance of its own, which both restarted on every re-render and
+ * fought the layout animation for control of the transform.
+ */
+.morph-multi-chip.morph-button {
+  /* The strip scrolls, so a chip is never the thing that gives way: with the
+     default shrink a full field squeezed every label into its neighbours. */
+  flex: 0 0 auto;
+  height: 32px;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: var(--morph-accent-soft);
+  color: var(--morph-on-accent-soft);
+  font-size: 12px;
+}
+
+.morph-multi-chip-x { font-size: 15px; line-height: 1; }
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-multi-chip.morph-button:not(:disabled):hover { background: color-mix(in srgb, var(--morph-accent-soft) 88%, white); }
+}
+
+.morph-multi-open { display: grid; flex: 0 0 36px; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: var(--morph-raised); color: var(--morph-text); font: inherit; font-size: 21px; cursor: pointer; }
+.morph-multi-search { display: flex; align-items: center; gap: 8px; height: 47px; margin: 8px 8px 4px; padding: 0 11px; border-radius: 8px; background: var(--morph-surface); color: var(--morph-muted); }
+.morph-multi-search > span { font-size: 21px; line-height: 1; }
+.morph-multi-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--morph-text); font: inherit; font-size: 13px; }
+.morph-multi-search input::placeholder { color: var(--morph-faint); }
+.morph-multi-options { height: 174px; overflow-y: auto; padding: 3px 8px; }
+.morph-multi-option { display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--morph-text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.morph-multi-option[data-active='true'], .morph-multi-option:hover { background: var(--morph-surface); }
+.morph-multi-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.morph-multi-option-check { display: grid; flex: 0 0 17px; place-items: center; width: 17px; height: 17px; border: 1px solid var(--morph-border); border-radius: 5px; color: var(--morph-on-accent); font-size: 11px; }
+.morph-multi-option-check[data-selected='true'] { border-color: var(--morph-accent); background: var(--morph-accent); }
+.morph-multi-empty { display: grid; place-items: center; height: 100px; color: var(--morph-muted); font-size: 13px; }
+.morph-multi-footer { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 13px; border-top: 1px solid var(--morph-border); color: var(--morph-muted); font-size: 12px; }
+.morph-multi-footer button { border: 0; background: transparent; color: var(--morph-text); font: inherit; font-weight: 500; cursor: pointer; }

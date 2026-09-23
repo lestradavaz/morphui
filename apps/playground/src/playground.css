@@ -96,3 +96,24 @@ h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.035em; lin
 
 .morph-panel-content > .sheet { position: static; }
 .feature > .sheet { position: static; }
+
+.playground-heading h2 { margin: 0; font-size: 25px; font-weight: 600; letter-spacing: -.03em; }
+.playground-heading p { margin: 5px 0 0; max-width: 65ch; color: var(--morph-muted); font-size: 14px; }
+.playground-heading--trials { margin-top: 20px; }
+.trial-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -12px; }
+.trial-nav a { padding: 7px 12px; border: 1px solid var(--morph-border); border-radius: var(--morph-radius-full); color: var(--morph-muted); font-size: 13px; text-decoration: none; }
+.trial-nav a:hover, .trial-nav a:focus-visible { color: var(--morph-text); background: var(--morph-surface); }
+.trial-list { display: grid; gap: 28px; }
+.trial { scroll-margin-top: 24px; }
+.trial-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+.trial-heading h3 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+.trial-heading p { margin: 0; color: var(--morph-muted); font-size: 13px; text-align: right; }
+.trial .stage { min-height: 190px; }
+@media (max-width: 600px) {
+  body { padding: 24px 16px 64px; }
+  .wrap { gap: 20px; }
+  h1 { font-size: 29px; }
+  .stage { padding: 24px 18px; }
+  .trial-heading { display: block; }
+  .trial-heading p { margin-top: 2px; text-align: left; }
+}

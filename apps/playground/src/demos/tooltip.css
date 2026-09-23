@@ -1,0 +1,6 @@
+.morph-tooltip-row { justify-content: center; gap: 16px; }
+.morph-tooltip-wrap { position: relative; display: inline-flex; }
+.morph-tooltip-bubble { position: absolute; z-index: 30; left: 50%; bottom: calc(100% + 10px); width: max-content; max-width: min(260px, calc(100vw - 32px)); padding: 8px 11px; border-radius: 8px; background: var(--morph-accent); color: var(--morph-on-accent); box-shadow: var(--morph-elevation-1); font-size: 12px; line-height: 1.3; text-align: center; opacity: 0; filter: blur(2px); transform: translate(-50%, 5px); pointer-events: none; transition: opacity var(--morph-duration-slide) var(--morph-ease-out-soft), transform var(--morph-duration-slide) var(--morph-ease-out-soft), filter var(--morph-duration-slide) var(--morph-ease-out-soft); }
+.morph-tooltip-wrap[data-side='bottom'] .morph-tooltip-bubble { top: calc(100% + 10px); bottom: auto; transform: translate(-50%, -5px); }
+.morph-tooltip-bubble[data-open='true'] { opacity: 1; filter: blur(0); transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .morph-tooltip-bubble { transition: none; filter: none; transform: translate(-50%, 0); } }

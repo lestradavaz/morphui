@@ -1,0 +1,16 @@
+.input-demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; width: min(100%, 650px); }
+.morph-input-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.morph-input-field label { color: var(--morph-text); font-size: 14px; font-weight: 500; }
+.morph-input-frame { position: relative; }
+.morph-input-frame input { width: 100%; height: 48px; padding: 0 42px 0 15px; border: 1px solid var(--morph-border); border-radius: var(--morph-radius-xs); background: var(--morph-bg); color: var(--morph-text); font: inherit; font-size: 14px; transition: border-color var(--morph-duration-hover) var(--morph-ease-out-soft), box-shadow var(--morph-duration-hover) var(--morph-ease-out-soft); }
+.morph-input-frame input::placeholder { color: var(--morph-faint); }
+.morph-input-frame input:focus-visible { outline: none; border-color: var(--morph-accent); box-shadow: 0 0 0 3px var(--morph-accent-soft); }
+.morph-input-field[data-status='error'] .morph-input-frame input { border-color: var(--morph-error); }
+.morph-input-field[data-status='error'] .morph-input-message { color: var(--morph-error); }
+.morph-input-field[data-status='success'] .morph-input-message { color: var(--morph-muted); }
+.morph-input-field input:disabled { cursor: not-allowed; opacity: .55; }
+.morph-input-check { position: absolute; right: 14px; top: 14px; color: var(--morph-accent); opacity: 0; transform: scale(.9); transition: opacity var(--morph-duration-draw) var(--morph-ease-out-soft), transform var(--morph-duration-draw) var(--morph-ease-out-soft); pointer-events: none; }
+.morph-input-field[data-status='success'] .morph-input-check { opacity: 1; transform: scale(1); }
+.morph-input-message { min-height: 20px; color: var(--morph-muted); font-size: 12px; }
+@media (max-width: 600px) { .input-demo-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .morph-input-check { transition: opacity 100ms; transform: none; } }
