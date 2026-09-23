@@ -1,10 +1,6 @@
 import packageJson from '../../../../../packages/morphui/package.json';
 
-// npm builds a tarball's name from the package's: the scope loses its @ and the
-// slash becomes a dash. Derived rather than written out, so a rename cannot leave
-// the download pointing at a file that is no longer produced.
-const tarball = `${packageJson.name.replace('@', '').replace('/', '-')}-${packageJson.version}.tgz`;
-export const release = { version: packageJson.version, archive: `/downloads/${tarball}`, filename: tarball };
+export const release = { name: packageJson.name, version: packageJson.version, npm: `https://www.npmjs.com/package/${packageJson.name}` };
 export const themes = [
   { id: 'ink', name: 'Ink' }, { id: 'green', name: 'Green' },
   { id: 'cobalt', name: 'Cobalt' }, { id: 'terracotta', name: 'Terracotta' },

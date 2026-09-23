@@ -25,7 +25,7 @@ const toc = [...(isComponent?[{slug:'preview',text:'Preview'},{slug:'example',te
 ---
 <DocsLayout title={entry.data.title} description={entry.data.description} headings={toc}>
   {isComponent && <><section id="preview" class="doc-preview"><Preview kind={kind} client:load /></section><section id="example" class="example-section"><h2>Example</h2><p class="section-intro">The same component used in the preview. Works in JSX and TSX.</p><CodeBlock code={sources[kind]} lang="tsx" label={`${entry.data.title} example`}/><details class="styles-disclosure"><summary>Preview stylesheet <span>demo.css</span></summary><CodeBlock code={demoStyles} lang="css" label="demo.css"/></details></section></>}
-  {entry.id === 'installation' && <div class="download-panel"><div><span class="release-tag">Pre-release {release.version}</span><p>Try the current package in your own project.</p></div><a class="button-primary" href={release.archive} download>Download package <span aria-hidden="true">↓</span></a><InstallCommand client:load/></div>}
+  {entry.id === 'installation' && <div class="download-panel"><div><span class="release-tag">v{release.version}</span><p>Published on npm. Install it in your own project.</p></div><a class="button-primary" href={release.npm} rel="noreferrer">View on npm <span aria-hidden="true">↗</span></a><InstallCommand client:load/></div>}
   {entry.id === 'themes' && <ThemeGallery client:load/>}
   {entry.id === 'motion' && <Preview client:load/>}
   <div class="prose"><Content/></div>

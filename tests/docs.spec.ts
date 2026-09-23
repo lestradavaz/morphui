@@ -4,7 +4,6 @@ import { expect, test, type Page } from '@playwright/test';
 /* Read from the manifest, not written out: a rename or a version bump must not
    need the assertions edited to keep passing. */
 const pkg = JSON.parse(readFileSync(new URL('../packages/morphui/package.json', import.meta.url), 'utf8')) as { name: string; version: string };
-const tarball = `${pkg.name.replace('@', '').replace('/', '-')}-${pkg.version}.tgz`;
 const routes = ['/','/docs/installation','/docs/themes','/docs/motion','/docs/morph-dialog','/docs/morph-window','/docs/morph-card'];
 
 /**
@@ -87,21 +86,26 @@ test('search and site appearance work across navigation', async ({ page }) => {
   await expect(page.locator('.search-dialog')).not.toBeVisible();
 });
 
-test('installation downloads a real tarball and copies the selected command', async ({ page, context, request }) => {
+test('installation names the published package and copies the selected command', async ({ page, context, request }) => {
   await context.grantPermissions(['clipboard-read','clipboard-write']);
   await page.goto('/docs/installation');
   await hydrate(page);
   await page.getByRole('button',{name:'pnpm',exact:true}).click();
-  await expect(page.locator('.install-code code')).toHaveText(`pnpm add ./${tarball} gsap`);
+  await expect(page.locator('.install-code code')).toHaveText(`pnpm add ${pkg.name} gsap`);
   await page.locator('.install-code').getByRole('button',{name:'Copy',exact:true}).click();
   await expect(page.locator('.copy-feedback')).toHaveText('Copied');
-  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`pnpm add ./${tarball} gsap`);
-  const url = await page.getByRole('link',{name:'Download package'}).getAttribute('href');
-  const response = await request.get(url!);
-  expect(response.status()).toBe(200);
-  const bytes = await response.body();
-  expect([...bytes.subarray(0,2)]).toEqual([0x1f,0x8b]);
-  expect(bytes.byteLength).toBeGreaterThan(10000);
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`pnpm add ${pkg.name} gsap`);
+
+  /*
+   * The page sends people to npm, so the version it names has to be the one
+   * that is there. A page offering 0.1.0 of something published as 0.2.0 sends
+   * everyone to a different library than the one it just demonstrated.
+   */
+  const link = await page.getByRole('link',{name:'View on npm'}).getAttribute('href');
+  expect(link).toBe(`https://www.npmjs.com/package/${pkg.name}`);
+  const registry = await request.get(`https://registry.npmjs.org/${pkg.name.replace('/','%2F')}`);
+  expect(registry.status()).toBe(200);
+  expect((await registry.json())['dist-tags'].latest).toBe(pkg.version);
 });
 
 test('the hero carries a copyable install command for every package manager', async ({ page, context }) => {
@@ -111,15 +115,15 @@ test('the hero carries a copyable install command for every package manager', as
   // The hero command is the reason a developer lands here, so it has to be the
   // real line and not a decorative one.
   const code = page.locator('.hero-install .install-code code');
-  await expect(code).toHaveText(`npm install ./${tarball} gsap`);
+  await expect(code).toHaveText(`npm install ${pkg.name} gsap`);
   // One package on one registry: every manager installs the same thing, so the
   // hero offers the choice rather than picking one and hiding the rest.
-  for (const [manager, expected] of [['pnpm',`pnpm add ./${tarball} gsap`],['yarn',`yarn add ./${tarball} gsap`],['bun',`bun add ./${tarball} gsap`]] as const) {
+  for (const [manager, expected] of [['pnpm',`pnpm add ${pkg.name} gsap`],['yarn',`yarn add ${pkg.name} gsap`],['bun',`bun add ${pkg.name} gsap`]] as const) {
     await page.locator('.hero-install').getByRole('button',{name:manager,exact:true}).click();
     await expect(code).toHaveText(expected);
   }
   await page.locator('.hero-install').getByRole('button',{name:'Copy',exact:true}).click();
-  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`bun add ./${tarball} gsap`);
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`bun add ${pkg.name} gsap`);
   await expect(page.locator('.hero-install .copy-feedback')).toHaveText('Copied');
 });
 

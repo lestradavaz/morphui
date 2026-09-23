@@ -11,5 +11,4 @@ dist/
 playwright-report/
 test-results/
 
-apps/docs/public/downloads/
 apps/docs/public/license.txt

@@ -48,9 +48,9 @@ pnpm build                    # turbo: package, then the site
 ```
 
 `pnpm build` at the root builds `packages/morphui` first, then the docs site,
-which runs `astro build` and packs the built package into
-`public/downloads/lestradavaz-morph-ui-0.1.0.tgz` so the installation page has something real
-to hand out. That tarball lands in the image along with the rest of the site.
+which runs `astro build`. The site imports the library from that build output,
+so the order matters; it no longer ships a tarball, because the package is on
+npm and the installation page points there.
 
 ## How requests are served
 

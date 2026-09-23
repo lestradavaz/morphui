@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: A small package. Your components, your styles, your project.
+description: One package from npm. Your components, your styles, your project.
 order: 1
 ---
 
@@ -8,7 +8,7 @@ order: 1
 
 MorphUI works in React projects using JavaScript or TypeScript. Install React and React DOM 18 or newer in your app. GSAP is a peer dependency, shared with the rest of your project.
 
-This is a local pre-release. Download the package above, move the archive into your project folder, then run the command for your package manager. Nothing needs to be published to npm to try it.
+Install it with the command above, in whichever package manager you use. One package, one registry — the line differs, what arrives does not.
 
 ## Add the styles
 
@@ -82,4 +82,4 @@ Keep callbacks, state and event handlers inside the client component. You do not
 
 The package contains MorphDialog, MorphWindow, MorphCard, MorphClose, the `useMorphClose` hook, theme helpers, compiled JavaScript, TypeScript declarations, and CSS themes.
 
-The interactive installation CLI is not included in this pre-release. Choose your theme using a CSS import or a data attribute, as shown in [Themes](/docs/themes).
+There is no installation CLI. Choose your theme with a CSS import or a data attribute, as shown in [Themes](/docs/themes).
