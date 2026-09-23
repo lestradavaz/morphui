@@ -52,7 +52,11 @@ test('previews hydrate, keep colors scoped and open all three packaged component
   expect(accents.size).toBe(7);
   expect(await page.locator('html').evaluate(el => getComputedStyle(el).getPropertyValue('--morph-accent'))).toBe(rootAccent);
   await page.getByRole('button',{name:'Dark',exact:true}).click();
-  await expect(page.locator('.preview-stage')).toHaveAttribute('data-morph-mode','dark');
+  // The token, not the attribute: the attribute is deliberately left off when
+  // the system already resolves to what was asked for.
+  await expect.poll(() => page.locator('.preview-stage').evaluate(
+    el => getComputedStyle(el).getPropertyValue('--morph-bg').trim().toLowerCase().startsWith('#f') ? 'light' : 'dark',
+  )).toBe('dark');
   for (const [tab, trigger, close] of [['Dialog','Create account','Close dialog'],['Window','A little context','Close window'],['Card','Open A study in motion','Close story']]) {
     await page.getByRole('button',{name:tab,exact:true}).click();
     await page.getByRole('button',{name:trigger,exact:true}).click();
@@ -229,3 +233,48 @@ test('the close button holds its size and its corner for the whole flight', asyn
   expect(leaving.some(at => at.seen < 0.05)).toBe(true);
   await expect(page.locator('.morph-dialog[open]')).toHaveCount(0, { timeout: 15_000 });
 });
+
+/**
+ * A live preview opens on the appearance the reader is already reading in.
+ *
+ * It used to open light whatever the site was doing, which on a dark page is a
+ * white slab in the middle of the article. Following the header covers the
+ * reader who picked a side and the reader who left it on System, and the pick
+ * inside the preview still wins once it is made.
+ */
+for (const system of ['light', 'dark'] as const) {
+  test.describe(`with a ${system} system`, () => {
+    test.use({ colorScheme: system });
+    const other = system === 'dark' ? 'light' : 'dark';
+    // Read the token rather than the attribute: it is what the reader sees, and
+    // the attribute is deliberately left off when the system already agrees.
+    const shown = (page: Page) => page.locator('.preview-stage').first().evaluate(
+      el => (getComputedStyle(el).getPropertyValue('--morph-bg').trim().toLowerCase().startsWith('#f') ? 'light' : 'dark'),
+    );
+
+    test('a preview opens in the appearance the header resolves to', async ({ page }) => {
+      await page.goto('/docs/morph-dialog');
+      await hydrate(page);
+      expect(await shown(page)).toBe(system);
+
+      await page.selectOption('#site-mode', other);
+      await expect.poll(() => shown(page)).toBe(other);
+
+      // The header remembers, so a fresh page opens there too.
+      await page.goto('/docs/morph-window');
+      await hydrate(page);
+      await expect.poll(() => shown(page)).toBe(other);
+    });
+
+    test('a preview stops following once the reader picks inside it', async ({ page }) => {
+      await page.goto('/docs/morph-dialog');
+      await hydrate(page);
+      await page.locator('.preview-controls').getByRole('button', { name: other === 'dark' ? 'Dark' : 'Light', exact: true }).click();
+      await expect.poll(() => shown(page)).toBe(other);
+
+      await page.selectOption('#site-mode', system === 'dark' ? 'light' : 'dark');
+      await page.waitForTimeout(200);
+      expect(await shown(page)).toBe(other);
+    });
+  });
+}
