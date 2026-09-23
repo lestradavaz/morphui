@@ -59,12 +59,12 @@ function ensure(): void {
   ready = true;
 }
 
-async function settle(timeline: gsap.core.Timeline, done: () => void): Promise<void> {
+export async function settle(timeline: gsap.core.Timeline, done: () => void): Promise<void> {
   await timeline;
   done();
 }
 
-function clearAll(...elements: (Element | null | undefined)[]): void {
+export function clearAll(...elements: (Element | null | undefined)[]): void {
   for (const el of elements) if (el) gsap.set(el, { clearProps: 'all' });
 }
 
@@ -74,7 +74,7 @@ function clearAll(...elements: (Element | null | undefined)[]): void {
  * given none of its own - so a close is an open played backwards. Shared words
  * and images travel separately in the dialog's top layer.
  */
-interface ShapeOptions {
+export interface ShapeOptions {
   fromScale: { x: number; y: number };
   toScale: { x: number; y: number };
   fromRadius: number;
@@ -87,7 +87,7 @@ interface ShapeOptions {
   chrome?: { el: HTMLElement; from: Box; to: Box; need: Box; leaving: boolean };
 }
 
-function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
+export function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
   const {
     fromScale, toScale, fromRadius, toRadius,
     geoDuration, geoEase, radiusDuration, radiusEase,
@@ -235,11 +235,11 @@ function chromeNeed(chrome: HTMLElement, panel: Box): Box {
  * the layers inside it cannot reflow and do not need pinning. They only need the
  * same origin as the panel, so everything scales about the same corner.
  */
-function anchorLayer(layer: HTMLElement | null | undefined): void {
+export function anchorLayer(layer: HTMLElement | null | undefined): void {
   if (layer) gsap.set(layer, { transformOrigin: 'top left' });
 }
 
-interface FlightPlan {
+export interface FlightPlan {
   items: ItemPair[];
   words: {
     sourceInk: Box[];
@@ -260,7 +260,7 @@ interface FlightPlan {
  * down to the trigger's box - off by the better part of the viewport. Measuring
  * is therefore its own step, called while the panel is still at its natural size.
  */
-function measureFlight(
+export function measureFlight(
   origin: HTMLElement,
   panel: HTMLElement,
   shareWords: boolean,
@@ -288,20 +288,34 @@ function measureFlight(
   };
 }
 
+export interface FlightOptions {
+  /**
+   * Leave the trigger's own words and marks alone for the length of the flight.
+   *
+   * A dialog lands over the trigger it came from, so emptying that trigger costs
+   * nothing - nobody can see it. An anchored surface sits beside its trigger, and
+   * a control whose label blanks itself for the whole trip reads as a broken
+   * control rather than as one word being carried. The copy still flies; it is
+   * only the original that stays where the user can see it.
+   */
+  keepTrigger?: boolean;
+}
+
 /** Turns the plan into tweens. Safe to call once the panel has been transformed. */
-function buildFlight(
+export function buildFlight(
   timeline: gsap.core.Timeline,
   plan: FlightPlan,
   host: HTMLElement,
   duration: number,
   ease: string,
   phase: 'open' | 'close',
+  options: FlightOptions = {},
 ): () => void {
   const opening = phase === 'open';
   const undo: (() => void)[] = [];
 
   for (const item of plan.items) {
-    const flight = buildItemFlight(item, host, opening);
+    const flight = buildItemFlight(item, host, opening, options.keepTrigger);
     const { from, to, outgoing, incoming } = flight;
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -361,13 +375,14 @@ function buildFlight(
       }
       // Neither end shows its own text while the stand-ins are up. The heading
       // goes outright; the trigger only loses its ink, so its box can still fade
-      // on its own schedule.
+      // on its own schedule - unless the caller has asked for the ink to stay,
+      // which is what a surface that leaves its trigger on screen has to do.
       gsap.set(heading, { opacity: 0 });
-      gsap.set(origin, { color: 'transparent' });
+      if (!options.keepTrigger) gsap.set(origin, { color: 'transparent' });
       undo.push(() => {
         built.layer.remove();
         gsap.set(heading, { clearProps: 'opacity' });
-        gsap.set(origin, { clearProps: 'color' });
+        if (!options.keepTrigger) gsap.set(origin, { clearProps: 'color' });
       });
     }
   }

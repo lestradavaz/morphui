@@ -24,8 +24,22 @@
   --morph-slow: 1;
   --morph-duration-open: calc(700ms * var(--morph-slow));
   --morph-duration-close: calc(500ms * var(--morph-slow));
-  --morph-duration-press: 140ms;
-  --morph-duration-hover: 200ms;
+  --morph-duration-press: calc(140ms * var(--morph-slow));
+  --morph-duration-hover: calc(200ms * var(--morph-slow));
+  --morph-duration-slide: calc(200ms * var(--morph-slow));
+  --morph-duration-draw: calc(200ms * var(--morph-slow));
+  /* An anchored surface crosses one trigger's height, not most of the viewport,
+     so it rides a shorter clock than a dialog. The curves are the same ones. */
+  --morph-duration-anchor-open: calc(460ms * var(--morph-slow));
+  --morph-duration-anchor-close: calc(360ms * var(--morph-slow));
+  --morph-duration-anchor-surface: calc(220ms * var(--morph-slow));
+  --morph-error: #b44949;
+
+  /* Switch geometry */
+  --morph-switch-width: 44px;
+  --morph-switch-height: 24px;
+  --morph-switch-thumb: 20px;
+  --morph-switch-travel: 20px;
 
   /* Shape */
   --morph-radius-xs: 10px;
@@ -51,6 +65,9 @@
 [data-morph-theme] {
   --morph-duration-open: calc(700ms * var(--morph-slow));
   --morph-duration-close: calc(500ms * var(--morph-slow));
+  --morph-duration-anchor-open: calc(460ms * var(--morph-slow));
+  --morph-duration-anchor-close: calc(360ms * var(--morph-slow));
+  --morph-duration-anchor-surface: calc(220ms * var(--morph-slow));
   --morph-glass: color-mix(in srgb, var(--morph-bg) 72%, transparent);
   --morph-glass-ring: rgb(0 0 0 / 0.09);
   --morph-elevation-1: 0 1px 2px rgb(0 0 0 / 0.07);
@@ -61,6 +78,7 @@
 @media (prefers-color-scheme: dark) {
   :where(:root):not([data-morph-mode="light"]),
   [data-morph-theme]:not([data-morph-mode="light"]) {
+    --morph-error: #ef8c8c;
     --morph-glass: color-mix(in srgb, var(--morph-bg) 60%, transparent);
     --morph-glass-ring: rgb(255 255 255 / 0.10);
     --morph-elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -71,6 +89,7 @@
 
 :where(:root)[data-morph-mode="dark"],
 [data-morph-theme][data-morph-mode="dark"] {
+  --morph-error: #ef8c8c;
   --morph-glass: color-mix(in srgb, var(--morph-bg) 60%, transparent);
   --morph-glass-ring: rgb(255 255 255 / 0.10);
   --morph-elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -85,5 +104,12 @@
     --morph-slow: 1;
     --morph-duration-open: 150ms;
     --morph-duration-close: 120ms;
+    --morph-duration-press: 0ms;
+    --morph-duration-hover: 0ms;
+    --morph-duration-slide: 0ms;
+    --morph-duration-draw: 0ms;
+    --morph-duration-anchor-open: 150ms;
+    --morph-duration-anchor-close: 120ms;
+    --morph-duration-anchor-surface: 90ms;
   }
 }

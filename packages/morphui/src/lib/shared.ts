@@ -109,7 +109,7 @@ function clippedCorners(element: HTMLElement, rect: Box): Corners {
 }
 
 /** Independent visual layer; originals keep their React ownership and layout. */
-export function buildItemFlight(pair: ItemPair, host: HTMLElement, opening: boolean) {
+export function buildItemFlight(pair: ItemPair, host: HTMLElement, opening: boolean, keepSource = false) {
   const from = opening ? pair.sourceBox : pair.targetBox;
   const to = opening ? pair.targetBox : pair.sourceBox;
   const source = opening ? pair.source : pair.target;
@@ -137,7 +137,14 @@ export function buildItemFlight(pair: ItemPair, host: HTMLElement, opening: bool
   };
   const outgoing = wrap(source, from, 'outgoing');
   const incoming = wrap(target, to, 'incoming');
-  const saved = [pair.source, pair.target].map((element) => ({
+  /*
+   * Both ends are normally held back while the stand-ins are up. The end that
+   * stays behind on screen is the exception: with a dialog it is covered by the
+   * panel, but a trigger sitting beside the surface it opened would be showing a
+   * control whose own mark had been taken away for the length of the trip.
+   */
+  const hidden = keepSource ? [pair.target] : [pair.source, pair.target];
+  const saved = hidden.map((element) => ({
     element, value: element.style.getPropertyValue('visibility'),
     priority: element.style.getPropertyPriority('visibility'),
   }));

@@ -152,6 +152,27 @@ html:has(.morph-dialog[open]) {
   pointer-events: none;
 }
 
+/*
+ * An anchored surface's content resolves on the same beats as a dialog's, on the
+ * anchored clock and against the same keyframes.
+ *
+ * The blur is doing real work here, not decoration. The surface is scaling the
+ * content with it - that is what stops the box and its contents from disagreeing
+ * about what is happening - and a line of 13px labels carried through a 5x
+ * vertical stretch is unreadable smudge for the first beat either way. Resolving
+ * it out of a blur means it reads as one thing arriving rather than as text
+ * appearing inside a box that was moving.
+ */
+.morph-opening .morph-anchored__content {
+  animation: morph-content-in var(--morph-duration-anchor-open) var(--morph-ease-flow) both;
+}
+
+.morph-closing .morph-anchored__content {
+  animation:
+    morph-blur-out var(--morph-duration-anchor-close) var(--morph-ease-blur) both,
+    morph-fade-out var(--morph-duration-anchor-close) var(--morph-ease-shape) both;
+}
+
 @keyframes morph-content-in { from { opacity: 0; filter: blur(8px); } }
 @keyframes morph-blur-in { from { opacity: 0; filter: blur(32px); } }
 @keyframes morph-blur-out { to { filter: blur(32px); } }
@@ -160,7 +181,9 @@ html:has(.morph-dialog[open]) {
 @media (prefers-reduced-motion: reduce) {
   .morph-opening .morph-panel-content,
   .morph-window-opening .morph-panel-content,
-  .morph-closing .morph-panel-content {
+  .morph-closing .morph-panel-content,
+  .morph-opening .morph-anchored__content,
+  .morph-closing .morph-anchored__content {
     animation: none;
   }
 }
@@ -174,6 +197,8 @@ html:has(.morph-dialog[open]) {
 
 .morph-opening .morph-panel-content,
 .morph-window-opening .morph-panel-content,
-.morph-closing .morph-panel-content {
+.morph-closing .morph-panel-content,
+.morph-opening .morph-anchored__content,
+.morph-closing .morph-anchored__content {
   will-change: opacity;
 }
