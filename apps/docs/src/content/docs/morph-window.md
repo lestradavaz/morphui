@@ -29,3 +29,5 @@ To use the original unshared variant, pass `shareWords={false}`. The trigger sta
 ## Closing and focus
 
 Use MorphClose, Escape, or the backdrop. The label follows its return path while the surrounding content softens and closes. Always provide a visible close action and an accessible dialog name.
+
+A close button pinned to a corner goes in `chrome` instead of the children, so it is in place from the first frame rather than fading in with the content and drifting as the panel settles. See [MorphDialog](/docs/morph-dialog).

@@ -71,6 +71,24 @@ Escape and, unless `dismissOnTintClick={false}`, clicking the tint close it too.
 A close requested while the panel is still opening is queued rather than
 dropped, so a button pressed early still does something.
 
+Put the button in `chrome` rather than in the children. Children fade in, blur
+and are transformed for the length of the transition, so a button among them
+arrives late and shifts as the panel settles. `chrome` renders in its own layer
+over the content, in its place from the first frame:
+
+```jsx
+<MorphDialog
+  chrome={<MorphClose><button type="button" className="close">×</button></MorphClose>}
+  trigger={…}
+>
+  …
+</MorphDialog>
+```
+
+Position it against the panel — `position: absolute` with your own insets. The
+layer spans the panel and takes no clicks of its own, so only the button is
+interactive.
+
 ## Shared elements
 
 Mark the same name on both sides and the piece travels between them.
@@ -116,6 +134,7 @@ are your own element.
 | `variant` | `'dialog' \| 'fullscreen' \| 'window'` | `'dialog'` | `MorphWindow` and `MorphCard` set this for you. |
 | `shareWords` | `boolean` | `false` | `true` for `MorphWindow`. |
 | `dismissOnTintClick` | `boolean` | `true` | Clicking the tint closes the panel. |
+| `chrome` | `ReactNode` | — | Panel furniture, the close button above all. Sits over the content, in its own layer. |
 | `onOpenChange` | `(open: boolean) => void` | — | Fires when the transition settles, not when it starts. |
 | `className` / `panelClassName` | `string` | — | On the dialog element and on the panel inside it. |
 | `aria-label` | `string` | — | Without it, the panel is labelled by its heading. |

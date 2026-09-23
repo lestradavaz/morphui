@@ -10,10 +10,12 @@ export default function DialogDemo() {
       aria-label="Create account"
       panelClassName="demo-dialog-panel"
       trigger={<button className="demo-primary" type="button">Create account</button>}
+      /* Chrome, not content: it rides above the panel rather than inside the
+         layer that fades, blurs and settles during the transition. */
+      chrome={<MorphClose><button className="demo-close" type="button" aria-label="Close dialog">×</button></MorphClose>}
       onOpenChange={open => { if (open) setCreated(false); }}
     >
       <div className="demo-sheet">
-        <MorphClose><button className="demo-close" type="button" aria-label="Close dialog">×</button></MorphClose>
         <span className="demo-emblem" aria-hidden="true">m</span>
         <h2 data-morph-words>Create account</h2>
         {created ? (

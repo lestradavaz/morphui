@@ -49,6 +49,21 @@ export interface MorphDialogProps {
   variant?: MorphVariant;
   /** Clicking the tint closes the panel. */
   dismissOnTintClick?: boolean;
+  /**
+   * Elements that belong to the panel rather than to its contents — a close
+   * button, most often. They render outside the content layer, in their own
+   * layer over it.
+   *
+   * The difference is visible for the length of the transition: the content is
+   * faded in and blurred, and the engine transforms it, so anything inside
+   * `children` arrives late and shifts when that transform is cleared. Chrome is
+   * there from the first frame, in the place it will stay.
+   *
+   * Position it against the panel (`position: absolute` with your own insets).
+   * `MorphClose` works here as well as in `children`, because it closes through
+   * context and not through its place in the tree.
+   */
+  chrome?: ReactNode;
   className?: string;
   panelClassName?: string;
   'aria-label'?: string;
@@ -61,6 +76,7 @@ export function MorphDialog({
   shareWords = false,
   variant = 'dialog',
   dismissOnTintClick = true,
+  chrome,
   className,
   panelClassName,
   onOpenChange,
@@ -179,6 +195,7 @@ export function MorphDialog({
           ref={panelRef}
           className={['morph-panel', panelClassName].filter(Boolean).join(' ')}
         >
+          {mounted && chrome ? <div className="morph-panel-chrome">{chrome}</div> : null}
           <div ref={contentRef} className="morph-panel-content">
             {mounted ? children : null}
           </div>

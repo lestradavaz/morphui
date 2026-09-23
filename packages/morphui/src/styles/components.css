@@ -59,6 +59,22 @@
   box-shadow: none;
 }
 
+/* Panel chrome (a close button, usually) rides above the content and outside its
+   transition: the content layer is faded, blurred and transformed while a panel
+   is opening or closing, and nothing inside it escapes that. Static children
+   would also push the content out of the panel's fixed height, so the layer is
+   taken out of flow and only its own children take clicks. */
+.morph-panel-chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.morph-panel-chrome * {
+  pointer-events: auto;
+}
+
 /* Scrolls on its own so the panel can keep overflow:hidden for clipping. */
 .morph-panel-content {
   width: 100%;

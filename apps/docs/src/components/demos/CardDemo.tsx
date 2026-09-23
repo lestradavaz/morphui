@@ -8,10 +8,12 @@ export default function CardDemo() {
         <span className="demo-art" data-morph-item="art" />
         <span className="demo-card-caption">A study in motion<span aria-hidden="true">↗</span></span>
       </button>
-    }>
+    }
+    /* Chrome, not content: it rides above the panel rather than inside the layer
+       that fades, blurs and settles during the transition. */
+    chrome={<MorphClose><button className="demo-close" type="button" aria-label="Close story">×</button></MorphClose>}>
       <article className="demo-feature">
         <span className="demo-art demo-art-wide" data-morph-item="art" />
-        <MorphClose><button className="demo-close" type="button" aria-label="Close story">×</button></MorphClose>
         <div className="demo-story">
           <p className="demo-note">A study in motion</p>
           <h2>The detail becomes<br />the whole picture.</h2>
