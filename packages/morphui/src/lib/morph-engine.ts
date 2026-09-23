@@ -46,10 +46,6 @@ const HANDOVER = 180;
 const TINT = 500;
 const TINT_WINDOW = 200;
 const GENTLE = 150;
-const CONTENT_CLOSE = 2000;
-
-/** The content only gets flow(0.25) of the way home before the panel closes over it. */
-const CONTENT_LAG = CLOSE / CONTENT_CLOSE;
 
 const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 
@@ -73,9 +69,10 @@ function clearAll(...elements: (Element | null | undefined)[]): void {
 }
 
 /**
- * Transform the panel and compensate its corner radius per axis. Content follows
- * the panel on entry; on exit it trails behind the clipping surface. Shared
- * words and images travel separately in the dialog's top layer.
+ * Transform the panel and compensate its corner radius per axis. The content
+ * follows the panel in both directions - it carries the panel's transform and is
+ * given none of its own - so a close is an open played backwards. Shared words
+ * and images travel separately in the dialog's top layer.
  */
 interface ShapeOptions {
   fromScale: { x: number; y: number };
@@ -86,8 +83,6 @@ interface ShapeOptions {
   geoEase: string;
   radiusDuration: number;
   radiusEase: string;
-  /** Closing only: makes the content trail the container that is clipping it. */
-  lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
   /** A layer outside the panel, kept over whatever box the panel is showing. */
   chrome?: { el: HTMLElement; from: Box; to: Box; need: Box; leaving: boolean };
 }
@@ -96,7 +91,7 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
   const {
     fromScale, toScale, fromRadius, toRadius,
     geoDuration, geoEase, radiusDuration, radiusEase,
-    lag, chrome,
+    chrome,
   } = options;
 
   /*
@@ -180,32 +175,6 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
         const r = lerp(fromRadius, toRadius, rp);
 
         placeChrome(gp);
-
-        if (lag) {
-          /*
-           * The content trails the container closing over it.
-           *
-           * The reference gives the container 500ms and the content 2000ms, then
-           * plays only the first 500ms of the content's path, so the content
-           * lands about 83% of the way home and the shrinking panel clips what is
-           * left. That lag is the whole character of the close.
-           *
-           * The content sits inside the panel, so it already carries the panel's
-           * transform. What it needs is the remainder: the trailing box expressed
-           * relative to the container, which is the container's transform undone
-           * and the trailing one applied. Hence the division by the panel's own
-           * scale rather than a second set of absolute numbers.
-           */
-          const raw = Math.min(1, elapsed / geoDuration);
-          const container = lerpBox(lag.from, lag.to, gp);
-          const trailing = lerpBox(lag.from, lag.to, geo(raw * lag.fraction));
-          gsap.set(lag.content, {
-            x: (trailing.x - container.x) / sx,
-            y: (trailing.y - container.y) / sy,
-            scaleX: lag.from.width ? trailing.width / lag.from.width / sx : 1,
-            scaleY: lag.from.height ? trailing.height / lag.from.height / sy : 1,
-          });
-        }
 
         /*
          * Written straight to the element, not through gsap.set.
@@ -560,7 +529,6 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     geoEase: ease,
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
-    ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
     ...(chrome && need ? { chrome: { el: chrome, from, to, need, leaving: true } } : {}),
   });
 
