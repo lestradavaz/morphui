@@ -1,6 +1,6 @@
 {
   "name": "@lestradavaz/morph-ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React components that transform instead of appearing. Shared elements, considered motion, seven themes. Built with GSAP.",
   "repository": {
     "type": "git",
