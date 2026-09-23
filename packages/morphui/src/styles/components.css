@@ -6,6 +6,9 @@
  * a panel never breaks the transition.
  */
 
+@import "./button.css";
+@import "./anchored.css";
+
 .morph-dialog {
   position: fixed;
   inset: 0;

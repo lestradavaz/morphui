@@ -87,12 +87,31 @@ select option {color:var(--morph-text);background:var(--morph-bg);}
 .component-row p {font-size:14px;color:var(--morph-muted);margin-top:5px;}
 .component-row-action {display:flex;align-items:center;gap:24px;font-size:13px;}
 .component-glyph {height:76px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--morph-surface);border-radius:20px;}
-.glyph-dialog span:first-child {width:28px;height:14px;border-radius:10px;background:var(--morph-accent);}
-.glyph-dialog span:last-child {width:30px;height:37px;border:1px solid var(--morph-muted);border-radius:10px;}
-.glyph-window span {width:47px;height:41px;background:var(--morph-bg);border:1px solid var(--morph-border);border-radius:11px;}
-.glyph-window i {width:10px;height:10px;background:var(--morph-accent);border-radius:50%;margin-left:-20px;margin-top:-22px;}
-.glyph-card span:first-child {width:23px;height:29px;background:var(--morph-accent);border-radius:7px;}
-.glyph-card span:last-child {width:36px;height:42px;background:var(--morph-raised);border:1px solid var(--morph-muted);border-radius:9px;}
+/* Every glyph is the same three spans, and each kind switches on the ones it
+   needs. A glyph is a shape about a shape - a trigger and what comes out of it -
+   so the two are always the same pair of materials: the accent for the thing,
+   an outline for the surface. Overlaps are pulled together with a negative
+   margin rather than positioned, which keeps this to one line per shape. */
+.component-glyph > span {display:none;}
+.glyph-dialog > span:nth-child(1) {display:block;width:28px;height:14px;border-radius:10px;background:var(--morph-accent);}
+.glyph-dialog > span:nth-child(2) {display:block;width:30px;height:37px;border:1px solid var(--morph-muted);border-radius:10px;}
+.glyph-window > span:nth-child(1) {display:block;width:47px;height:41px;background:var(--morph-bg);border:1px solid var(--morph-border);border-radius:11px;}
+.glyph-window > span:nth-child(2) {display:block;width:10px;height:10px;background:var(--morph-accent);border-radius:50%;margin-left:-20px;margin-top:-22px;}
+.glyph-card > span:nth-child(1) {display:block;width:23px;height:29px;background:var(--morph-accent);border-radius:7px;}
+.glyph-card > span:nth-child(2) {display:block;width:36px;height:42px;background:var(--morph-raised);border:1px solid var(--morph-muted);border-radius:9px;}
+.glyph-button > span:nth-child(1) {display:block;width:42px;height:17px;border-radius:999px;background:var(--morph-accent);}
+.glyph-button > span:nth-child(2) {display:block;width:8px;height:8px;margin-left:-18px;border-radius:50%;background:var(--morph-on-accent);}
+.glyph-popover > span:nth-child(1) {display:block;width:26px;height:13px;border-radius:7px;background:var(--morph-accent);}
+.glyph-popover > span:nth-child(2) {display:block;width:31px;height:27px;margin-top:16px;border:1px solid var(--morph-border);border-radius:9px;background:var(--morph-bg);}
+.glyph-tooltip > span:nth-child(1) {display:block;width:35px;height:19px;border:1px solid var(--morph-muted);border-radius:7px;background:var(--morph-raised);}
+.glyph-tooltip > span:nth-child(2) {display:block;width:8px;height:8px;margin-left:-24px;margin-top:-20px;border-radius:50%;background:var(--morph-accent);}
+.glyph-context-menu > span:nth-child(1) {display:block;width:36px;height:32px;border:1px solid var(--morph-border);border-radius:9px;background:var(--morph-bg);}
+.glyph-context-menu > span:nth-child(2) {display:block;width:9px;height:9px;margin-left:-22px;margin-top:-22px;border-radius:50%;background:var(--morph-accent);}
+.glyph-combobox > span:nth-child(1) {display:block;width:48px;height:21px;border:1px solid var(--morph-border);border-radius:8px;background:var(--morph-bg);}
+.glyph-combobox > span:nth-child(2) {display:block;width:11px;height:11px;margin-left:-36px;border-radius:3px;background:var(--morph-accent);}
+.glyph-multi-select > span:nth-child(1) {display:block;width:48px;height:21px;border:1px solid var(--morph-border);border-radius:8px;background:var(--morph-bg);}
+.glyph-multi-select > span:nth-child(2) {display:block;width:13px;height:9px;margin-left:-30px;border-radius:3px;background:var(--morph-accent);}
+.glyph-multi-select > span:nth-child(3) {display:block;width:9px;height:9px;border-radius:3px;background:var(--morph-accent-soft);}
 .component-row:hover .component-row-action {text-decoration:underline;text-underline-offset:4px;}
 .theme-story {display:grid;grid-template-columns:1fr 1.25fr;align-items:center;gap:80px;padding:94px 0;border-top:1px solid var(--morph-border);margin-top:25px;}
 .theme-story p {font-size:15px;line-height:1.8;color:var(--morph-muted);max-width:370px;margin:20px 0;}
@@ -183,7 +202,7 @@ td small {display:block;margin-top:5px;font-size:11px;}
   .header-inner {height:70px;padding:0 22px;gap:15px;} .wordmark {font-size:22px;} .desktop-nav {display:none;} .header-tools {gap:12px;} .search-trigger {background:transparent;border:0;padding:9px;} .search-trigger span,.search-trigger kbd {display:none;} .site-mode-label select {font-size:12px;width:76px;}
   .home-main {padding:0 22px;} .hero {padding:52px 0 56px;gap:35px;} .hero h1 {font-size:48px;} .hero-description {font-size:15px;} .hero-actions {gap:20px;} .hero-meta {gap:16px;font-size:11px;} .intro-label {font-size:13px;} .desktop-break {display:none;} .hero-install {margin-top:28px;} .install-command.is-compact .install-code {padding:13px 12px;} .install-command.is-compact .install-code code {font-size:11px;}
   .preview-top {padding:12px;} .preview-controls {padding:12px;} .preview-stage,.preview-showcase .preview-stage {min-height:320px;} .preview-top .segmented button {padding:6px 10px;} .preview-controls .segmented button {padding:6px 9px;} .preview-hint {font-size:11px;}
-  .collection {padding-top:34px;} .section-heading h2,.theme-story h2,.start-section h2 {font-size:30px;} .section-count {display:none;} .section-heading p {font-size:14px;} .component-row {grid-template-columns:66px 1fr 18px;gap:18px;padding:24px 0;} .component-glyph {height:64px;border-radius:16px;gap:4px;} .component-row h3 {font-size:20px;} .component-row p {font-size:12px;} .component-row-action {font-size:0;gap:0;} .component-row-action svg {width:18px;} .glyph-dialog span:first-child {width:18px;} .glyph-dialog span:last-child {width:23px;height:32px;}
+  .collection {padding-top:34px;} .section-heading h2,.theme-story h2,.start-section h2 {font-size:30px;} .section-count {display:none;} .section-heading p {font-size:14px;} .component-row {grid-template-columns:66px 1fr 18px;gap:18px;padding:24px 0;} .component-glyph {height:64px;border-radius:16px;gap:4px;} .component-row h3 {font-size:20px;} .component-row p {font-size:12px;} .component-row-action {font-size:0;gap:0;} .component-row-action svg {width:18px;} .glyph-dialog > span:nth-child(1) {width:18px;} .glyph-dialog > span:nth-child(2) {width:23px;height:32px;}
   .theme-story {grid-template-columns:1fr;padding:52px 0;gap:28px;} .theme-comparison {grid-template-columns:1fr 1fr;} .theme-comparison>div {padding:18px 13px;min-height:205px;} .theme-sample {font-size:11px;padding:15px 11px;} .start-section {align-items:flex-start;flex-direction:column;padding:45px 0 55px;} .start-section .release-note {max-width:none;} .site-footer {padding:25px 22px;gap:16px;flex-wrap:wrap;} .site-footer p {width:calc(100% - 100px);margin:0;font-size:11px;}
   .docs-shell {display:block;padding:0 22px;} .docs-sidebar {display:none;} .docs-main {padding:20px 0 50px;} .mobile-docs-nav {display:block;border-bottom:1px solid var(--morph-border);margin-bottom:28px;padding-bottom:18px;font-size:13px;} .mobile-docs-nav summary {cursor:pointer;list-style:none;display:flex;justify-content:space-between;} .mobile-docs-nav nav {display:grid;gap:10px;padding-top:20px;} .mobile-docs-nav a[aria-current] {font-weight:600;} .doc-heading h1 {font-size:37px;} .doc-heading>p {font-size:15px;} .breadcrumb {font-size:11px;margin-bottom:18px;} .docs-main h2 {font-size:23px;} .prose p {font-size:15px;} .code-heading {font-size:11px;} pre {font-size:11px;padding:16px;}
   .download-panel {padding:18px;} .download-panel .button-primary {min-height:42px;} .install-toolbar>span {display:none;} .install-code {padding:15px 12px;} .install-code code {font-size:11px;} .download-panel .segmented button {padding:5px 10px;} .theme-gallery .section-heading {align-items:flex-start;flex-direction:column;gap:6px;} .table-scroll table {min-width:540px;} .not-found {padding:70px 22px 100px;} .not-found h1 {font-size:40px;}

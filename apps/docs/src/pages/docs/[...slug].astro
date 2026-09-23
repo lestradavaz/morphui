@@ -5,10 +5,17 @@ import Preview from '@/components/demos/Preview';
 import ThemeGallery from '@/components/docs/ThemeGallery';
 import InstallCommand from '@/components/docs/InstallCommand';
 import CodeBlock from '@/components/ui/CodeBlock.astro';
-import { release, sharedProps } from '@/core/data/catalog';
+import { release } from '@/core/data/catalog';
+import { api } from '@/core/data/api';
 import dialogSource from '@/components/demos/DialogDemo.tsx?raw';
 import windowSource from '@/components/demos/WindowDemo.tsx?raw';
 import cardSource from '@/components/demos/CardDemo.tsx?raw';
+import buttonSource from '@/components/demos/ButtonDemo.tsx?raw';
+import popoverSource from '@/components/demos/PopoverDemo.tsx?raw';
+import tooltipSource from '@/components/demos/TooltipDemo.tsx?raw';
+import contextMenuSource from '@/components/demos/ContextMenuDemo.tsx?raw';
+import comboboxSource from '@/components/demos/ComboboxDemo.tsx?raw';
+import multiSelectSource from '@/components/demos/MultiSelectDemo.tsx?raw';
 import demoStyles from '@/components/demos/demo.css?raw';
 export async function getStaticPaths() {
   return (await getCollection('docs')).map(entry=>({params:{slug:entry.id},props:{entry}}));
@@ -17,10 +24,15 @@ const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
 const kind = entry.data.kind;
 const isComponent = kind !== 'guide';
-const sources = { dialog: dialogSource, window: windowSource, card: cardSource };
-const props = [...sharedProps].filter(row=>kind!=='card'||row[0]!=='shareWords');
-props.unshift([kind === 'card' ? 'card' : 'trigger', 'ReactElement', 'Required', 'A single element that forwards its ref to a DOM node.']);
-if(kind==='dialog') props.push(['variant', "'dialog' | 'window' | 'fullscreen'", "'dialog'", 'The geometry and appearance of the panel transition.']);
+/* The example under the preview is the demo that is on screen, not a rewrite of
+   it: a code sample that has drifted from the thing it describes is worse than
+   no sample at all. */
+const sources: Record<string, string> = {
+  dialog: dialogSource, window: windowSource, card: cardSource,
+  button: buttonSource, popover: popoverSource, tooltip: tooltipSource,
+  'context-menu': contextMenuSource, combobox: comboboxSource, 'multi-select': multiSelectSource,
+};
+const componentApi = api[kind] ?? { rows: [], note: '' };
 const toc = [...(isComponent?[{slug:'preview',text:'Preview'},{slug:'example',text:'Example'}]:[]),...headings.filter(h=>h.depth===2),...(isComponent?[{slug:'api',text:'API reference'}]:[])];
 ---
 <DocsLayout title={entry.data.title} description={entry.data.description} headings={toc}>
@@ -29,7 +41,7 @@ const toc = [...(isComponent?[{slug:'preview',text:'Preview'},{slug:'example',te
   {entry.id === 'themes' && <ThemeGallery client:load/>}
   {entry.id === 'motion' && <Preview client:load/>}
   <div class="prose"><Content/></div>
-  {isComponent && <section id="api" class="api-section"><h2>API reference</h2><p class="section-intro">{entry.data.title} props</p><div class="table-scroll" tabindex="0" aria-label="Component props"><table><thead><tr><th>Prop</th><th>Type / default</th><th>Description</th></tr></thead><tbody>{props.map(([name,type,value,description])=><tr><td><code>{name}</code></td><td><code>{type}</code><small>{value}</small></td><td>{description}</td></tr>)}</tbody></table></div><p class="api-note">MorphClose accepts one button as its child. The optional callback reports changes; this release does not expose a controlled <code>open</code> prop.</p></section>}
+  {isComponent && <section id="api" class="api-section"><h2>API reference</h2><p class="section-intro">{entry.data.title} props</p><div class="table-scroll" tabindex="0" aria-label="Component props"><table><thead><tr><th>Prop</th><th>Type / default</th><th>Description</th></tr></thead><tbody>{componentApi.rows.map(([name,type,value,description])=><tr><td><code>{name}</code></td><td><code>{type}</code><small>{value}</small></td><td>{description}</td></tr>)}</tbody></table></div><p class="api-note" set:html={componentApi.note}/></section>}
 </DocsLayout>
 <script>
   document.querySelectorAll('.prose pre').forEach(pre=>{

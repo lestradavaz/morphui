@@ -1,0 +1,592 @@
+/*
+ * MorphUI - anchored surfaces.
+ *
+ * The surface itself, and the four things built on it: a popover, a combobox, a
+ * multi select and a context menu. They share a shape because they share a
+ * mechanism - all four grow out of a trigger and are carried between boxes by a
+ * transform - so what differs between them is only what they hold.
+ *
+ * Sizes here are floors, not the sizes the surfaces open at. A surface with no
+ * width or height of its own is measured as it lays itself out, so a combobox
+ * with three options opens a short panel; these keep that measurement from
+ * collapsing to a column of ellipses when the content is narrow.
+ */
+
+/*
+ * The counterpart of `.morph-panel`. It is laid out at the box it rests at, and
+ * carried between boxes by a transform rather than by reflowing, which is what
+ * lets its content travel with it instead of being pinned and faded in beside
+ * it.
+ *
+ * No border, for the same reason the dialog panel has none: a transform scales
+ * painted border widths along with everything else, so a 1px ring becomes 0.2px
+ * on one axis and 0.8px on the other halfway through a morph and thickens back
+ * as it lands. It reads as the edge wobbling. The elevation carries the edge
+ * instead - and in dark themes `--morph-elevation-2` already draws a hairline
+ * ring of its own.
+ */
+.morph-anchored {
+  position: fixed;
+  z-index: 9500;
+  overflow: hidden;
+  border-radius: var(--morph-radius-sm);
+  background: var(--morph-bg);
+  color: var(--morph-text);
+  box-shadow: var(--morph-elevation-2);
+  transform-origin: top left;
+}
+
+/*
+ * Carries the surface's transform, so it must never reflow: a box that is being
+ * scaled is not a box that can be resized. The appearance layer in
+ * components.css fades and blurs it, on the anchored clock.
+ */
+.morph-anchored__content {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* ── Popover ───────────────────────────────────────── */
+
+.morph-popover {
+  min-width: 240px;
+}
+
+.morph-popover__body {
+  display: grid;
+  gap: 2px;
+  padding: 17px 17px 0;
+}
+
+.morph-popover__body > h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+}
+
+.morph-popover__body > p {
+  margin: 3px 0 13px;
+  color: var(--morph-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* One setting: its name and its note on the left, its control on the right. */
+.morph-popover__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 51px;
+  border-top: 1px solid var(--morph-border);
+}
+
+.morph-popover__row > :first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.morph-popover__row strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.morph-popover__row small {
+  color: var(--morph-muted);
+  font-size: 11px;
+}
+
+.morph-popover__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 46px;
+  border-top: 1px solid var(--morph-border);
+}
+
+/* ── Combobox ──────────────────────────────────────── */
+
+.morph-combobox {
+  width: min(280px, 100%);
+}
+
+.morph-combobox__label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--morph-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.morph-combobox__field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 50px;
+  padding: 0 12px;
+  border: 1px solid var(--morph-border);
+  border-radius: var(--morph-radius-xs);
+  background: var(--morph-bg);
+}
+
+.morph-combobox__field:focus-within {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 2px;
+}
+
+.morph-combobox__mark,
+.morph-combobox__option-mark {
+  display: grid;
+  flex: 0 0 26px;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--morph-accent-soft);
+  color: var(--morph-on-accent-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.morph-combobox__input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.morph-combobox__input::placeholder {
+  color: var(--morph-faint);
+}
+
+/* The arrow is a control, not decoration: it opens and closes the list. */
+.morph-combobox__chevron {
+  display: grid;
+  flex: 0 0 22px;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.morph-combobox__chevron::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-right: 1.5px solid var(--morph-muted);
+  border-bottom: 1.5px solid var(--morph-muted);
+  transform: rotate(45deg);
+  transition: transform 160ms var(--morph-ease-out-soft), margin-top 160ms var(--morph-ease-out-soft);
+}
+
+.morph-combobox__chevron[data-open='true']::before {
+  margin-top: 4px;
+  transform: rotate(-135deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-combobox__chevron:hover { background: var(--morph-surface); }
+}
+
+.morph-combobox__list {
+  min-width: 264px;
+  padding: 8px;
+}
+
+.morph-combobox__group {
+  padding: 9px 10px 5px;
+  color: var(--morph-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.morph-combobox__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 49px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: var(--morph-radius-xs);
+  background: transparent;
+  color: var(--morph-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.morph-combobox__option[data-active='true'],
+.morph-combobox__option:hover {
+  background: var(--morph-surface);
+}
+
+.morph-combobox__option-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.morph-combobox__option-copy strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.morph-combobox__option-copy small {
+  color: var(--morph-muted);
+  font-size: 11px;
+}
+
+.morph-combobox__check {
+  margin-left: auto;
+  color: var(--morph-muted);
+  font-size: 14px;
+}
+
+.morph-combobox__empty {
+  display: grid;
+  place-items: center;
+  min-height: 100px;
+  color: var(--morph-muted);
+  font-size: 13px;
+}
+
+/* ── Multi select ──────────────────────────────────── */
+
+.morph-multi-select {
+  width: min(320px, 100%);
+}
+
+.morph-multi-select__label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--morph-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.morph-multi-select__field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 7px 6px 10px;
+  border: 1px solid var(--morph-border);
+  border-radius: var(--morph-radius-xs);
+  background: var(--morph-bg);
+}
+
+.morph-multi-select__field:focus-within {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 2px;
+}
+
+.morph-multi-select__chips {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.morph-multi-select__chips::-webkit-scrollbar {
+  display: none;
+}
+
+.morph-multi-select__placeholder {
+  padding-left: 2px;
+  color: var(--morph-faint);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/*
+ * A chosen option is a button, so it is built out of one: the ripple, the press
+ * scale, the focus ring and the hover step all come from MorphButton. This only
+ * says what a chip in a field looks like.
+ */
+.morph-multi-select__chip.morph-button {
+  /* The strip scrolls, so a chip is never the thing that gives way: with the
+     default shrink a full field squeezed every label into its neighbours. */
+  flex: 0 0 auto;
+  height: 32px;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: var(--morph-accent-soft);
+  color: var(--morph-on-accent-soft);
+  font-size: 12px;
+}
+
+.morph-multi-select__chip-x {
+  font-size: 15px;
+  line-height: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-multi-select__chip.morph-button:not(:disabled):hover {
+    background: color-mix(in srgb, var(--morph-accent-soft) 88%, white);
+  }
+}
+
+.morph-multi-select__open {
+  display: grid;
+  flex: 0 0 36px;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--morph-raised);
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 21px;
+  cursor: pointer;
+}
+
+.morph-multi-select__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 47px;
+  margin: 8px 8px 4px;
+  padding: 0 11px;
+  border-radius: 8px;
+  background: var(--morph-surface);
+  color: var(--morph-muted);
+}
+
+.morph-multi-select__search > span {
+  font-size: 21px;
+  line-height: 1;
+}
+
+.morph-multi-select__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.morph-multi-select__search input::placeholder {
+  color: var(--morph-faint);
+}
+
+.morph-multi-select__list {
+  min-width: 300px;
+  max-height: 174px;
+  overflow-y: auto;
+  padding: 3px 8px;
+}
+
+.morph-multi-select__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.morph-multi-select__option[data-active='true'],
+.morph-multi-select__option:hover {
+  background: var(--morph-surface);
+}
+
+.morph-multi-select__option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.morph-multi-select__check {
+  display: grid;
+  flex: 0 0 17px;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--morph-border);
+  border-radius: 5px;
+  color: var(--morph-on-accent);
+  font-size: 11px;
+}
+
+.morph-multi-select__check[data-selected='true'] {
+  border-color: var(--morph-accent);
+  background: var(--morph-accent);
+}
+
+.morph-multi-select__empty {
+  display: grid;
+  place-items: center;
+  height: 100px;
+  color: var(--morph-muted);
+  font-size: 13px;
+}
+
+.morph-multi-select__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  padding: 0 13px;
+  border-top: 1px solid var(--morph-border);
+  color: var(--morph-muted);
+  font-size: 12px;
+}
+
+.morph-multi-select__footer button {
+  border: 0;
+  background: transparent;
+  color: var(--morph-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* ── Context menu ──────────────────────────────────── */
+
+.morph-context-menu {
+  min-width: 200px;
+}
+
+.morph-context-menu__items {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+}
+
+.morph-context-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  height: 46px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--morph-radius-xs);
+  background: transparent;
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.morph-context-menu__item[data-active='true'],
+.morph-context-menu__item:hover {
+  background: var(--morph-surface);
+}
+
+.morph-context-menu__item:disabled {
+  color: var(--morph-faint);
+  cursor: not-allowed;
+}
+
+.morph-context-menu__item:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: -2px;
+}
+
+.morph-context-menu__icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  color: var(--morph-muted);
+  font-size: 17px;
+}
+
+.morph-context-menu__end {
+  margin-left: auto;
+  color: var(--morph-muted);
+}
+
+/* ── Tooltip ───────────────────────────────────────── */
+
+/*
+ * Not a morph, and not built on `.morph-anchored`: a hint is a caption for the
+ * control, read in a glance, and the dialog's geometry over a bubble this small
+ * is motion for its own sake. It fades and lifts on the library's slide
+ * duration and its own softening curve, which is what keeps it in the family.
+ */
+.morph-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.morph-tooltip__bubble {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  width: max-content;
+  max-width: min(260px, calc(100vw - 32px));
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: var(--morph-accent);
+  color: var(--morph-on-accent);
+  box-shadow: var(--morph-elevation-1);
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: center;
+  opacity: 0;
+  filter: blur(2px);
+  transform: translate(-50%, 5px);
+  pointer-events: none;
+  transition:
+    opacity var(--morph-duration-slide) var(--morph-ease-out-soft),
+    transform var(--morph-duration-slide) var(--morph-ease-out-soft),
+    filter var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+.morph-tooltip[data-side='bottom'] .morph-tooltip__bubble {
+  top: calc(100% + 10px);
+  bottom: auto;
+  transform: translate(-50%, -5px);
+}
+
+.morph-tooltip__bubble[data-open='true'] {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-tooltip__bubble {
+    transition: none;
+    filter: none;
+    transform: translate(-50%, 0);
+  }
+}

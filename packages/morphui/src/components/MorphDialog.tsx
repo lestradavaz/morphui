@@ -2,10 +2,8 @@
 
 import {
   cloneElement,
-  createContext,
   isValidElement,
   useCallback,
-  useContext,
   useEffect,
   useId,
   useRef,
@@ -16,15 +14,11 @@ import {
 } from 'react';
 
 import { closeMorph, frameChrome, openMorph, type MorphParts, type MorphVariant } from '../lib/morph-engine.js';
+import { MorphCloseContext } from './MorphClose.js';
 
-const MorphCloseContext = createContext<(() => void) | null>(null);
-
-/** Closes the panel it is called from. Returns a no-op outside a MorphUI panel. */
-export function useMorphClose(): () => void {
-  return useContext(MorphCloseContext) ?? noop;
-}
-
-const noop = (): void => {};
+// The close context is shared with every other panel in the library, so these
+// two keep working for anything that has been importing them from here.
+export { MorphClose, useMorphClose, type MorphCloseProps } from './MorphClose.js';
 
 export interface MorphDialogProps {
   /**
@@ -245,19 +239,4 @@ export function MorphDialog({
       </dialog>
     </MorphCloseContext.Provider>
   );
-}
-
-export interface MorphCloseProps {
-  children: ReactElement<{ onClick?: (e: MouseEvent) => void }>;
-}
-
-/** Wraps your own button and closes the panel when it is pressed. */
-export function MorphClose({ children }: MorphCloseProps): ReactElement {
-  const close = useMorphClose();
-  return cloneElement(children, {
-    onClick: (event: MouseEvent) => {
-      children.props.onClick?.(event);
-      if (!event.defaultPrevented) close();
-    },
-  });
 }

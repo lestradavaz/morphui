@@ -1,0 +1,215 @@
+/*
+ * MorphUI - MorphButton.
+ *
+ * Structure and appearance in one place because a button is nothing but its
+ * appearance; every value reads from a theme token, so a theme change never
+ * leaves a button mid-way between two looks.
+ *
+ * All of it is CSS. A press is not a morph: it has to work on a page that never
+ * imports a transition, and it has to keep working while the main thread is busy
+ * opening the panel the button just asked for.
+ */
+
+.morph-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--morph-duration-press) var(--morph-ease-out-soft),
+    opacity var(--morph-duration-hover) var(--morph-ease-out-soft),
+    background var(--morph-duration-hover) var(--morph-ease-out-soft),
+    box-shadow var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-button:active {
+  transform: scale(0.97);
+}
+
+.morph-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.morph-button:disabled:active {
+  transform: none;
+}
+
+.morph-button:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 3px;
+}
+
+/* Touch fires a hover on tap; motion that answers a pointer belongs behind this. */
+@media (hover: hover) and (pointer: fine) {
+  .morph-button--pill:not(:disabled):hover { background: color-mix(in srgb, var(--morph-accent) 88%, white); }
+  .morph-button--ghost:not(:disabled):hover { background: var(--morph-raised); }
+  .morph-button--chip:not(:disabled):hover,
+  .morph-button--icon:not(:disabled):hover { background: color-mix(in srgb, var(--morph-chip) 88%, white); }
+}
+
+.morph-button__ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.morph-button__ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.08);
+  animation: morph-button-ripple 460ms var(--morph-ease-out-soft) forwards;
+}
+
+@keyframes morph-button-ripple {
+  12% { opacity: .18; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+.morph-button--pill {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--morph-radius-full);
+  background: var(--morph-accent);
+  color: var(--morph-on-accent);
+}
+
+.morph-button--ghost {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--morph-radius-full);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--morph-border);
+  color: var(--morph-text);
+}
+
+.morph-button--chip {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--morph-radius-xs);
+  background: var(--morph-chip);
+  color: var(--morph-text);
+}
+
+.morph-button--icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--morph-radius-xs);
+  background: var(--morph-chip);
+  color: var(--morph-text);
+  display: grid;
+  place-items: center;
+}
+
+.morph-button--sm.morph-button--pill,
+.morph-button--sm.morph-button--ghost {
+  height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
+.morph-button--sm.morph-button--chip {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.morph-button--sm.morph-button--icon {
+  width: 34px;
+  height: 34px;
+}
+
+.morph-button__content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition:
+    opacity var(--morph-duration-hover) var(--morph-ease-out-soft),
+    filter var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-button--loading .morph-button__content {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+/* The spinner takes the content's place rather than sitting beside it, so a
+   button that starts loading does not change size and move everything after it. */
+.morph-button__spinner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    opacity var(--morph-duration-hover) var(--morph-ease-out-soft),
+    filter var(--morph-duration-hover) var(--morph-ease-out-soft);
+  pointer-events: none;
+}
+
+.morph-button--loading .morph-button__spinner {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.morph-button__ring {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: morph-spin 600ms linear infinite;
+}
+
+@keyframes morph-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-button {
+    transition:
+      opacity var(--morph-duration-hover) var(--morph-ease-out-soft),
+      background var(--morph-duration-hover) var(--morph-ease-out-soft),
+      box-shadow var(--morph-duration-hover) var(--morph-ease-out-soft);
+  }
+
+  .morph-button:active {
+    transform: none;
+  }
+
+  .morph-button__content {
+    transition: opacity var(--morph-duration-hover) var(--morph-ease-out-soft);
+    filter: none !important;
+  }
+
+  .morph-button__spinner {
+    transition: opacity var(--morph-duration-hover) var(--morph-ease-out-soft);
+    filter: none !important;
+  }
+
+  /* A ring that spins forever is exactly the kind of motion this preference is
+     asking to be spared. Held still, it still says "working". */
+  .morph-button__ring {
+    animation: none;
+    border-top-color: currentColor;
+    opacity: .55;
+  }
+}

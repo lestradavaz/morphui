@@ -4,7 +4,12 @@ import { expect, test, type Page } from '@playwright/test';
 /* Read from the manifest, not written out: a rename or a version bump must not
    need the assertions edited to keep passing. */
 const pkg = JSON.parse(readFileSync(new URL('../packages/morphui/package.json', import.meta.url), 'utf8')) as { name: string; version: string };
-const routes = ['/','/docs/installation','/docs/themes','/docs/motion','/docs/morph-dialog','/docs/morph-window','/docs/morph-card'];
+const routes = [
+  '/','/docs/installation','/docs/themes','/docs/motion',
+  '/docs/morph-dialog','/docs/morph-window','/docs/morph-card',
+  '/docs/morph-button','/docs/morph-popover','/docs/morph-tooltip',
+  '/docs/morph-context-menu','/docs/morph-combobox','/docs/morph-multi-select',
+];
 
 /**
  * Clicks land before React attaches its listeners if the page is still hydrating,
@@ -66,6 +71,52 @@ test('previews hydrate, keep colors scoped and open all three packaged component
     await page.getByRole('button',{name:close,exact:true}).click();
     await expect(page.locator('.morph-dialog[open]')).toHaveCount(0);
   }
+});
+
+/**
+ * Every control on the anchored pages opens something, so every one of them is
+ * a place where a measurement taken too early shows up as content that does not
+ * fit the box it was given: the surface is measured once and then held while it
+ * is scaled, and a box a row too short clips the last row rather than growing.
+ * The surface's own scroll height is what says whether the box matches.
+ */
+test('the anchored surfaces open out of their trigger, fit their content, and close', async ({ page }) => {
+  const controls: { route: string; open: (page: Page) => Promise<void>; what: string }[] = [
+    { route: '/docs/morph-popover', what: 'popover', open: async p => { await p.getByRole('button', { name: /Notification settings/ }).first().click(); } },
+    { route: '/docs/morph-context-menu', what: 'menu', open: async p => { await p.locator('.demo-file').first().click(); } },
+    { route: '/docs/morph-combobox', what: 'list', open: async p => { await p.locator('.morph-combobox__field').first().click(); } },
+    { route: '/docs/morph-multi-select', what: 'list', open: async p => { await p.locator('.morph-multi-select__field').first().click(); } },
+  ];
+
+  for (const { route, open, what } of controls) {
+    await page.goto(route);
+    await hydrate(page);
+    await open(page);
+
+    const surface = page.locator('.morph-anchored').first();
+    await expect(surface).toHaveCount(1);
+    // Settled, and big enough to be a panel rather than a line.
+    await page.waitForTimeout(1200);
+    const box = await surface.boundingBox();
+    expect(box!.height, `${route}: ${what} opened too small`).toBeGreaterThan(80);
+    expect(await surface.evaluate(el => el.scrollHeight - el.clientHeight), `${route}: ${what} is taller than its box`).toBeLessThanOrEqual(1);
+
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.morph-anchored')).toHaveCount(0);
+  }
+});
+
+test('a tooltip answers the pointer and the keyboard, and belongs to one control', async ({ page }) => {
+  await page.goto('/docs/morph-tooltip');
+  await hydrate(page);
+
+  // Focus, not hover: this has to hold where there is no pointer at all.
+  const control = page.getByRole('button', { name: 'Inspect motion' }).first();
+  await control.focus();
+  await expect(page.locator('.morph-tooltip__bubble[data-open=true]')).toHaveCount(1);
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.morph-tooltip__bubble[data-open=true]')).toHaveCount(0);
 });
 
 test('search and site appearance work across navigation', async ({ page }) => {

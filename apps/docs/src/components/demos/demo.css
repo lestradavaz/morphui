@@ -27,3 +27,21 @@
 .demo-story p:not(.demo-note) { color:var(--morph-muted); font-size:17px; line-height:1.7; margin:0 0 24px; }
 .demo-feature { min-height:100%; }
 @media(max-width:480px) { .demo-sheet { padding:66px 24px 28px; } .demo-dialog-panel { height:min(640px,100%); } }
+
+/* Anchored surfaces: the trigger sits in the page, the surface comes out of it. */
+.demo-stack { display:flex; flex-direction:column; align-items:center; gap:18px; width:100%; }
+.demo-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; }
+/* An opaque trigger, because a surface borrows the trigger's fill for its first
+   beat: opening out of a transparent ghost would start it invisible. */
+.demo-popover-trigger { background:var(--morph-bg); }
+.morph-popover__row input[type='checkbox'] { width:18px; height:18px; accent-color:var(--morph-accent); cursor:pointer; }
+.demo-small { height:30px; padding:0 13px; border:0; border-radius:8px; background:var(--morph-accent); color:var(--morph-on-accent); font:inherit; font-size:12px; cursor:pointer; }
+.demo-context { width:min(320px,100%); }
+.demo-file { display:flex; align-items:center; gap:12px; width:100%; min-height:72px; padding:10px 14px; border:1px solid var(--morph-border); border-radius:var(--morph-radius-sm); background:var(--morph-bg); color:var(--morph-text); cursor:context-menu; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+.demo-file:focus-visible { outline:2px solid var(--morph-accent); outline-offset:2px; }
+.demo-file > span:nth-child(2) { display:grid; gap:2px; flex:1; }
+.demo-file strong { font-size:14px; font-weight:500; }
+.demo-file small { color:var(--morph-muted); font-size:11px; }
+.demo-file-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:10px; background:var(--morph-accent-soft); color:var(--morph-on-accent-soft); font-size:22px; }
+.demo-file-favourite { color:var(--morph-muted); font-size:21px; }
+.demo-notice { min-height:18px; margin:0; color:var(--morph-muted); font-size:11px; text-align:center; }

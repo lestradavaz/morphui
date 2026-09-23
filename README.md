@@ -7,6 +7,16 @@ Morphing React components. Interfaces that transform instead of appearing.
 | `MorphDialog` | A trigger becomes a native `<dialog>`. The trigger label can fly into the heading, and the trigger fill becomes the panel surface. |
 | `MorphWindow` | The window shares its label with a marked heading and returns it on close. An unshared variant keeps the trigger visible. |
 | `MorphCard` | The image is the shared element between a card and its full-screen view. Corner radius interpolates across the transition. |
+| `MorphButton` | Pill, ghost, chip and icon shapes, with a ripple that starts where the press landed. |
+| `MorphPopover` | The control unfolds into what it controls. The page behind it stays put. |
+| `MorphTooltip` | A hint on hover and on keyboard focus. Deliberately not a morph: it fades and lifts on the slide duration. |
+| `MorphContextMenu` | Actions that come out of the row they act on, on right-click, click, long press or the menu key. |
+| `MorphCombobox` | The field opens into the list it is choosing from, grouped, with the current choice's letter travelling between them. |
+| `MorphMultiSelect` | Chosen values stay in the field as chips and the field makes room for them. |
+
+Every surface that opens on a trigger is built on `AnchoredSurface`, which is
+exported too: the dialog's morph, corner compensation and borrowed fill on a
+shorter clock, for anything else that wants to be anchored.
 
 MIT licensed. Works in JavaScript and TypeScript, in React and Next.js.
 

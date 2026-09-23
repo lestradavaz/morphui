@@ -139,6 +139,64 @@ and hides it, which is what a dialog does - so a window that shares is a dialog
 with a softer blur. Turn it on when the label matters more than the trigger
 staying where it is.
 
+## Surfaces that open on a control
+
+A dialog takes the page. These do not: they grow out of the control that opened
+them, wear its fill and corners for the first beat, and leave the rest of the
+page alone. They run the same Flip geometry and the same curves on a shorter
+clock, and they are what `AnchoredSurface` is for.
+
+```jsx
+<MorphPopover
+  label="Notification settings"
+  shareWords
+  trigger={
+    <MorphButton variant="ghost">
+      <span data-morph-words>Notification settings</span>
+    </MorphButton>
+  }
+>
+  <h3 data-morph-words>Notification settings</h3>
+  <p>Choose how this workspace keeps you informed.</p>
+</MorphPopover>
+
+<MorphContextMenu
+  label="File actions"
+  items={[{ id: 'rename', label: 'Rename', icon: '✎', onSelect: rename }]}
+  trigger={<div className="file-row" tabIndex={0}>Project brief</div>}
+/>
+
+<MorphCombobox options={workspaces} value={value} onChange={setValue} label="Workspace" />
+<MorphMultiSelect options={topics} value={topics} onChange={setTopics} label="Topics" />
+
+<MorphTooltip tip="The same curve, at every scale">
+  <MorphButton variant="ghost" size="sm">Inspect motion</MorphButton>
+</MorphTooltip>
+```
+
+| Component | Props that matter |
+| --- | --- |
+| `MorphButton` | `variant` (`pill` `ghost` `chip` `icon`), `size` (`sm` `md`), `loading`, `disabled`. |
+| `MorphPopover` | `trigger`, `children`, `label`, `width`, `height`, `shareWords`. |
+| `MorphContextMenu` | `trigger`, `items` (`id`, `label`, `icon`, `checked`, `disabled`, `onSelect`), `label`. |
+| `MorphCombobox` | `options` (`value`, `label`, `detail`, `group`), `value`, `onChange`, `label`, `placeholder`. |
+| `MorphMultiSelect` | `options` (strings), `value`, `onChange`, `label`, `placeholder`. |
+| `MorphTooltip` | `tip`, `children`, `side`, `delay`. |
+
+Each of them takes your own element as its trigger and reads it, rather than
+wrapping it in one of its own: the context menu's long press is read off the
+trigger itself, so nothing is added around your markup and your layout is left
+where you put it.
+
+`AnchoredSurface` is exported for the same reason. Pass it `open`, an `anchorRef`,
+an `onClose` and the content, and you get the anchored morph without any of the
+opinions above.
+
+Sizing is measured once, as the surface lays itself out, and then held: a surface
+that is being scaled cannot also be reflowed, so its size is fixed for as long as
+it is up. Pass `width` and `height` when the content can change while the panel
+is open — a filtered list, a menu whose items come and go.
+
 ## Props
 
 `MorphDialog` and `MorphWindow` take a `trigger`; `MorphCard` takes `card`. Both
@@ -262,8 +320,7 @@ change. It never becomes no transition at all — the dialog still has to arrive
 
 ## Status
 
-`0.0.0`. Nothing is published to npm yet, so the install line above is what it
-will be rather than what it is. The components and the theme layer run in
-the playground and in the documentation site.
+Published on npm. The dialog, window, card and anchored families are all in the
+package, and the documentation site renders the package's own build.
 
 MIT © Luis Estrada
