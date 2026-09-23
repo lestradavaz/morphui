@@ -1,0 +1,105 @@
+/*
+ * MorphUI - MorphHoldButton.
+ *
+ * The fill is a CSS transition on `:active`, and the component's own clock is
+ * the same number: the button confirms on the beat the fill arrives, in every
+ * theme and at every `--morph-slow` setting, because both read the duration from
+ * `--morph-hold-duration`.
+ *
+ * Releasing retargets the fill back to zero from wherever it got to. A keyframe
+ * would start again from nothing, which is the wrong answer to a press that
+ * changed its mind.
+ */
+
+.morph-hold-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  min-width: 176px;
+  height: 48px;
+  padding: 0 22px;
+  border: 1px solid var(--morph-border);
+  border-radius: var(--morph-radius-full);
+  background: var(--morph-bg);
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color var(--morph-duration-slide) var(--morph-ease-out-soft),
+    background var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+.morph-hold-button__progress {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--morph-accent-soft);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.morph-hold-button:active:not([data-confirmed='true']) .morph-hold-button__progress {
+  transform: scaleX(1);
+  transition: transform var(--morph-hold-duration, 700ms) linear;
+}
+
+.morph-hold-button[data-confirmed='true'] {
+  border-color: var(--morph-accent);
+  background: var(--morph-accent-soft);
+}
+
+.morph-hold-button__face {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  transition:
+    opacity var(--morph-duration-slide) var(--morph-ease-out-soft),
+    transform var(--morph-duration-slide) var(--morph-ease-out-soft),
+    filter var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+.morph-hold-button__face--done {
+  opacity: 0;
+  transform: translateY(8px);
+  filter: blur(3px);
+}
+
+.morph-hold-button[data-confirmed='true'] .morph-hold-button__face--ready {
+  opacity: 0;
+  transform: translateY(-8px);
+  filter: blur(3px);
+}
+
+.morph-hold-button[data-confirmed='true'] .morph-hold-button__face--done {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.morph-hold-button:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 3px;
+}
+
+.morph-hold-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-hold-button:not(:disabled):not([data-confirmed='true']):hover {
+    background: color-mix(in srgb, var(--morph-bg) 92%, var(--morph-text));
+  }
+}
+
+/* A fill that arrives over zero milliseconds has said nothing, and the two faces
+   are on the same beat anyway: `--morph-duration-slide` is already 0ms here. */
+@media (prefers-reduced-motion: reduce) {
+  .morph-hold-button__progress {
+    display: none;
+  }
+}

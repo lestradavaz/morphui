@@ -1,14 +1,17 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 /* Read from the manifest, not written out: a rename or a version bump must not
    need the assertions edited to keep passing. */
 const pkg = JSON.parse(readFileSync(new URL('../packages/morphui/package.json', import.meta.url), 'utf8')) as { name: string; version: string };
+/* The pages are read off the directory for the same reason. A page that was
+   written and never added to a list in a test is a page nothing checks. */
 const routes = [
-  '/','/docs/installation','/docs/themes','/docs/motion',
-  '/docs/morph-dialog','/docs/morph-window','/docs/morph-card',
-  '/docs/morph-button','/docs/morph-popover','/docs/morph-tooltip',
-  '/docs/morph-context-menu','/docs/morph-combobox','/docs/morph-multi-select',
+  '/',
+  ...readdirSync(new URL('../apps/docs/src/content/docs', import.meta.url))
+    .filter(name => name.endsWith('.md'))
+    .map(name => `/docs/${name.replace(/\.md$/, '')}`)
+    .sort(),
 ];
 
 /**
@@ -117,6 +120,79 @@ test('a tooltip answers the pointer and the keyboard, and belongs to one control
 
   await page.keyboard.press('Escape');
   await expect(page.locator('.morph-tooltip__bubble[data-open=true]')).toHaveCount(0);
+});
+
+/* Four controls change their own size, which is the one thing a control on a
+   page is not allowed to make everyone else pay for. */
+test('a control that resizes itself leaves the rest of the page where it was', async ({ page }) => {
+  await page.goto('/docs/morph-save-button');
+  await hydrate(page);
+  const save = page.locator('.morph-save-button').first();
+  const saveNote = await page.locator('.preview-stage .demo-note').boundingBox();
+  const wide = (await save.boundingBox())!.width;
+  await save.click();
+  await page.waitForTimeout(1000);
+  const narrow = (await save.boundingBox())!.width;
+  expect(narrow, 'the saved face did not make the button narrower').toBeLessThan(wide - 20);
+  expect((await page.locator('.preview-stage .demo-note').boundingBox())!.y, 'the line under the button moved').toBe(saveNote!.y);
+
+  await page.goto('/docs/morph-expand');
+  await hydrate(page);
+  const expand = page.locator('.morph-expand').first();
+  const expandNote = await page.locator('.preview-stage .demo-note').boundingBox();
+  const closed = (await expand.boundingBox())!.width;
+  await page.locator('.morph-expand__trigger').click();
+  await page.waitForTimeout(1000);
+  expect((await expand.boundingBox())!.width, 'the control did not widen to hold its actions').toBeGreaterThan(closed + 60);
+  expect((await page.locator('.preview-stage .demo-note').boundingBox())!.y, 'the line under the control moved').toBe(expandNote!.y);
+  // The height is the one thing that must not change: this opens sideways.
+  expect(Math.round((await expand.boundingBox())!.height)).toBe(48);
+});
+
+test('a stepper gives the space to the number when a button runs out of room', async ({ page }) => {
+  await page.goto('/docs/morph-stepper');
+  await hydrate(page);
+  const stepper = page.locator('.morph-stepper').first();
+  const read = () => stepper.evaluate(el => {
+    const display = el.querySelector<HTMLElement>('.morph-stepper__display')!;
+    const increase = el.querySelector<HTMLElement>('button[aria-label="Increase"]')!;
+    return { track: Math.round(el.getBoundingClientRect().width), display: Math.round(display.getBoundingClientRect().width), increase: Number(getComputedStyle(increase).opacity) };
+  });
+  const start = await read();
+  expect(start.increase).toBe(1);
+  // The demo's own range is three, so this reaches the end of it.
+  for (let press = 0; press < 4; press += 1) {
+    await page.locator('.morph-stepper button[aria-label="Increase"]').first().click({ force: true });
+    await page.waitForTimeout(600);
+  }
+  await page.waitForTimeout(700);
+  const end = await read();
+  expect(end.track, 'the control grew instead of handing over its own room').toBe(start.track);
+  expect(end.display, 'the number did not take the room the plus left').toBeGreaterThan(start.display + 30);
+  expect(end.increase, 'the plus is still on screen at the top of the range').toBe(0);
+});
+
+test('a hold button confirms only when the press is held', async ({ page }) => {
+  await page.goto('/docs/morph-hold-button');
+  await hydrate(page);
+  const button = page.locator('.morph-hold-button').first();
+  const bounds = (await button.boundingBox())!;
+  const press = async (ms: number) => {
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(ms);
+    await page.mouse.up();
+    await page.waitForTimeout(250);
+  };
+
+  // Released early: the fill goes back and nothing has happened.
+  await press(250);
+  await expect(button).toHaveAttribute('data-confirmed', 'false');
+  const travelled = await page.locator('.morph-hold-button__progress').first().evaluate(el => new DOMMatrixReadOnly(getComputedStyle(el).transform).a);
+  expect(travelled, 'the fill did not go back to the start').toBeLessThan(0.05);
+
+  await press(1100);
+  await expect(button).toHaveAttribute('data-confirmed', 'true');
 });
 
 test('search and site appearance work across navigation', async ({ page }) => {

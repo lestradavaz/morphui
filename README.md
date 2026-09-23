@@ -8,11 +8,21 @@ Morphing React components. Interfaces that transform instead of appearing.
 | `MorphWindow` | The window shares its label with a marked heading and returns it on close. An unshared variant keeps the trigger visible. |
 | `MorphCard` | The image is the shared element between a card and its full-screen view. Corner radius interpolates across the transition. |
 | `MorphButton` | Pill, ghost, chip and icon shapes, with a ripple that starts where the press landed. |
+| `MorphSwitch` | A button with `role="switch"`: the thumb travels and squashes under the press rather than jumping. |
+| `MorphCheckbox` | A real input, visually hidden, with a box beside it and a tick that draws itself. |
+| `MorphRadio` | A radio group on a raised track, where a panel moves between the rows instead of a highlight blinking. |
+| `MorphInput` | A labelled field whose status changes the border, the mark and the message line, and moves nothing else. |
+| `MorphStepper` | At the ends of its range one button leaves, and the number takes the space it had. |
+| `MorphTabs` | The panel changes at once and the pill takes 200ms: the tab is what was asked for, the pill is only the record. |
 | `MorphPopover` | The control unfolds into what it controls. The page behind it stays put. |
 | `MorphTooltip` | A hint on hover and on keyboard focus. Deliberately not a morph: it fades and lifts on the slide duration. |
 | `MorphContextMenu` | Actions that come out of the row they act on, on right-click, click, long press or the menu key. |
 | `MorphCombobox` | The field opens into the list it is choosing from, grouped, with the current choice's letter travelling between them. |
 | `MorphMultiSelect` | Chosen values stay in the field as chips and the field makes room for them. |
+| `MorphSaveButton` | A button that becomes the receipt for the press, changing width between its two faces. |
+| `MorphHoldButton` | A button that has to be held, with a fill that runs on the same clock as the confirm. |
+| `MorphSelect` | A short dialog whose heading is shared with the field, so the field's own words become the list's title. |
+| `MorphExpand` | A control that widens in place into its own actions, measured from the actions it holds. |
 
 Every surface that opens on a trigger is built on `AnchoredSurface`, which is
 exported too: the dialog's morph, corner compensation and borrowed fill on a

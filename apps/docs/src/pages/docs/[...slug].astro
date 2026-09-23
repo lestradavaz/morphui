@@ -11,11 +11,21 @@ import dialogSource from '@/components/demos/DialogDemo.tsx?raw';
 import windowSource from '@/components/demos/WindowDemo.tsx?raw';
 import cardSource from '@/components/demos/CardDemo.tsx?raw';
 import buttonSource from '@/components/demos/ButtonDemo.tsx?raw';
+import switchSource from '@/components/demos/SwitchDemo.tsx?raw';
+import checkboxSource from '@/components/demos/CheckboxDemo.tsx?raw';
+import radioSource from '@/components/demos/RadioDemo.tsx?raw';
+import inputSource from '@/components/demos/InputDemo.tsx?raw';
+import stepperSource from '@/components/demos/StepperDemo.tsx?raw';
+import tabsSource from '@/components/demos/TabsDemo.tsx?raw';
 import popoverSource from '@/components/demos/PopoverDemo.tsx?raw';
 import tooltipSource from '@/components/demos/TooltipDemo.tsx?raw';
 import contextMenuSource from '@/components/demos/ContextMenuDemo.tsx?raw';
 import comboboxSource from '@/components/demos/ComboboxDemo.tsx?raw';
 import multiSelectSource from '@/components/demos/MultiSelectDemo.tsx?raw';
+import saveButtonSource from '@/components/demos/SaveButtonDemo.tsx?raw';
+import holdButtonSource from '@/components/demos/HoldButtonDemo.tsx?raw';
+import selectSource from '@/components/demos/SelectDemo.tsx?raw';
+import expandSource from '@/components/demos/ExpandDemo.tsx?raw';
 import demoStyles from '@/components/demos/demo.css?raw';
 export async function getStaticPaths() {
   return (await getCollection('docs')).map(entry=>({params:{slug:entry.id},props:{entry}}));
@@ -30,7 +40,10 @@ const isComponent = kind !== 'guide';
 const sources: Record<string, string> = {
   dialog: dialogSource, window: windowSource, card: cardSource,
   button: buttonSource, popover: popoverSource, tooltip: tooltipSource,
+  switch: switchSource, checkbox: checkboxSource, radio: radioSource,
+  input: inputSource, stepper: stepperSource, tabs: tabsSource,
   'context-menu': contextMenuSource, combobox: comboboxSource, 'multi-select': multiSelectSource,
+  'save-button': saveButtonSource, 'hold-button': holdButtonSource, select: selectSource, expand: expandSource,
 };
 const componentApi = api[kind] ?? { rows: [], note: '' };
 const toc = [...(isComponent?[{slug:'preview',text:'Preview'},{slug:'example',text:'Example'}]:[]),...headings.filter(h=>h.depth===2),...(isComponent?[{slug:'api',text:'API reference'}]:[])];

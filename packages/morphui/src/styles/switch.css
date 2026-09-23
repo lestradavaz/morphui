@@ -1,0 +1,77 @@
+/*
+ * The switch is CSS rather than GSAP, and that is the point: it is one transform
+ * and one background, it is pressed tens of times a day, and a transition
+ * retargets from wherever the thumb currently is while a keyframe would start
+ * again from zero. Two taps in a second is what a switch is for.
+ */
+
+.morph-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: var(--morph-switch-width);
+  height: var(--morph-switch-height);
+  padding: 2px;
+  border: 0;
+  border-radius: var(--morph-radius-full);
+  /* Off is a groove, and a groove has to be seen: the border token is the same
+     value as the surface in most themes, which leaves an off switch looking
+     like a pill drawn in nothing. Mixed from the muted ink, it reads in all
+     seven themes and in both modes. */
+  background: color-mix(in srgb, var(--morph-muted) 32%, transparent);
+  cursor: pointer;
+  transition: background var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-switch[aria-checked='true'] {
+  background: var(--morph-accent);
+}
+
+.morph-switch__thumb {
+  display: block;
+  width: var(--morph-switch-thumb);
+  height: var(--morph-switch-thumb);
+  border-radius: var(--morph-radius-full);
+  background: var(--morph-bg);
+  transform: translateX(0);
+  transition: transform var(--morph-duration-slide) var(--morph-ease-in-out-soft);
+  pointer-events: none;
+}
+
+.morph-switch[aria-checked='true'] .morph-switch__thumb {
+  transform: translateX(var(--morph-switch-travel));
+}
+
+/* The thumb stretches under the press rather than jumping to a new place: the
+   travel is what the eye is following, and a squash keeps it legible. */
+.morph-switch:active .morph-switch__thumb {
+  transform: translateX(0) scaleX(1.12);
+}
+
+.morph-switch[aria-checked='true']:active .morph-switch__thumb {
+  transform: translateX(var(--morph-switch-travel)) scaleX(1.12);
+}
+
+.morph-switch:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 3px;
+}
+
+.morph-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Touch fires a false hover on the way to the tap, which here reads as the
+   switch reacting to a press that has not happened yet. */
+@media (hover: hover) and (pointer: fine) {
+  .morph-switch:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-switch__thumb {
+    transition-duration: 0ms;
+  }
+}

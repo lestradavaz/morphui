@@ -101,6 +101,19 @@ select option {color:var(--morph-text);background:var(--morph-bg);}
 .glyph-card > span:nth-child(2) {display:block;width:36px;height:42px;background:var(--morph-raised);border:1px solid var(--morph-muted);border-radius:9px;}
 .glyph-button > span:nth-child(1) {display:block;width:42px;height:17px;border-radius:999px;background:var(--morph-accent);}
 .glyph-button > span:nth-child(2) {display:block;width:8px;height:8px;margin-left:-18px;border-radius:50%;background:var(--morph-on-accent);}
+.glyph-switch > span:nth-child(1) {display:block;width:42px;height:24px;border-radius:999px;background:var(--morph-accent);}
+.glyph-switch > span:nth-child(2) {display:block;width:18px;height:18px;margin-left:-29px;border-radius:50%;background:var(--morph-on-accent);}
+/* The controls read as the pair they are: the shape, and the mark that fills it. */
+.glyph-checkbox > span:nth-child(1) {display:block;width:25px;height:25px;border:1px solid var(--morph-border);border-radius:8px;background:var(--morph-bg);}
+.glyph-checkbox > span:nth-child(2) {display:block;width:15px;height:15px;margin-left:-27px;border-radius:5px;background:var(--morph-accent);}
+.glyph-radio > span:nth-child(1) {display:block;width:25px;height:25px;border:1px solid var(--morph-border);border-radius:50%;background:var(--morph-bg);}
+.glyph-radio > span:nth-child(2) {display:block;width:14px;height:14px;margin-left:-27px;border-radius:50%;background:var(--morph-accent);}
+.glyph-input > span:nth-child(1) {display:block;width:46px;height:22px;border:1px solid var(--morph-border);border-radius:8px;background:var(--morph-bg);}
+.glyph-input > span:nth-child(2) {display:block;width:13px;height:13px;margin-left:-28px;border-radius:4px;background:var(--morph-accent-soft);}
+.glyph-stepper > span:nth-child(1) {display:block;width:46px;height:23px;border:1px solid var(--morph-border);border-radius:999px;background:var(--morph-bg);}
+.glyph-stepper > span:nth-child(2) {display:block;width:12px;height:12px;margin-left:-36px;border-radius:4px;background:var(--morph-accent);}
+.glyph-tabs > span:nth-child(1) {display:block;width:50px;height:24px;border-radius:999px;background:var(--morph-chip);}
+.glyph-tabs > span:nth-child(2) {display:block;width:22px;height:16px;margin-left:-53px;border-radius:999px;background:var(--morph-accent);}
 .glyph-popover > span:nth-child(1) {display:block;width:26px;height:13px;border-radius:7px;background:var(--morph-accent);}
 .glyph-popover > span:nth-child(2) {display:block;width:31px;height:27px;margin-top:16px;border:1px solid var(--morph-border);border-radius:9px;background:var(--morph-bg);}
 .glyph-tooltip > span:nth-child(1) {display:block;width:35px;height:19px;border:1px solid var(--morph-muted);border-radius:7px;background:var(--morph-raised);}
@@ -112,6 +125,15 @@ select option {color:var(--morph-text);background:var(--morph-bg);}
 .glyph-multi-select > span:nth-child(1) {display:block;width:48px;height:21px;border:1px solid var(--morph-border);border-radius:8px;background:var(--morph-bg);}
 .glyph-multi-select > span:nth-child(2) {display:block;width:13px;height:9px;margin-left:-30px;border-radius:3px;background:var(--morph-accent);}
 .glyph-multi-select > span:nth-child(3) {display:block;width:9px;height:9px;border-radius:3px;background:var(--morph-accent-soft);}
+.glyph-save-button > span:nth-child(1) {display:block;width:48px;height:22px;border-radius:999px;background:var(--morph-accent);}
+.glyph-save-button > span:nth-child(2) {display:block;width:14px;height:8px;margin-left:-31px;margin-top:-3px;border-left:2px solid var(--morph-on-accent);border-bottom:2px solid var(--morph-on-accent);transform:rotate(-45deg);}
+.glyph-hold-button > span:nth-child(1) {display:block;width:48px;height:22px;border:1px solid var(--morph-border);border-radius:999px;background:var(--morph-bg);}
+.glyph-hold-button > span:nth-child(2) {display:block;width:22px;height:20px;margin-left:-53px;border-radius:999px 0 0 999px;background:var(--morph-accent-soft);}
+.glyph-select > span:nth-child(1) {display:block;width:48px;height:21px;border:1px solid var(--morph-border);border-radius:8px;background:var(--morph-bg);}
+.glyph-select > span:nth-child(2) {display:block;width:12px;height:12px;margin-left:-41px;border-radius:50%;background:var(--morph-accent);}
+.glyph-select > span:nth-child(3) {display:block;width:7px;height:7px;margin-left:-3px;margin-top:-4px;border-right:1.5px solid var(--morph-muted);border-bottom:1.5px solid var(--morph-muted);transform:rotate(45deg);}
+.glyph-expand > span:nth-child(1) {display:block;width:48px;height:24px;border-radius:999px;background:var(--morph-accent);}
+.glyph-expand > span:nth-child(2) {display:block;width:26px;height:16px;margin-left:-33px;border-radius:999px;background:color-mix(in srgb,var(--morph-on-accent) 26%,transparent);}
 .component-row:hover .component-row-action {text-decoration:underline;text-underline-offset:4px;}
 .theme-story {display:grid;grid-template-columns:1fr 1.25fr;align-items:center;gap:80px;padding:94px 0;border-top:1px solid var(--morph-border);margin-top:25px;}
 .theme-story p {font-size:15px;line-height:1.8;color:var(--morph-muted);max-width:370px;margin:20px 0;}

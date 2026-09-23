@@ -45,3 +45,12 @@
 .demo-file-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:10px; background:var(--morph-accent-soft); color:var(--morph-on-accent-soft); font-size:22px; }
 .demo-file-favourite { color:var(--morph-muted); font-size:21px; }
 .demo-notice { min-height:18px; margin:0; color:var(--morph-muted); font-size:11px; text-align:center; }
+
+/* A control and its visible text side by side: the switch and the checkbox each
+   decide their own text, so only the pair's layout lives here. */
+.demo-label { font-size:15px; font-weight:500; color:var(--morph-text); cursor:pointer; -webkit-user-select:none; user-select:none; }
+.demo-label[data-disabled] { color:var(--morph-muted); cursor:not-allowed; }
+/* Two fields stacked at a readable measure: a text field at the width of the
+   stage is a field nobody can scan. */
+.demo-fields { display:grid; gap:16px; width:min(100%,340px); }
+.demo-copy { margin:0; max-width:52ch; color:var(--morph-muted); font-size:14px; }

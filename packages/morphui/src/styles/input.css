@@ -1,0 +1,99 @@
+.morph-input {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.morph-input label {
+  color: var(--morph-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.morph-input__frame {
+  position: relative;
+}
+
+.morph-input__frame input {
+  width: 100%;
+  height: 48px;
+  /* Room for the check mark, whether or not one is showing: a mark that pushed
+     the text across when it appeared would move what the reader is reading. */
+  padding: 0 42px 0 15px;
+  border: 1px solid var(--morph-border);
+  border-radius: var(--morph-radius-xs);
+  background: var(--morph-bg);
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 14px;
+  transition:
+    border-color var(--morph-duration-hover) var(--morph-ease-out-soft),
+    box-shadow var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-input__frame input::placeholder {
+  color: var(--morph-faint);
+}
+
+/* The ring is drawn with the box shadow rather than the outline, because the
+   field's own border is what changes color: an outline outside it would leave
+   two rings for a focused, valid field. */
+.morph-input__frame input:focus-visible {
+  outline: none;
+  border-color: var(--morph-accent);
+  box-shadow: 0 0 0 3px var(--morph-accent-soft);
+}
+
+.morph-input[data-status='error'] .morph-input__frame input {
+  border-color: var(--morph-error);
+}
+
+.morph-input[data-status='error'] .morph-input__message {
+  color: var(--morph-error);
+}
+
+.morph-input[data-status='success'] .morph-input__message {
+  color: var(--morph-muted);
+}
+
+.morph-input input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.morph-input__check {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  color: var(--morph-accent);
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
+  transition:
+    opacity var(--morph-duration-draw) var(--morph-ease-out-soft),
+    transform var(--morph-duration-draw) var(--morph-ease-out-soft);
+}
+
+.morph-input[data-status='success'] .morph-input__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Held at its own height whether or not there is anything in it: a message that
+   appears moves everything below it at the exact moment the reader is looking
+   at what they typed. */
+.morph-input__message {
+  min-height: 20px;
+  color: var(--morph-muted);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The mark still arrives — it is what says the value is good — it just does
+     not scale on the way. */
+  .morph-input__check {
+    transform: none;
+    transition: opacity 100ms;
+  }
+}

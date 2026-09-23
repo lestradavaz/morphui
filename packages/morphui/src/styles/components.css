@@ -8,6 +8,16 @@
 
 @import "./button.css";
 @import "./anchored.css";
+@import "./switch.css";
+@import "./checkbox.css";
+@import "./radio.css";
+@import "./input.css";
+@import "./stepper.css";
+@import "./tabs.css";
+@import "./save-button.css";
+@import "./hold-button.css";
+@import "./select.css";
+@import "./expand.css";
 
 .morph-dialog {
   position: fixed;

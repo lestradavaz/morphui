@@ -197,6 +197,47 @@ that is being scaled cannot also be reflowed, so its size is fixed for as long a
 it is up. Pass `width` and `height` when the content can change while the panel
 is open — a filtered list, a menu whose items come and go.
 
+## Controls
+
+Form controls are CSS rather than GSAP, on purpose: a press is not a morph, and a
+transition retargets from where the control already is while a keyframe would
+start again from zero. They also work on a page that never imports a transition.
+
+```jsx
+<MorphSwitch label="Email notifications" checked={on} onChange={setOn} />
+<MorphCheckbox label="Remember this device" checked={remember} onChange={setRemember} />
+<MorphRadio name="plan" label="Plan" options={plans} value={plan} onChange={setPlan} />
+<MorphInput label="Email address" status={status} message="Enter a valid address." />
+<MorphStepper value={seats} onChange={setSeats} min={1} max={4} />
+<MorphTabs label="Details" tabs={[{ label: 'Overview', content: … }]} />
+```
+
+| Component | Props that matter |
+| --- | --- |
+| `MorphSwitch` | `label` (the accessible name), `checked`, `onChange`, `disabled`. |
+| `MorphCheckbox` | `label` (`ReactNode`), `checked`, `onChange`, `disabled`. |
+| `MorphRadio` | `name`, `label`, `options` (`value`, `label`), `value`, `onChange`. |
+| `MorphInput` | `label`, `status` (`idle` `error` `success`), `message`, and every input prop. |
+| `MorphStepper` | `value`, `onChange`, `min`, `max`, `step`. |
+| `MorphTabs` | `tabs` (`label`, `content`), `defaultIndex`, `label`. |
+
+`MorphInput`'s status is the caller's call and never the field's: whether an
+address is good enough is a policy, and the policy belongs to the application.
+
+## Buttons that change their own size
+
+| Component | Props that matter |
+| --- | --- |
+| `MorphSaveButton` | `saved`, `label`, `savedLabel`, `icon`, `savedIcon`; the press is reported through `onClick`. |
+| `MorphHoldButton` | `hold`, `label`, `confirmedLabel`, `onConfirm`, `onReset`. |
+| `MorphExpand` | `actions`, `label`, `onSelect`. |
+| `MorphSelect` | `options` (`value`, `label`, `swatch`), `value`, `onChange`, `label`, `description`. |
+
+Three of them grow or shrink while they are on screen, and none of them makes the
+page pay for it: the save button measures the face that is arriving to know how
+wide to be, the expand control measures the actions it is holding, and the
+stepper hands its own room to the number when a button runs out of range.
+
 ## Props
 
 `MorphDialog` and `MorphWindow` take a `trigger`; `MorphCard` takes `card`. Both
@@ -320,7 +361,8 @@ change. It never becomes no transition at all — the dialog still has to arrive
 
 ## Status
 
-Published on npm. The dialog, window, card and anchored families are all in the
-package, and the documentation site renders the package's own build.
+Published on npm. The dialog, window, card, anchored, control and resize
+families are all in the package, and the documentation site renders the
+package's own build.
 
 MIT © Luis Estrada

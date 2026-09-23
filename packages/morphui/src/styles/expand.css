@@ -1,0 +1,135 @@
+/*
+ * MorphUI - MorphExpand.
+ *
+ * The control's width belongs to the script: the actions are out of the flow, so
+ * there is nothing in the CSS for a box to be sized from. What the CSS does own
+ * is the closed state, which is the trigger's own natural width - so the first
+ * paint, before any script has run, is already right.
+ */
+
+.morph-expand {
+  position: relative;
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  height: 48px;
+  overflow: hidden;
+  border-radius: var(--morph-radius-full);
+  background: var(--morph-accent);
+  color: var(--morph-on-accent);
+  box-shadow: var(--morph-elevation-1);
+  isolation: isolate;
+}
+
+.morph-expand__trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  padding: 0 15px 0 11px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Open, the trigger is the icon alone, and it keeps the same left edge: the
+   thing the reader pressed does not move out from under the press. */
+.morph-expand[data-open='true'] .morph-expand__trigger {
+  width: 48px;
+  padding: 0 12px;
+}
+
+.morph-expand__icon {
+  display: grid;
+  flex: 0 0 24px;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+  transition: transform var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+.morph-expand[data-open='true'] .morph-expand__icon {
+  transform: rotate(90deg);
+}
+
+.morph-expand__label {
+  transition:
+    opacity var(--morph-duration-hover) var(--morph-ease-out-soft),
+    transform var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-expand[data-open='true'] .morph-expand__label {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+.morph-expand__actions {
+  position: absolute;
+  left: 48px;
+  top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 40px;
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+  transition:
+    opacity var(--morph-duration-slide) var(--morph-ease-out-soft),
+    transform var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+/* The actions follow the width rather than racing it: the box is still growing
+   when it opens, and a row that arrived at full opacity would be sitting in
+   space the control has not made yet. */
+.morph-expand[data-open='true'] .morph-expand__actions {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  transition-delay: 70ms;
+}
+
+.morph-expand__actions button {
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--morph-radius-full);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.morph-expand__trigger:focus-visible,
+.morph-expand__actions button:focus-visible {
+  outline: 2px solid var(--morph-on-accent);
+  outline-offset: -3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-expand__actions button:hover {
+    background: color-mix(in srgb, currentColor 18%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-expand__trigger,
+  .morph-expand__icon,
+  .morph-expand__label,
+  .morph-expand__actions {
+    transition: none;
+  }
+}

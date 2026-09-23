@@ -1,0 +1,166 @@
+/*
+ * MorphUI - MorphSelect.
+ *
+ * The trigger is the caller's own field, so its size and its border are the only
+ * things set here; the panel is a dialog panel that happens to be short, which
+ * is why it has a height of its own rather than the library's default fill.
+ */
+
+.morph-select__trigger {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-width: 240px;
+  height: 52px;
+  padding: 0 18px;
+  border: 1px solid var(--morph-border);
+  border-radius: var(--morph-radius-xs);
+  background: var(--morph-bg);
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform var(--morph-duration-press) var(--morph-ease-out-soft);
+}
+
+.morph-select__trigger:active {
+  transform: scale(0.98);
+}
+
+.morph-select__trigger:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 3px;
+}
+
+.morph-select__trigger > span:first-child {
+  font-weight: 500;
+}
+
+.morph-select__current {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--morph-muted);
+}
+
+.morph-select__chevron {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  margin: -4px 2px 0;
+  border-right: 1.5px solid var(--morph-muted);
+  border-bottom: 1.5px solid var(--morph-muted);
+  transform: rotate(45deg);
+  transition: transform var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+/* The chevron turns over as the field is opened: it is the one thing on the
+   trigger that says which of the two states the reader is looking at. */
+.morph-select__trigger[aria-expanded='true'] .morph-select__chevron {
+  transform: translateY(4px) rotate(225deg);
+}
+
+/* Doubled up with the library's own panel rule, which is declared after this
+   file and would otherwise keep the panel at its default fill: a list of four
+   finishes does not need the height of a dialog. */
+.morph-panel.morph-select__panel {
+  width: min(380px, 100%);
+  /* Hugs its list, up to the point where the list would run off the viewport. */
+  height: auto;
+  max-height: min(480px, calc(100dvh - 48px));
+}
+
+.morph-select__content {
+  padding: 30px 20px 20px;
+}
+
+.morph-select__content h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 550;
+  letter-spacing: -0.025em;
+}
+
+.morph-select__content p {
+  margin: 4px 0 22px;
+  color: var(--morph-muted);
+  font-size: 14px;
+}
+
+.morph-select__options {
+  display: grid;
+  gap: 4px;
+}
+
+.morph-select__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--morph-radius-xs);
+  background: transparent;
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.morph-select__option[aria-pressed='true'] {
+  background: var(--morph-accent-soft);
+}
+
+.morph-select__option-label {
+  flex: 1;
+}
+
+.morph-select__option:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: -2px;
+}
+
+.morph-select__swatch {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  /* A swatch for a colour the theme does not know still needs an edge: without
+     it a pale finish on a pale panel is a hole. */
+  box-shadow: inset 0 0 0 1px var(--morph-border);
+}
+
+.morph-select__current .morph-select__swatch {
+  flex-basis: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.morph-select__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--morph-raised);
+  color: var(--morph-text);
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-select__option:hover {
+    background: var(--morph-raised);
+  }
+}

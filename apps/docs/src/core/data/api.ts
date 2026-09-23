@@ -83,6 +83,67 @@ export const api: Record<string, Api> = {
     ],
     note: 'The ripple, the press and the loading state are CSS, so they work on a page that never imports a transition, and they keep working while the main thread is busy opening the panel the button just asked for.',
   },
+  switch: {
+    rows: [
+      ['label', 'string', 'Required', 'The accessible name. Hidden, and required: a switch is announced as a switch and then as nothing else.'],
+      ['checked', 'boolean', 'false', 'Whether the switch is on. Control it, or let the component keep its own state and read it from onChange.'],
+      ['onChange', '(checked: boolean) => void', '—', 'Called with the position the reader moved it to.'],
+      ['disabled', 'boolean', 'false', 'Blocks the press and reports itself.'],
+      ['…rest', 'ButtonHTMLAttributes', '—', 'Every other prop goes to the underlying button, including id, name and aria-*.'],
+    ],
+    note: 'The visible text beside a switch is yours: give it an <code>id</code> and point a <code>&lt;label htmlFor&gt;</code> at it, which is what makes the text itself press the switch.',
+  },
+  checkbox: {
+    rows: [
+      ['label', 'ReactNode', 'Required', 'The text of the control. Clicking it ticks the box, because it is a real label.'],
+      ['checked', 'boolean', 'false', 'Whether the box is ticked.'],
+      ['onChange', '(checked: boolean) => void', '—', 'Called with the state the reader left it in.'],
+      ['disabled', 'boolean', 'false', 'Blocks the input and takes the whole label out of the pointer’s reach.'],
+      ['…rest', 'InputHTMLAttributes', '—', 'Every other prop goes to the underlying checkbox input, including id, name and aria-*.'],
+    ],
+    note: 'A real input stays in the tree, visually hidden, and the box is decoration beside it: that is what keeps the keyboard behaviour, form participation and label association a <code>div</code> with a role would have to reimplement.',
+  },
+  radio: {
+    rows: [
+      ['name', 'string', 'Required', 'The group’s name, so the browser keeps its own arrow-key behaviour.'],
+      ['label', 'string', 'Required', 'The group’s accessible name.'],
+      ['options', 'MorphRadioOption[]', 'Required', 'value and label, for each row.'],
+      ['value', 'string', '—', 'The chosen value. With nothing chosen, the panel stays hidden.'],
+      ['onChange', '(value: string) => void', '—', 'Called with the value the reader moved to.'],
+      ['disabled', 'boolean', 'false', 'Blocks the whole group without hiding which option is carried.'],
+    ],
+    note: 'The panel behind the chosen row is sized from that row, so rows of any height work. It is placed rather than animated on the first pass and under <code>prefers-reduced-motion</code>.',
+  },
+  input: {
+    rows: [
+      ['label', 'string', 'Required', 'The field’s visible label. Always rendered: a placeholder is not a label.'],
+      ['status', "'idle' | 'error' | 'success'", "'idle'", 'What the field reports back. The component never decides this.'],
+      ['message', 'string', '—', 'The line under the field. Its height is held whether or not there is a message.'],
+      ['…rest', 'InputHTMLAttributes', '—', 'Every other prop goes to the underlying input, including type, name, value and aria-*.'],
+    ],
+    note: 'The check mark is drawn inside the field’s own right-hand padding, which is reserved whether or not a mark is showing, and the message line is always in the layout: a hint appearing mid-keystroke moves neither the text nor the page.',
+  },
+  stepper: {
+    rows: [
+      ['value', 'number', 'Required', 'The number. Controlled: the stepper reports the next one and waits to be told.'],
+      ['onChange', '(value: number) => void', '—', 'Called with the next number, already clamped to the range.'],
+      ['min', 'number', '0', 'The bottom of the range. At it, the minus leaves and the number takes the space.'],
+      ['max', 'number', '99', 'The top of the range, where the plus leaves.'],
+      ['step', 'number', '1', 'How far one press moves.'],
+      ['disabled', 'boolean', 'false', 'Blocks both buttons without changing the geometry.'],
+      ['label', 'string', "'Quantity'", 'An accessible name for the group.'],
+    ],
+    note: 'The display is <code>aria-live="polite"</code>, and at either end focus moves to the button that is left rather than dropping the keyboard back onto the page.',
+  },
+  tabs: {
+    rows: [
+      ['tabs', 'MorphTab[]', 'Required', 'label and content for each tab. The label is also its key.'],
+      ['defaultIndex', 'number', '0', 'Which tab starts selected. The component keeps the choice itself from there.'],
+      ['label', 'string', "'Sections'", 'An accessible name for the tab list. A page with two of them needs two names.'],
+      ['onSelect', '(index: number) => void', '—', 'Called when the selection changes, by pointer or by keyboard.'],
+    ],
+    note: 'The panel changes immediately and the pill takes 200ms: the reader asked for the tab, so the tab is there, and the pill is only the record of where they are. Arrow keys, Home and End move selection and focus together, without the slide.',
+  },
   popover: {
     rows: [
       ['trigger', 'ReactElement', 'Required', 'Your own element. MorphUI attaches a ref, an onClick and the aria wiring.'],
@@ -140,5 +201,48 @@ export const api: Record<string, Api> = {
       ...anchoredTail,
     ],
     note: 'Adding a chip is the field’s own change: it fades in where it belongs and its neighbours slide, rather than a copy of a row crossing the panel to become it. Backspace in an empty search removes the last chip.',
+  },
+  'save-button': {
+    rows: [
+      ['saved', 'boolean', 'Required', 'Whether the thing has been saved. The press is reported through onClick; the state is yours.'],
+      ['label', 'string', "'Save changes'", 'The words before the save.'],
+      ['savedLabel', 'string', "'Saved'", 'The words after it.'],
+      ['icon', 'ReactNode', "'↗'", 'The mark on the face before the save.'],
+      ['savedIcon', 'ReactNode', "'✓'", 'The mark on the face after it, where the evidence belongs.'],
+      ['…rest', 'MorphButtonProps', '—', 'Everything a MorphButton takes: variant, size, loading, disabled, onClick and the aria attributes.'],
+    ],
+    note: 'The button changes width between its two faces and the width is measured from the face that is arriving, so no project has to say how wide its own words are.',
+  },
+  'hold-button': {
+    rows: [
+      ['hold', 'number', '700', 'How long the press has to be held, in milliseconds. The fill runs on the same number.'],
+      ['label', 'string', "'Hold to confirm'", 'The words while the button is waiting.'],
+      ['confirmedLabel', 'string', "'Confirmed · reset'", 'The words after it, which also have to say how to undo it.'],
+      ['onConfirm', '() => void', '—', 'Called when the hold completes, or on a keyboard press.'],
+      ['onReset', '() => void', '—', 'Called when the reader takes it back.'],
+      ['…rest', 'ButtonHTMLAttributes', '—', 'Every other prop goes to the underlying button, including disabled, className and aria-*.'],
+    ],
+    note: 'The fill is a CSS transition on the press and the confirm is a timer on the same number, so the two cannot disagree about when the button was held long enough.',
+  },
+  select: {
+    rows: [
+      ['options', 'MorphSelectOption[]', 'Required', 'value, label, and optionally swatch — any CSS colour, drawn in the list and in the field.'],
+      ['value', 'string', 'Required', 'The chosen value. Controlled.'],
+      ['onChange', '(value: string) => void', 'Required', 'Called when a row is chosen. The panel closes itself.'],
+      ['label', 'string', 'Required', 'The field’s words, and the panel’s heading: the two are connected, so these words travel.'],
+      ['description', 'string', '—', 'A line under the heading, for what the choice is for.'],
+      ['panelClassName', 'string', '—', 'Classes on the panel, for a width of your own.'],
+      ['className', 'string', '—', 'Classes on the outer native dialog.'],
+    ],
+    note: 'This is a MorphDialog on a short panel, so the page behind it is dimmed and held still while the choice is made.',
+  },
+  expand: {
+    rows: [
+      ['actions', 'string[]', 'Required', 'The row that appears, in the order it should be offered.'],
+      ['label', 'string', "'Share'", 'The words on the closed control. The chosen action replaces them.'],
+      ['onSelect', '(action: string) => void', '—', 'Called with the action that was chosen.'],
+      ['className', 'string', '—', 'Classes on the control.'],
+    ],
+    note: 'The open width is measured from the actions themselves, so a control with two short actions does not open to the width of one with four long ones.',
   },
 };

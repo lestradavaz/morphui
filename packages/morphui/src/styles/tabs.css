@@ -1,0 +1,81 @@
+.morph-tabs__bar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--morph-radius-sm);
+  background: var(--morph-chip);
+}
+
+/*
+ * The pill that slides. Its x and width are the component's, in pixels, because
+ * the tabs are whatever the labels make them: a pill sized in fractions of the
+ * bar breaks on the first two-word tab, and the pill is what says which tab is
+ * on.
+ */
+.morph-tabs__indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--morph-surface);
+  border-radius: var(--morph-radius-xs);
+  box-shadow: var(--morph-elevation-1);
+}
+
+.morph-tabs__tab {
+  position: relative;
+  z-index: 1;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--morph-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--morph-duration-press) var(--morph-ease-out-soft),
+    color var(--morph-duration-hover) var(--morph-ease-out-soft);
+}
+
+.morph-tabs__tab[aria-selected='true'] {
+  color: var(--morph-text);
+}
+
+.morph-tabs__tab:active {
+  transform: scale(0.97);
+}
+
+/* Inside the pill's own corner, so the ring reads as belonging to the tab
+   rather than to the bar. */
+.morph-tabs__tab:focus-visible {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: -2px;
+  border-radius: var(--morph-radius-xs);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-tabs__tab:not([aria-selected='true']):hover {
+    color: var(--morph-text);
+  }
+}
+
+.morph-tabs__panel {
+  min-height: 80px;
+  padding: 16px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-tabs__tab {
+    transition: color var(--morph-duration-hover) var(--morph-ease-out-soft);
+  }
+
+  .morph-tabs__tab:active {
+    transform: none;
+  }
+}

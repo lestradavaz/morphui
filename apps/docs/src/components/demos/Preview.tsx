@@ -3,11 +3,21 @@ import DialogDemo from './DialogDemo';
 import WindowDemo from './WindowDemo';
 import CardDemo from './CardDemo';
 import ButtonDemo from './ButtonDemo';
+import SwitchDemo from './SwitchDemo';
+import CheckboxDemo from './CheckboxDemo';
+import RadioDemo from './RadioDemo';
+import InputDemo from './InputDemo';
+import StepperDemo from './StepperDemo';
+import TabsDemo from './TabsDemo';
 import PopoverDemo from './PopoverDemo';
 import TooltipDemo from './TooltipDemo';
 import ContextMenuDemo from './ContextMenuDemo';
 import ComboboxDemo from './ComboboxDemo';
 import MultiSelectDemo from './MultiSelectDemo';
+import SaveButtonDemo from './SaveButtonDemo';
+import HoldButtonDemo from './HoldButtonDemo';
+import SelectDemo from './SelectDemo';
+import ExpandDemo from './ExpandDemo';
 import { themes, components, type DemoKind } from '@/core/data/catalog';
 import { useSiteMode, useModeAttribute, type Mode } from '@/core/site-mode';
 
@@ -17,11 +27,21 @@ const DEMOS: Record<DemoKind, ComponentType> = {
   window: WindowDemo,
   card: CardDemo,
   button: ButtonDemo,
+  switch: SwitchDemo,
+  checkbox: CheckboxDemo,
+  radio: RadioDemo,
+  input: InputDemo,
+  stepper: StepperDemo,
+  tabs: TabsDemo,
   popover: PopoverDemo,
   tooltip: TooltipDemo,
   'context-menu': ContextMenuDemo,
   combobox: ComboboxDemo,
   'multi-select': MultiSelectDemo,
+  'save-button': SaveButtonDemo,
+  'hold-button': HoldButtonDemo,
+  select: SelectDemo,
+  expand: ExpandDemo,
 };
 
 /** What to do with this one, said in the same voice as the preview. */
@@ -30,11 +50,21 @@ const HINTS: Record<DemoKind, string> = {
   window: 'Open the window. The button stays where it is.',
   card: 'Open the card. Follow the image.',
   button: 'Press anywhere on a button. The ripple starts there.',
+  switch: 'Flip one. The thumb travels, it does not jump.',
+  checkbox: 'Tick a box. The tick draws itself.',
+  radio: 'Pick a row. The panel slides to it.',
+  input: 'Type. Nothing under the field moves.',
+  stepper: 'Step to an end. The button leaves and the number takes the room.',
+  tabs: 'Press a tab. The panel is already there; the pill is what travels.',
   popover: 'Open it. The heading travels out of the button.',
   tooltip: 'Rest on a button, or tab to one.',
   'context-menu': 'Right-click the row, or press Shift+F10.',
   combobox: 'Open the list. The mark travels with the choice.',
   'multi-select': 'Pick a topic. The field makes room for it.',
+  'save-button': 'Press it. The words cross; the box is what moves.',
+  'hold-button': 'Hold it. Let go early and watch the fill come back.',
+  select: 'Open the field. Its own words become the title.',
+  expand: 'Open it. The pill widens out of the label it was showing.',
 };
 
 /* The hero cycles the three that show the language at its largest; the other

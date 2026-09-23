@@ -1,0 +1,56 @@
+/*
+ * MorphUI - MorphSaveButton.
+ *
+ * The two faces stack in the same box. The one that is showing is in the flow
+ * and gives the button its width; the one that is not is out of it, which is
+ * what lets the incoming face claim the width in the same frame the outgoing
+ * one lets go of it - and what makes the first paint, before any script has
+ * run, already the right size.
+ */
+
+.morph-save-button .morph-button__content {
+  display: block;
+}
+
+.morph-save-button__face {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  transition:
+    opacity var(--morph-duration-slide) var(--morph-ease-out-soft),
+    transform var(--morph-duration-slide) var(--morph-ease-out-soft),
+    filter var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+.morph-save-button__icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* On its way out, a face leaves the flow: it must not hold the box open behind
+   the face that is arriving. */
+.morph-save-button[data-saved='true'] .morph-save-button__face--save,
+.morph-save-button[data-saved='false'] .morph-save-button__face--saved {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+}
+
+.morph-save-button[data-saved='false'] .morph-save-button__face--saved {
+  opacity: 0;
+  transform: translateY(8px);
+  filter: blur(3px);
+}
+
+/* Saving and having saved are not the same gesture, and the faces cross in the
+   direction of the thing that happened: the promise leaves upward, the receipt
+   comes up from below. */
+.morph-save-button[data-saved='true'] .morph-save-button__face--save {
+  opacity: 0;
+  transform: translateY(-8px);
+  filter: blur(3px);
+}
+
+/* Under `prefers-reduced-motion` the slide token is already 0ms, so the faces
+   cross without travelling and the blur never resolves. Nothing to override. */

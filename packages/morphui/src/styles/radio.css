@@ -1,0 +1,125 @@
+.morph-radio {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: var(--morph-radius-sm);
+  background: var(--morph-raised);
+}
+
+.morph-radio[data-disabled='true'] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/*
+ * The panel that slides. It is placed and sized by the component, in pixels,
+ * because the rows are whatever the caller's text makes them: a group whose
+ * rows are told apart by a fixed height would break on the first two-line
+ * option, and the panel is the only thing that says which row is chosen.
+ */
+.morph-radio__indicator {
+  position: absolute;
+  top: 0;
+  left: 4px;
+  right: 4px;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--morph-surface);
+  border-radius: var(--morph-radius-xs);
+  box-shadow: var(--morph-elevation-1);
+}
+
+.morph-radio__option {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  font-size: 15px;
+  color: var(--morph-text);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform var(--morph-duration-press) var(--morph-ease-out-soft);
+}
+
+.morph-radio__option:active {
+  transform: scale(0.98);
+}
+
+/* In the tree, out of sight: the state, the arrow keys and the label's own
+   click-to-select come from the real input. */
+.morph-radio__option input[type='radio'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+.morph-radio__circle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: var(--morph-radius-full);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--morph-border);
+  transition:
+    box-shadow var(--morph-duration-hover) var(--morph-ease-out-soft),
+    transform var(--morph-duration-press) var(--morph-ease-out-soft);
+}
+
+.morph-radio__circle[data-checked='true'] {
+  box-shadow: inset 0 0 0 1.5px var(--morph-accent);
+}
+
+/* Grows from half size rather than from nothing: nothing in the world appears
+   out of a point, and at 10px the difference is the whole of the motion. */
+.morph-radio__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--morph-radius-full);
+  background: var(--morph-accent);
+  opacity: 0;
+  transform: scale(0.5);
+  transition:
+    transform var(--morph-duration-slide) var(--morph-ease-out-soft),
+    opacity var(--morph-duration-slide) var(--morph-ease-out-soft);
+}
+
+.morph-radio__circle[data-checked='true'] .morph-radio__dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.morph-radio__option input[type='radio']:focus-visible + .morph-radio__circle {
+  outline: 2px solid var(--morph-accent);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .morph-radio__option:hover .morph-radio__circle:not([data-checked='true']) {
+    box-shadow: inset 0 0 0 1.5px var(--morph-muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-radio__option,
+  .morph-radio__dot {
+    transition: none;
+  }
+
+  .morph-radio__circle {
+    transition: box-shadow var(--morph-duration-hover) var(--morph-ease-out-soft);
+  }
+}
