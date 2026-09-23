@@ -1,0 +1,20 @@
+# Build definition for Dokploy's Nixpacks builder.
+#
+# The build has to run from the repository root: the documentation site imports
+# the morphui package from the workspace and packs it into a tarball, so a build
+# scoped to apps/docs would not have the package to point at.
+#
+# Every phase is spelled out rather than left to provider detection, because
+# adding nginx to the setup phase replaces what Nixpacks would have inferred.
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm", "nginx"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm build"]
+
+[start]
+cmd = "sh deploy/start.sh"

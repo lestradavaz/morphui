@@ -15,6 +15,7 @@ MIT licensed. Works in JavaScript and TypeScript, in React and Next.js.
 ```
 packages/morphui     the published npm package
 apps/docs            the Astro documentation site
+deploy/              nginx config and start script for the container
 legacy/              the original vanilla HTML/CSS/JS the components came from
 ```
 
@@ -39,6 +40,19 @@ To look at the themes without any build step:
 cd packages/morphui && python3 -m http.server 4173
 # then open http://127.0.0.1:4173/preview/
 ```
+
+## Deploying
+
+The site is static and deploys through Nixpacks. Dokploy builds it with the
+phases in `nixpacks.toml` and serves the result with nginx.
+
+```bash
+pnpm build
+PORT=8080 sh deploy/start.sh    # the same thing outside a container
+```
+
+Set `SITE_URL` to the absolute URL at build time, or the site ships `noindex`
+and a `Disallow: /` robots file. See [deploy/README.md](deploy/README.md).
 
 ## Design system
 

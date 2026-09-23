@@ -1,0 +1,90 @@
+# Serves the built documentation as static files.
+#
+# The listen port and the document root are filled in by start.sh from PORT and
+# SITE_ROOT. Do not write those two placeholders anywhere in this file except
+# where they belong, or the substitution will overwrite the text.
+#
+# The mime table is written out rather than included from /etc/nginx, because
+# nginx installed through nix lives in the nix store and that path does not
+# exist in the container.
+
+worker_processes auto;
+pid /tmp/nginx/nginx.pid;
+error_log /dev/stderr warn;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  default_type application/octet-stream;
+
+  types {
+    text/html html;
+    text/css css;
+    application/javascript js mjs;
+    application/json json webmanifest;
+    image/svg+xml svg;
+    image/png png;
+    image/jpeg jpg jpeg;
+    image/webp webp;
+    image/avif avif;
+    image/x-icon ico;
+    font/woff woff;
+    font/woff2 woff2;
+    text/plain txt;
+    application/xml xml;
+  }
+
+  # nginx needs writable paths for its temporary files; the image is read-only
+  # apart from /tmp.
+  client_body_temp_path /tmp/nginx/client_body;
+  proxy_temp_path /tmp/nginx/proxy;
+  fastcgi_temp_path /tmp/nginx/fastcgi;
+  uwsgi_temp_path /tmp/nginx/uwsgi;
+  scgi_temp_path /tmp/nginx/scgi;
+
+  # Container logs, so Dokploy picks them up.
+  access_log /dev/stdout;
+
+  sendfile on;
+  tcp_nopush on;
+  keepalive_timeout 65;
+
+  gzip on;
+  gzip_vary on;
+  gzip_min_length 1024;
+  gzip_types text/plain text/css application/javascript application/json image/svg+xml application/xml;
+
+  server {
+    listen __PORT__;
+    server_name _;
+    root __ROOT__;
+    index index.html;
+
+    # Astro emits docs/installation.html for the URL /docs/installation, and the
+    # site links to the short form. Trying $uri.html is what makes the clean
+    # URLs resolve.
+    location / {
+      add_header Cache-Control "public, max-age=0, must-revalidate" always;
+      try_files $uri $uri.html $uri/index.html =404;
+    }
+
+    # Build assets carry a content hash, so they never change under one name.
+    location /_astro/ {
+      add_header Cache-Control "public, max-age=31536000, immutable" always;
+      try_files $uri =404;
+    }
+
+    # The downloadable package changes whenever the package does.
+    location /downloads/ {
+      add_header Cache-Control "public, max-age=300" always;
+      try_files $uri =404;
+    }
+
+    error_page 404 /404.html;
+    location = /404.html {
+      internal;
+    }
+  }
+}
