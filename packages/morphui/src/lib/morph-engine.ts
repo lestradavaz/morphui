@@ -87,7 +87,7 @@ interface ShapeOptions {
   /** Closing only: makes the content trail the container that is clipping it. */
   lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
   /** A layer outside the panel, kept over whatever box the panel is showing. */
-  chrome?: { el: HTMLElement; from: Box; to: Box; need: Box };
+  chrome?: { el: HTMLElement; from: Box; to: Box; need: Box; resolves: boolean };
 }
 
 function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
@@ -133,7 +133,18 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
      * chrome crowds the trigger it grew from; above it there is room to spare.
      */
     const room = Math.min(visible.width / chrome.need.width, visible.height / chrome.need.height);
-    frameChrome(chrome.el, visible, Math.max(0, Math.min(1, (room - 1) / 0.5)));
+    const fits = Math.max(0, Math.min(1, (room - 1) / 0.5));
+
+    /*
+     * Room decides whether the chrome may be seen at all; the panel's own
+     * progress decides how much of it is. The reference puts the close button
+     * inside the panel's snapshot, so it resolves on `morph-content-in` with
+     * everything else - which is why it is never seen crisp on top of the
+     * trigger, and why it reads as arriving in its place rather than flying
+     * there. This is that beat, on the same curve, without the blur: the chrome
+     * has to stay legible where the content behind it is still dissolving.
+     */
+    frameChrome(chrome.el, visible, fits * (chrome.resolves ? progress : 1));
   };
 
   placeChrome(0);
@@ -446,7 +457,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
     geoEase: EASE_FLOW,
     radiusDuration: ms(isWindow ? WINDOW_RADIUS : fullScreen ? FULL_RADIUS : SURFACE),
     radiusEase: isWindow ? EASE_SHAPE : fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
-    ...(chrome && need ? { chrome: { el: chrome, from, to, need } } : {}),
+    ...(chrome && need ? { chrome: { el: chrome, from, to, need, resolves: true } } : {}),
   });
 
   if (borrowsSurface) {
@@ -535,7 +546,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
     ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
-    ...(chrome && need ? { chrome: { el: chrome, from, to, need } } : {}),
+    ...(chrome && need ? { chrome: { el: chrome, from, to, need, resolves: false } } : {}),
   });
 
   const toShadow = toSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : toSurface.shadow;

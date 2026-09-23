@@ -90,11 +90,12 @@ Position it against the panel — `position: absolute` with your own insets, rea
 from the corner the viewer sees. The layer spans the panel and takes no clicks of
 its own, so only the button is interactive.
 
-It appears as soon as the panel is large enough to hold it, which is a different
-moment for each trigger rather than a fixed delay: at once for a card, since the
-card is already bigger than the button needs, and a beat later for a panel
-growing out of a pill, which the button would otherwise sit on top of. It leaves
-before the panel arrives, on a beat you can change in CSS.
+It resolves on the panel's own beat, the same one the content is on, so it reads
+as arriving in its place instead of flying there from the trigger's corner. It
+also waits for the panel to be large enough to hold it, which is a different
+moment for each trigger rather than a fixed delay, so it is never drawn crisply
+on top of the thing it grew out of. It leaves before the panel arrives, on a beat
+you can change in CSS.
 
 ## Shared elements
 

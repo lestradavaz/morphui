@@ -174,6 +174,7 @@ test('the close button holds its size and its corner for the whole flight', asyn
   });
 
   await page.getByRole('button',{name:'Open A study in motion',exact:true}).click();
+  const arriving: number[] = [];
   for (let i = 0; i < 6; i++) {
     await page.waitForTimeout(400);
     const at = await read();
@@ -181,10 +182,17 @@ test('the close button holds its size and its corner for the whole flight', asyn
     expect(at.h).toBe(38);
     expect(Math.abs(at.top - 18)).toBeLessThanOrEqual(1);
     expect(Math.abs(at.right - 18)).toBeLessThanOrEqual(1);
-    // The card has room for the button before it starts growing, so there is
-    // nothing for the button to wait for: it is there from the first reading.
-    expect(at.seen).toBeCloseTo(1, 1);
+    arriving.push(at.seen);
   }
+  /*
+   * It resolves rather than appears, on the panel's own beat: barely there while
+   * the panel is still the card that was clicked, full strength by the time the
+   * panel is. A reading that started high would mean a button drawn crisply over
+   * the trigger; one that never climbed would mean it cut in at the end.
+   */
+  expect(arriving[0]!).toBeLessThan(0.5);
+  for (let i = 1; i < arriving.length; i++) expect(arriving[i]!).toBeGreaterThanOrEqual(arriving[i - 1]!);
+  expect(arriving.at(-1)!).toBeCloseTo(1, 1);
 
   /*
    * The full-screen corners run a 1200ms beat against the box's 700ms, so the
