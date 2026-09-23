@@ -11,7 +11,7 @@ import {
   EASE_SHAPE,
   registerMorphEases,
 } from './easing.js';
-import { box, prefersReducedMotion, slowFactor, surface, type Box } from './measure.js';
+import { box, lerpBox, prefersReducedMotion, slowFactor, surface, type Box } from './measure.js';
 import { buildWordClones, collectItems, measureWordInk, type ItemPair } from './shared.js';
 
 export type MorphVariant = 'dialog' | 'window' | 'fullscreen';
@@ -42,6 +42,10 @@ const TRIGGER_SHOW_DELAY = 200;
 const TINT = 500;
 const TINT_WINDOW = 200;
 const GENTLE = 150;
+const CONTENT_CLOSE = 2000;
+
+/** The content only gets flow(0.25) of the way home before the panel closes over it. */
+const CONTENT_LAG = CLOSE / CONTENT_CLOSE;
 
 const ms = (value: number) => (value / 1000) * slowFactor();
 const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
@@ -97,10 +101,12 @@ interface ShapeOptions {
   geoEase: string;
   radiusDuration: number;
   radiusEase: string;
+  /** Closing only: makes the content trail the container that is clipping it. */
+  lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
 }
 
 function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
-  const { fromScale, toScale, fromRadius, toRadius, geoDuration, geoEase, radiusDuration, radiusEase } = options;
+  const { fromScale, toScale, fromRadius, toRadius, geoDuration, geoEase, radiusDuration, radiusEase, lag } = options;
 
   /*
    * The corners run on their own clock.
@@ -131,6 +137,32 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
         const sx = lerp(fromScale.x, toScale.x, gp) || 1;
         const sy = lerp(fromScale.y, toScale.y, gp) || 1;
         const r = lerp(fromRadius, toRadius, rp);
+
+        if (lag) {
+          /*
+           * The content trails the container closing over it.
+           *
+           * The reference gives the container 500ms and the content 2000ms, then
+           * plays only the first 500ms of the content's path, so the content
+           * lands about 83% of the way home and the shrinking panel clips what is
+           * left. That lag is the whole character of the close.
+           *
+           * The content sits inside the panel, so it already carries the panel's
+           * transform. What it needs is the remainder: the trailing box expressed
+           * relative to the container, which is the container's transform undone
+           * and the trailing one applied. Hence the division by the panel's own
+           * scale rather than a second set of absolute numbers.
+           */
+          const raw = Math.min(1, elapsed / geoDuration);
+          const container = lerpBox(lag.from, lag.to, gp);
+          const trailing = lerpBox(lag.from, lag.to, geo(raw * lag.fraction));
+          gsap.set(lag.content, {
+            x: (trailing.x - container.x) / sx,
+            y: (trailing.y - container.y) / sy,
+            scaleX: lag.from.width ? trailing.width / lag.from.width / sx : 1,
+            scaleY: lag.from.height ? trailing.height / lag.from.height / sy : 1,
+          });
+        }
 
         /*
          * Written straight to the element, not through gsap.set.
@@ -431,9 +463,15 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     geoEase: ease,
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
+    ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
   });
 
-  tl.to(panel, { backgroundColor: toSurface.background, duration: ms(CLOSE), ease }, 0);
+  const toShadow = toSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : toSurface.shadow;
+  tl.to(
+    panel,
+    { backgroundColor: toSurface.background, boxShadow: toShadow, duration: ms(CLOSE), ease },
+    0,
+  );
   tl.to(tint, { opacity: 0, duration: ms(CLOSE), ease: EASE_IN_STRONG }, 0);
 
   if (!isWindow) {
