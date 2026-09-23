@@ -71,7 +71,8 @@ export function MorphDialog({
   const panelRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const tintRef = useRef<HTMLDivElement | null>(null);
-  const busy = useRef(false);
+  const inFlight = useRef<Promise<void> | null>(null);
+  const pendingClose = useRef(false);
   const [mounted, setMounted] = useState(false);
   const labelId = useId();
 
@@ -89,26 +90,40 @@ export function MorphDialog({
 
   const config = useCallback(() => ({ variant, shareWords }), [shareWords, variant]);
 
+  // An open request that arrives mid-transition is dropped, but a close request
+  // is queued instead: the user asked for the panel to go away, and swallowing
+  // that click leaves them pressing a button that does nothing.
   const open = useCallback(async () => {
     const p = parts();
-    if (!p || busy.current || p.dialog.open) return;
-    busy.current = true;
-    onOpenChange?.(true);
-    try {
+    if (!p || inFlight.current || p.dialog.open) return;
+    const run = (async () => {
+      onOpenChange?.(true);
       await openMorph(p, config());
+    })();
+    inFlight.current = run;
+    try {
+      await run;
     } finally {
-      busy.current = false;
+      inFlight.current = null;
     }
   }, [config, onOpenChange, parts]);
 
   const close = useCallback(async () => {
     const p = parts();
-    if (!p || busy.current || !p.dialog.open) return;
-    busy.current = true;
+    if (!p || !p.dialog.open) return;
+    if (inFlight.current) {
+      if (pendingClose.current) return;
+      pendingClose.current = true;
+      await inFlight.current.catch(() => {});
+      pendingClose.current = false;
+    }
+    if (!p.dialog.open) return;
+    const run = closeMorph(p, config());
+    inFlight.current = run;
     try {
-      await closeMorph(p, config());
+      await run;
     } finally {
-      busy.current = false;
+      inFlight.current = null;
       onOpenChange?.(false);
     }
   }, [config, onOpenChange, parts]);
