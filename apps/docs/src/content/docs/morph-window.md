@@ -9,16 +9,17 @@ order: 5
 
 A window grows out beside the button that opened it. The button stays where it is, keeps the way it looks, and is still there when the window closes — which is the difference between this and a dialog, where the trigger becomes the panel and is gone for the duration.
 
-That is what the preview above shows, and it is `shareWords={false}`.
+That is what the preview above shows, and it is what you get with no props beyond the trigger.
 
 Use `panelClassName` to size the window. Its position remains centered in the viewport while its animation begins at the trigger.
 
 ## Sharing the label instead
 
-Word sharing is on by default: mark a heading with `data-morph-words` and the trigger's label flies into it, in both directions. Sharing anything hands the trigger's surface to the window and hides it for the duration, so the window opens the way a dialog does and differs only in its blur and its closing curve. Pick it when the label matters more than the trigger staying put.
+Pass `shareWords` and mark a heading with `data-morph-words`, and the trigger's label flies into it, in both directions. Sharing anything hands the trigger's surface to the window and hides it for the duration, so the window then opens the way a dialog does and differs only in its blur and its closing curve. Pick it when the label matters more than the trigger staying put.
 
 ```jsx
 <MorphWindow
+  shareWords
   aria-label="More information"
   trigger={<button>More information</button>}
 >

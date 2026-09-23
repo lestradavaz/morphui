@@ -18,7 +18,7 @@ const { Content, headings } = await render(entry);
 const kind = entry.data.kind;
 const isComponent = kind !== 'guide';
 const sources = { dialog: dialogSource, window: windowSource, card: cardSource };
-const props = [...sharedProps].filter(row=>kind!=='card'||row[0]!=='shareWords').map(row=>row[0]==='shareWords'&&kind==='window'?[row[0],row[1],'true',row[3]]:row);
+const props = [...sharedProps].filter(row=>kind!=='card'||row[0]!=='shareWords');
 props.unshift([kind === 'card' ? 'card' : 'trigger', 'ReactElement', 'Required', 'A single element that forwards its ref to a DOM node.']);
 if(kind==='dialog') props.push(['variant', "'dialog' | 'window' | 'fullscreen'", "'dialog'", 'The geometry and appearance of the panel transition.']);
 const toc = [...(isComponent?[{slug:'preview',text:'Preview'},{slug:'example',text:'Example'}]:[]),...headings.filter(h=>h.depth===2),...(isComponent?[{slug:'api',text:'API reference'}]:[])];

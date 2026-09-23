@@ -123,6 +123,9 @@ export function App() {
       <section className="stage">
         <div className="row" style={{ justifyContent: 'center' }}>
           <MorphWindow
+            /* Explicit now that it is not the default: this one is the sharing
+               window, which is the path the word-flight test covers. */
+            shareWords
             trigger={<button type="button" className="chip">What is it?</button>}
             aria-label="About the morph"
           >

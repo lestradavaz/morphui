@@ -4,10 +4,6 @@ import './demo.css';
 export default function WindowDemo() {
   return (
     <MorphWindow
-      // Unshared: the trigger stays put and keeps its own surface, and the
-      // window grows beside it. Share words instead and the window takes the
-      // trigger over, which is what MorphDialog is for.
-      shareWords={false}
       aria-label="A little context"
       panelClassName="demo-window-panel"
       trigger={<button className="demo-chip" type="button">A little context</button>}

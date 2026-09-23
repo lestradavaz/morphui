@@ -134,9 +134,10 @@ word instead of cross-fading them whole. Use the same label at both ends, at
 least the same number of words. For a trigger that also has an icon, mark its
 label `data-morph-words` too so only that text is measured.
 
-`MorphWindow` turns `shareWords` on when its heading is marked. Pass
-`shareWords={false}` for the unshared window, where the trigger stays visible
-and takes nothing back.
+`MorphWindow` leaves it off. Sharing hands the trigger's surface to the panel
+and hides it, which is what a dialog does - so a window that shares is a dialog
+with a softer blur. Turn it on when the label matters more than the trigger
+staying where it is.
 
 ## Props
 
@@ -147,7 +148,7 @@ are your own element.
 | ------------------------------ | -------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
 | `trigger` / `card`             | `ReactElement`                         | —          | Required. MorphUI adds a ref and an `onClick` and nothing else.                                                   |
 | `variant`                      | `'dialog' \| 'fullscreen' \| 'window'` | `'dialog'` | `MorphWindow` and `MorphCard` set this for you.                                                                   |
-| `shareWords`                   | `boolean`                              | `false`    | `true` for `MorphWindow`.                                                                                         |
+| `shareWords`                   | `boolean`                              | `false`    | Sharing hands the trigger's surface over, in any component.                                                       |
 | `dismissOnTintClick`           | `boolean`                              | `true`     | Clicking the tint closes the panel.                                                                               |
 | `chrome`                       | `ReactNode`                            | —          | Panel furniture, the close button above all. Its own layer over the panel, at its own size and corner throughout. |
 | `onOpenChange`                 | `(open: boolean) => void`              | —          | Fires when the transition settles, not when it starts.                                                            |

@@ -36,7 +36,7 @@ Apply `data-morph-theme="ink"` to that container so its CSS timing tokens resolv
 
 ## Shared words
 
-Use `shareWords` on MorphDialog and mark the heading with `data-morph-words`. MorphWindow enables word sharing by default when it finds a marked heading.
+Use `shareWords` and mark the heading with `data-morph-words`. It is off everywhere by default, including MorphWindow, where sharing also hands the trigger's surface to the panel.
 
 Use the same words at both ends. If the trigger includes an icon or extra content, wrap only its label in a marked span. Word pairs are positional, so matching labels produce the intended transition.
 
