@@ -2,12 +2,13 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Preview from '@/components/demos/Preview';
 import Icon from '@/components/ui/Icon.astro';
+import InstallCommand from '@/components/docs/InstallCommand';
 import { components, release } from '@/core/data/catalog';
 ---
 <BaseLayout>
   <main id="main" class="home-main">
     <section class="hero">
-      <div class="hero-copy"><p class="intro-label">A small library of considered motion.</p><h1>Interfaces that<br/>stay <span>connected.</span></h1><p class="hero-description">Buttons become dialogs. Cards become stories.<br class="desktop-break"/> Nothing just appears. Everything comes from somewhere.</p><div class="hero-actions"><a class="button-primary" href="/docs/installation">Get started <Icon name="arrow" size={18}/></a><a class="text-link" href="#components">Explore components</a></div><div class="hero-meta"><span>React & Next.js</span><span>JavaScript & TypeScript</span><a href="/license.txt">MIT</a></div></div>
+      <div class="hero-copy"><p class="intro-label">A small library of considered motion.</p><h1>Interfaces that<br/>stay <span>connected.</span></h1><p class="hero-description">Buttons become dialogs. Cards become stories.<br class="desktop-break"/> Nothing just appears. Everything comes from somewhere.</p><div class="hero-install"><InstallCommand client:load compact/><p class="hero-install-note">Ships as a local package while the npm release is prepared. <a href="/docs/installation">Other package managers</a>.</p></div><div class="hero-actions"><a class="button-primary" href="/docs/installation">Get started <Icon name="arrow" size={18}/></a><a class="text-link" href="#components">Explore components</a></div><div class="hero-meta"><span>React & Next.js</span><span>JavaScript & TypeScript</span><a href="/license.txt">MIT</a></div></div>
       <div class="hero-demo"><Preview client:load showcase/><p class="demo-caption">Real components. Go ahead, try one.</p></div>
     </section>
     <section class="collection" id="components"><div class="section-heading"><div><h2>Three primitives.<br/>A shared language.</h2><p>Small enough to understand. Flexible enough to make your own.</p></div><span class="section-count">The collection</span></div>

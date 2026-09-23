@@ -10,6 +10,111 @@ pnpm add morphui gsap
 GSAP is a peer dependency on purpose. Two copies of GSAP in one app means plugins
 registered on one instance are invisible to the other, so MorphUI uses yours.
 
+## Quick start
+
+Import the styles once, then render a component. Each one wraps your own element
+and changes nothing about it, so your classes and styles survive.
+
+```css
+@import "morphui/styles.css";
+```
+
+```jsx
+import { MorphDialog, MorphClose } from 'morphui';
+
+<MorphDialog trigger={<button type="button">Create account</button>}>
+  <MorphClose><button type="button" aria-label="Close">Close</button></MorphClose>
+  <h2>Create account</h2>
+  <p>Anything you like.</p>
+</MorphDialog>
+```
+
+`MorphWindow` grows out of a trigger that stays where it is. `MorphCard` opens a
+card into a full-screen view around a shared image.
+
+```jsx
+<MorphWindow trigger={<button type="button">A little context</button>}>
+  …
+</MorphWindow>
+
+<MorphCard card={<button type="button"><img data-morph-item="art" src="…" alt=""/></button>}>
+  <img data-morph-item="art" src="…" alt=""/>
+  …
+</MorphCard>
+```
+
+## Closing a panel
+
+MorphUI does not add a close button, because it does not know what your close
+button should look like. Wrap yours in `MorphClose` and it closes the panel,
+after calling whatever `onClick` you already had:
+
+```jsx
+<MorphClose><button type="button">Done</button></MorphClose>
+```
+
+Anywhere deeper in the tree, use the hook:
+
+```jsx
+const close = useMorphClose();
+
+<button type="button" onClick={close}>Done</button>
+```
+
+Escape and, unless `dismissOnTintClick={false}`, clicking the tint close it too.
+
+A close requested while the panel is still opening is queued rather than
+dropped, so a button pressed early still does something.
+
+## Shared elements
+
+Mark the same name on both sides and the piece travels between them.
+
+```jsx
+<MorphDialog
+  shareWords
+  trigger={
+    <button type="button">
+      <Clock data-morph-item="icon" />
+      Create account
+    </button>
+  }
+>
+  <Clock data-morph-item="icon" />
+  <h2 data-morph-words>Create account</h2>
+</MorphDialog>
+```
+
+`data-morph-item` takes a name that must match at both ends. It works on
+anything measurable, including images. The real nodes are hidden for the length
+of the flight while visual copies travel in a layer inside the dialog, so the
+pair is unaffected by the panel content's blur, fade or closing lag. Both are
+restored when the transition ends.
+
+`shareWords` pairs the trigger label and a `data-morph-words` heading word by
+word instead of cross-fading them whole. Use the same label at both ends, at
+least the same number of words. For a trigger that also has an icon, mark its
+label `data-morph-words` too so only that text is measured.
+
+`MorphWindow` turns `shareWords` on when its heading is marked. Pass
+`shareWords={false}` for the unshared window, where the trigger stays visible
+and takes nothing back.
+
+## Props
+
+`MorphDialog` and `MorphWindow` take a `trigger`; `MorphCard` takes `card`. Both
+are your own element.
+
+| Prop | Type | Default | |
+| --- | --- | --- | --- |
+| `trigger` / `card` | `ReactElement` | — | Required. MorphUI adds a ref and an `onClick` and nothing else. |
+| `variant` | `'dialog' \| 'fullscreen' \| 'window'` | `'dialog'` | `MorphWindow` and `MorphCard` set this for you. |
+| `shareWords` | `boolean` | `false` | `true` for `MorphWindow`. |
+| `dismissOnTintClick` | `boolean` | `true` | Clicking the tint closes the panel. |
+| `onOpenChange` | `(open: boolean) => void` | — | Fires when the transition settles, not when it starts. |
+| `className` / `panelClassName` | `string` | — | On the dialog element and on the panel inside it. |
+| `aria-label` | `string` | — | Without it, the panel is labelled by its heading. |
+
 ## Styles
 
 Pick one of three setups.
@@ -71,6 +176,10 @@ setMorphTheme('terracotta');
 setMorphMode('system');
 ```
 
+Any element with `data-morph-theme` re-resolves the material and timing tokens
+for its own subtree, so a component can be themed in isolation rather than only
+through the document.
+
 ### Your own colours
 
 Override four variables. Move the neutrals to the same hue as the accent, at very
@@ -85,37 +194,6 @@ low chroma — an untinted grey next to a saturated accent reads as a mistake.
 }
 ```
 
-## Shared elements
-
-Mark the same name on both sides and the piece travels between them.
-
-```jsx
-<MorphDialog
-  shareWords
-  trigger={
-    <button>
-      <Clock data-morph-item="icon" />
-      Create account
-    </button>
-  }
->
-  <Clock data-morph-item="icon" />
-  <h2 data-morph-words>Create account</h2>
-</MorphDialog>
-```
-
-`data-morph-item` uses visual copies in a separate layer inside the dialog.
-The pair travels and cross-fades between the measured endpoints, unaffected by
-the panel content's blur, fade or closing lag. The original nodes stay in place
-and become visible again when the transition finishes.
-
-`shareWords` pairs the trigger label and `data-morph-words` heading word by word.
-Use the same label at both ends. For a trigger containing an icon, mark its label
-with `data-morph-words` too, so only that text is measured.
-
-`MorphWindow` enables `shareWords` by default when its heading is marked. Set
-`shareWords={false}` to keep the unshared window with a persistent trigger.
-
 ## Motion
 
 Every duration is `calc(<base> * var(--morph-slow))`. Set `--morph-slow: 5` to
@@ -129,12 +207,17 @@ The two opening and closing curves are `linear()` functions carried over from th
 components these were built from, digit for digit. They are two-segment curves,
 which a single `cubic-bezier()` cannot express.
 
+The panel travels on transforms only, so nothing re-lays-out mid-flight, and the
+content counter-scales with its corner radius divided per axis to keep the shape
+from distorting.
+
 Under `prefers-reduced-motion: reduce` the morph shortens to a 150 ms opacity
 change. It never becomes no transition at all — the dialog still has to arrive.
 
 ## Status
 
-`0.0.0`. The three components and theme layer are available in the playground.
-Nothing is published to npm yet.
+`0.0.0`. Nothing is published to npm yet, so the install line above is what it
+will be rather than what it is. The three components and the theme layer run in
+the playground and in the documentation site.
 
 MIT © Emil Estrada

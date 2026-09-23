@@ -88,6 +88,19 @@ test('installation downloads a real tarball and copies the selected command', as
   expect(bytes.byteLength).toBeGreaterThan(10000);
 });
 
+test('the hero carries a copyable install command', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read','clipboard-write']);
+  await page.goto('/');
+  await hydrate(page);
+  // The hero command is the reason a developer lands here, so it has to be the
+  // real line and not a decorative one.
+  await expect(page.locator('.hero-install .install-code code')).toHaveText('npm install ./morphui-0.0.0.tgz gsap');
+  await expect(page.locator('.hero-install .install-toolbar')).toHaveCount(0);
+  await page.locator('.hero-install').getByRole('button',{name:'Copy',exact:true}).click();
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe('npm install ./morphui-0.0.0.tgz gsap');
+  await expect(page.locator('.hero-install .copy-feedback')).toHaveText('Copied');
+});
+
 test('slow motion is local and CSS and geometry use the same multiplier', async ({ page }) => {
   await page.goto('/docs/morph-dialog');
   await hydrate(page);
