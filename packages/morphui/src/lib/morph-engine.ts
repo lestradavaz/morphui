@@ -86,15 +86,15 @@ interface ShapeOptions {
   radiusEase: string;
   /** Closing only: makes the content trail the container that is clipping it. */
   lag?: { content: HTMLElement; from: Box; to: Box; fraction: number };
-  /** A layer that undoes the panel's scale, sized to the panel's visible box. */
-  counter?: { el: HTMLElement; width: number; height: number };
+  /** A layer outside the panel, kept over whatever box the panel is showing. */
+  chrome?: { el: HTMLElement; from: Box; to: Box; need: Box };
 }
 
 function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: ShapeOptions): void {
   const {
     fromScale, toScale, fromRadius, toRadius,
     geoDuration, geoEase, radiusDuration, radiusEase,
-    lag, counter,
+    lag, chrome,
   } = options;
 
   /*
@@ -112,16 +112,31 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
   const rad = gsap.parseEase(radiusEase);
   const driver = { t: 0 };
 
-  // The first frame belongs to the starting scale as much as any other, and the
-  // timeline does not necessarily render one before the browser paints.
-  if (counter) {
-    gsap.set(counter.el, {
-      width: counter.width * fromScale.x,
-      height: counter.height * fromScale.y,
-      scaleX: 1 / fromScale.x,
-      scaleY: 1 / fromScale.y,
-    });
-  }
+  /*
+   * The chrome is put where it belongs before the timeline runs. The stylesheet
+   * leaves it on the panel's resting box, which is the wrong box the moment a
+   * transition starts, and the timeline does not necessarily render a frame
+   * before the browser paints one.
+   */
+  const placeChrome = (progress: number): void => {
+    if (!chrome) return;
+    const visible = lerpBox(chrome.from, chrome.to, progress);
+    /*
+     * On when the panel has room for it, and not on a clock: on a clock a card's
+     * button - whose trigger is already bigger than the button needs - waits for
+     * a fade it never needed, while a dialog growing out of a pill puts a
+     * full-size button on top of the label. What decides it is whether the box
+     * on screen can hold the chrome yet, so that is what is asked, every frame.
+     * It reverses on the way out for free.
+     *
+     * The band from just-fits to half again as much is the fade. Below it the
+     * chrome crowds the trigger it grew from; above it there is room to spare.
+     */
+    const room = Math.min(visible.width / chrome.need.width, visible.height / chrome.need.height);
+    frameChrome(chrome.el, visible, Math.max(0, Math.min(1, (room - 1) / 0.5)));
+  };
+
+  placeChrome(0);
 
   timeline.to(
     driver,
@@ -138,30 +153,7 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
         const sy = lerp(fromScale.y, toScale.y, gp) || 1;
         const r = lerp(fromRadius, toRadius, rp);
 
-        if (counter) {
-          /*
-           * The panel's scale is undone for its chrome.
-           *
-           * Everything inside the panel carries the panel's transform, and that
-           * transform is non-uniform: at the first frame of a dialog the box is
-           * the trigger's, so a 32px round button renders 18 by 12. Squashed on
-           * the way out, too small to see on the way in.
-           *
-           * Undoing the scale makes the button its own size again, but the layer
-           * it sits in would then cover the panel's untransformed box - a corner
-           * inset would land outside what is actually on screen. So the layer is
-           * given the panel's visible size in layout pixels and scaled back by
-           * the same amount, which cancels to exactly the box being shown. An
-           * inset is then read in real pixels from the corner the viewer sees,
-           * and holds there for the whole flight.
-           */
-          gsap.set(counter.el, {
-            width: counter.width * sx,
-            height: counter.height * sy,
-            scaleX: 1 / sx,
-            scaleY: 1 / sy,
-          });
-        }
+        placeChrome(gp);
 
         if (lag) {
           /*
@@ -203,6 +195,44 @@ function driveShape(timeline: gsap.core.Timeline, panel: HTMLElement, options: S
     },
     0,
   );
+}
+
+/**
+ * Puts the chrome layer over a box, in viewport coordinates.
+ *
+ * Exported because the resting box is nobody else's business to guess: the panel
+ * is sized by whatever the page put on it, so the only reliable answer is to
+ * measure the panel and hand the numbers over - on settling, on a resize, and
+ * on the paths that play no transition at all.
+ */
+export function frameChrome(el: HTMLElement, at: Box, opacity = 1): void {
+  gsap.set(el, { left: at.x, top: at.y, width: at.width, height: at.height, opacity });
+}
+
+/**
+ * The smallest panel that still holds the chrome, in the panel's own pixels.
+ *
+ * Like every other measurement here it has to be taken before Flip builds its
+ * timeline, since that applies the starting transform at once and the chrome
+ * would be read while the panel is squeezed down to the trigger.
+ *
+ * Each piece is read against whichever edge it sits nearer, because that is the
+ * one it is anchored to: a button 24px from the right of an 800px panel is 744px
+ * from the left, and reading it from the left would call for a panel it never
+ * needs. Taking the nearer inset plus the piece's own size gives the box below
+ * which it would start crowding the corner it is in.
+ */
+function chromeNeed(chrome: HTMLElement, panel: Box): Box {
+  let width = 0;
+  let height = 0;
+  for (const child of Array.from(chrome.children)) {
+    const r = child.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    width = Math.max(width, Math.min(r.left - panel.x, panel.x + panel.width - r.right) + r.width);
+    height = Math.max(height, Math.min(r.top - panel.y, panel.y + panel.height - r.bottom) + r.height);
+  }
+  // Nothing measurable in there: nothing to wait for either.
+  return { x: 0, y: 0, width: Math.max(1, width), height: Math.max(1, height) };
 }
 
 /*
@@ -359,6 +389,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
 
   if (gentle) {
     dialog.showModal();
+    if (chrome) frameChrome(chrome, box(panel));
     const tl = gsap.timeline();
     tl.from(tint, { opacity: 0, duration: ms(GENTLE), ease: 'power2.out' }, 0);
     tl.from(panel, { opacity: 0, duration: ms(GENTLE), ease: 'power2.out' }, 0);
@@ -382,11 +413,14 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
 
   // Before anything is transformed.
   const plan = measureFlight(trigger, panel, !!config.shareWords, 'open');
+  // Framed before it is read: the layer carries no box of its own, so until it
+  // is put over the panel its contents are nowhere in particular.
+  if (chrome) frameChrome(chrome, to);
+  const need = chrome ? chromeNeed(chrome, to) : null;
   const sharesContent = !!plan.words || plan.items.length > 0;
   const borrowsSurface = !isWindow || sharesContent;
 
   anchorLayer(content);
-  anchorLayer(chrome);
 
   const tl = Flip.from(state, {
     targets: panel,
@@ -412,7 +446,7 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
     geoEase: EASE_FLOW,
     radiusDuration: ms(isWindow ? WINDOW_RADIUS : fullScreen ? FULL_RADIUS : SURFACE),
     radiusEase: isWindow ? EASE_SHAPE : fullScreen ? EASE_IN_OUT_SOFT : EASE_FLOW,
-    ...(chrome ? { counter: { el: chrome, width: to.width, height: to.height } } : {}),
+    ...(chrome && need ? { chrome: { el: chrome, from, to, need } } : {}),
   });
 
   if (borrowsSurface) {
@@ -441,6 +475,8 @@ export function openMorph(parts: MorphParts, config: MorphConfig): Promise<void>
   return settle(tl, () => {
     cleanupFlight();
     clearAll(panel, content, tint, chrome);
+    // clearAll takes the box with it, and the panel is back on its own.
+    if (chrome) frameChrome(chrome, box(panel));
   });
 }
 
@@ -471,10 +507,11 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
   const fromRadius = Number.parseFloat(surface(panel).radius) || 0;
 
   const plan = measureFlight(trigger, panel, !!config.shareWords, 'close');
+  if (chrome) frameChrome(chrome, from);
+  const need = chrome ? chromeNeed(chrome, from) : null;
   const borrowsSurface = !isWindow || !!plan.words || plan.items.length > 0;
 
   anchorLayer(content);
-  anchorLayer(chrome);
 
   // The trigger is the destination this time, so its box is what Flip records.
   const state = Flip.getState(trigger);
@@ -498,7 +535,7 @@ export function closeMorph(parts: MorphParts, config: MorphConfig): Promise<void
     radiusDuration: ms(CLOSE),
     radiusEase: isWindow ? EASE_SHAPE : EASE_FLOW,
     ...(isWindow ? {} : { lag: { content, from, to, fraction: CONTENT_LAG } }),
-    ...(chrome ? { counter: { el: chrome, width: from.width, height: from.height } } : {}),
+    ...(chrome && need ? { chrome: { el: chrome, from, to, need } } : {}),
   });
 
   const toShadow = toSurface.shadow === 'none' ? 'rgba(0, 0, 0, 0) 0px 0px 0px 0px' : toSurface.shadow;

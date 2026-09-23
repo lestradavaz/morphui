@@ -24,7 +24,7 @@ function DoneButton() {
 }
 ```
 
-A close button in the corner belongs in `chrome`, not in the children. Children fade in, blur and are transformed while the panel opens, so a button among them arrives late and drifts as the panel settles. `chrome` is rendered in its own layer over the content, and the engine undoes the panel's scale for that layer, so the button keeps its own size and its corner for the whole flight rather than stretching with the box.
+A close button in the corner belongs in `chrome`, not in the children. Children fade in, blur and are transformed with the panel, so a button among them arrives late, stretches with the box and drifts as the panel settles. `chrome` is a layer of its own, held over the panel and above everything in it — including a shared image still in flight — at the button's own size and in its corner for the whole trip.
 
 ```jsx
 <MorphDialog
@@ -35,7 +35,7 @@ A close button in the corner belongs in `chrome`, not in the children. Children 
 </MorphDialog>
 ```
 
-Position it against the panel — `position: absolute` with your own insets, read from the corner the viewer sees. The layer takes no clicks of its own; only the button does. It comes on over a short beat and leaves before the panel arrives, since at the very start the panel is still the trigger's box; both beats are plain CSS on `.morph-panel-chrome`.
+Position it against the panel — `position: absolute` with your own insets, read from the corner the viewer sees. The layer takes no clicks of its own; only the button does. It appears as soon as the panel is large enough to hold it rather than after a fixed delay: at once when the trigger already has room, a beat later for a panel growing out of a pill the button would cover.
 
 ## Full-screen variant
 

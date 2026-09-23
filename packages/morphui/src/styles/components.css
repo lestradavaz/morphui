@@ -72,13 +72,15 @@
  * shape instead of stretching with the box. Left alone the rest of the time.
  */
 .morph-panel-chrome {
+  /* Held over the panel's box - the one on screen, which during a transition is
+     not the one in the stylesheet - so the engine writes the box and this only
+     says where those numbers are read from. The dialog has no border and sits at
+     the viewport's origin, so they are viewport coordinates. One above the
+     flying layers is the whole point of being out here. */
   position: absolute;
-  top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  transform-origin: top left;
-  z-index: 1;
+  top: 0;
+  z-index: 2147483647;
   pointer-events: none;
 }
 
@@ -99,7 +101,8 @@
 [data-morph-item-layer] {
   position: fixed;
   inset: 0;
-  z-index: 2147483647;
+  /* One below the chrome, above everything else. */
+  z-index: 2147483646;
   pointer-events: none;
 }
 
@@ -137,27 +140,24 @@ html:has(.morph-dialog[open]) {
 }
 
 /*
- * The chrome is on from the first frame the panel has room for it, which is a
- * short beat rather than none: at the very start the panel is still the
- * trigger's box, and a full-size button pinned to the corner of a small pill
- * covers the thing it grew out of. Going the other way it leaves early, while
- * the panel is still large enough to hold it, instead of riding the box down.
+ * Coming on is the engine's call, not a duration's: the chrome appears once the
+ * panel is big enough to hold it, which is a different moment for a card than
+ * for a pill, so its opacity is written frame by frame alongside the geometry.
  *
- * Neither beat uses the flow ease. That curve is nearly over by a third of its
- * duration - right for a box that should arrive and settle, wrong for an opacity
- * that would then read as a cut rather than a fade.
+ * Leaving is a beat of its own. The fit alone would keep a card's button at full
+ * strength until the last frames, since the card it returns to has room for it
+ * the whole way, and the button would blink out with the panel. An animation
+ * takes it off earlier, and takes precedence over the engine's opacity for as
+ * long as it runs. Not on the flow ease: that curve is all but over by a third
+ * of its duration, which reads as a cut rather than a fade.
  */
-.morph-opening .morph-panel-chrome,
-.morph-window-opening .morph-panel-chrome {
-  animation: morph-chrome-in calc(var(--morph-duration-open) / 7) var(--morph-ease-out-soft) both;
-}
-
-.morph-closing .morph-panel-chrome {
+/* A sibling selector, because the class is on the panel and the layer is next to
+   it rather than inside it. */
+.morph-closing ~ .morph-panel-chrome {
   animation: morph-chrome-out calc(var(--morph-duration-close) / 2) var(--morph-ease-in-out-soft) both;
   pointer-events: none;
 }
 
-@keyframes morph-chrome-in { from { opacity: 0; } }
 @keyframes morph-chrome-out { to { opacity: 0; } }
 
 @keyframes morph-content-in { from { opacity: 0; filter: blur(8px); } }
@@ -170,9 +170,7 @@ html:has(.morph-dialog[open]) {
   .morph-opening .morph-panel-content,
   .morph-window-opening .morph-panel-content,
   .morph-closing .morph-panel-content,
-  .morph-opening .morph-panel-chrome,
-  .morph-window-opening .morph-panel-chrome,
-  .morph-closing .morph-panel-chrome {
+  .morph-closing ~ .morph-panel-chrome {
     animation: none;
   }
 }

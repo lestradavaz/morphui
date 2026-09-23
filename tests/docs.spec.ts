@@ -147,21 +147,26 @@ test('a close request during the opening animation is honoured, not swallowed', 
 });
 
 /**
- * Panel chrome keeps its own shape and its corner.
+ * Panel chrome keeps its own shape, its corner, and its visibility.
  *
- * Everything inside the panel carries the panel's non-uniform scale, so a close
- * button in the corner used to render 18 by 12 at the start of a dialog and
- * squash back down on the way out. The engine undoes that scale for the chrome
- * layer; this reads the button while the panel is still moving, which is the
- * only place the regression is visible.
+ * Three regressions meet here, all of them only visible mid-flight. A button
+ * kept inside the panel carried the panel's non-uniform scale, so it rendered 18
+ * by 12 at the start of a dialog and squashed back down on the way out. Inside
+ * the panel it was also painted under the flying image, because a transformed
+ * panel is its own stacking context. And a card, whose trigger is already larger
+ * than the button needs, has no reason to wait for it at all.
  */
 test('the close button holds its size and its corner for the whole flight', async ({ page }) => {
   await page.goto('/docs/morph-card');
   await hydrate(page);
   await page.getByRole('button',{name:'Slow motion',exact:true}).click();
 
-  const read = () => page.locator('.morph-dialog[open] .morph-panel').evaluate(panel => {
-    const closer = panel.querySelector('.demo-close')!;
+  // The chrome layer is a sibling of the panel, not a child of it.
+  // Insets are checked to the pixel, not beyond it: the layer is placed from a
+  // lerped box while the panel arrives by transform.
+  const read = () => page.locator('.morph-dialog[open]').evaluate(dialog => {
+    const panel = dialog.querySelector('.morph-panel')!;
+    const closer = dialog.querySelector('.demo-close')!;
     const p = panel.getBoundingClientRect(), c = closer.getBoundingClientRect();
     let seen = 1;
     for (let el: Element | null = closer; el; el = el.parentElement) seen *= Number(getComputedStyle(el).opacity);
@@ -174,11 +179,12 @@ test('the close button holds its size and its corner for the whole flight', asyn
     const at = await read();
     expect(at.w).toBe(38);
     expect(at.h).toBe(38);
-    expect(at.top).toBe(18);
-    expect(at.right).toBe(18);
+    expect(Math.abs(at.top - 18)).toBeLessThanOrEqual(1);
+    expect(Math.abs(at.right - 18)).toBeLessThanOrEqual(1);
+    // The card has room for the button before it starts growing, so there is
+    // nothing for the button to wait for: it is there from the first reading.
+    expect(at.seen).toBeCloseTo(1, 1);
   }
-  // On by the time the panel has grown into itself, never a growing speck.
-  expect((await read()).seen).toBeCloseTo(1, 1);
 
   /*
    * The full-screen corners run a 1200ms beat against the box's 700ms, so the
@@ -199,8 +205,8 @@ test('the close button holds its size and its corner for the whole flight', asyn
     const at = await read();
     expect(at.w).toBe(38);
     expect(at.h).toBe(38);
-    expect(at.top).toBe(18);
-    expect(at.right).toBe(18);
+    expect(Math.abs(at.top - 18)).toBeLessThanOrEqual(1);
+    expect(Math.abs(at.right - 18)).toBeLessThanOrEqual(1);
     leaving.push({ panel: at.panel, seen: at.seen });
   }
   // Still there as the panel starts back, and gone before it arrives: the button

@@ -20,7 +20,7 @@ export const sharedProps = [
   ['children', 'ReactNode', 'Required', 'Content rendered inside the panel.'],
   ['shareWords', 'boolean', 'false', 'Connect trigger text to a heading marked data-morph-words.'],
   ['dismissOnTintClick', 'boolean', 'true', 'Close when the surrounding backdrop is clicked.'],
-  ['chrome', 'ReactNode', '—', 'Panel furniture such as the close button. Its own layer over the content, held at its own size and corner for the whole transition.'],
+  ['chrome', 'ReactNode', '—', 'Panel furniture such as the close button. Its own layer over the panel, held at its own size and corner for the whole transition.'],
   ['panelClassName', 'string', '—', 'Classes on the visible panel. Use this to set its size and appearance.'],
   ['className', 'string', '—', 'Classes on the outer native dialog.'],
   ['aria-label', 'string', '—', 'An accessible name for the dialog. Set this for every instance.'],

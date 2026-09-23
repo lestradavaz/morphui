@@ -72,11 +72,10 @@ A close requested while the panel is still opening is queued rather than
 dropped, so a button pressed early still does something.
 
 Put the button in `chrome` rather than in the children. Children fade in, blur
-and are transformed for the length of the transition, so a button among them
-arrives late and shifts as the panel settles. `chrome` renders in its own layer
-over the content, and the engine undoes the panel's scale for that layer, so the
-button keeps its own size and its corner from the first frame to the last
-instead of stretching with the box:
+and are transformed with the panel, so a button among them arrives late,
+stretches with the box and shifts as the panel settles — and on a card it is
+painted under the image still in flight. `chrome` is a layer of its own, held
+over the panel and above everything in it, at the button's own size:
 
 ```jsx
 <MorphDialog
@@ -91,10 +90,11 @@ Position it against the panel — `position: absolute` with your own insets, rea
 from the corner the viewer sees. The layer spans the panel and takes no clicks of
 its own, so only the button is interactive.
 
-It comes on over a short beat and leaves before the panel arrives, because at the
-very start the panel is still the trigger's box and a full-size button would sit
-on top of the thing it grew out of. Both beats are ordinary CSS on
-`.morph-panel-chrome`, so a page that wants them instant can say so.
+It appears as soon as the panel is large enough to hold it, which is a different
+moment for each trigger rather than a fixed delay: at once for a card, since the
+card is already bigger than the button needs, and a beat later for a panel
+growing out of a pill, which the button would otherwise sit on top of. It leaves
+before the panel arrives, on a beat you can change in CSS.
 
 ## Shared elements
 
@@ -141,7 +141,7 @@ are your own element.
 | `variant` | `'dialog' \| 'fullscreen' \| 'window'` | `'dialog'` | `MorphWindow` and `MorphCard` set this for you. |
 | `shareWords` | `boolean` | `false` | `true` for `MorphWindow`. |
 | `dismissOnTintClick` | `boolean` | `true` | Clicking the tint closes the panel. |
-| `chrome` | `ReactNode` | — | Panel furniture, the close button above all. Its own layer over the content, held at its own size and corner throughout. |
+| `chrome` | `ReactNode` | — | Panel furniture, the close button above all. Its own layer over the panel, at its own size and corner throughout. |
 | `onOpenChange` | `(open: boolean) => void` | — | Fires when the transition settles, not when it starts. |
 | `className` / `panelClassName` | `string` | — | On the dialog element and on the panel inside it. |
 | `aria-label` | `string` | — | Without it, the panel is labelled by its heading. |

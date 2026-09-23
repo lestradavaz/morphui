@@ -15,7 +15,7 @@ import {
   type Ref,
 } from 'react';
 
-import { closeMorph, openMorph, type MorphParts, type MorphVariant } from '../lib/morph-engine.js';
+import { closeMorph, frameChrome, openMorph, type MorphParts, type MorphVariant } from '../lib/morph-engine.js';
 
 const MorphCloseContext = createContext<(() => void) | null>(null);
 
@@ -51,14 +51,16 @@ export interface MorphDialogProps {
   dismissOnTintClick?: boolean;
   /**
    * Elements that belong to the panel rather than to its contents — a close
-   * button, most often. They render outside the content layer, in their own
-   * layer over it.
+   * button, most often. They render in a layer of their own, held over the
+   * panel and above everything else in it, including a shared image in flight.
    *
-   * The difference is visible for the length of the transition: the content is
-   * faded in and blurred, and the engine transforms it, so anything inside
-   * `children` arrives late and shifts when that transform is cleared. Chrome
-   * holds its place and its own shape throughout, since the engine undoes the
-   * panel's scale for it, and only takes a short beat to come on.
+   * The difference is visible for the length of the transition. Content is faded
+   * in, blurred and transformed with the panel, so a button among `children`
+   * arrives late, stretches with the box and shifts when the transform is
+   * cleared. Chrome keeps its own size and its corner from the first frame, and
+   * appears as soon as the panel is large enough to hold it — at once for a
+   * card, a beat later for a panel growing out of a small pill, which it would
+   * otherwise cover.
    *
    * Position it against the panel (`position: absolute` with your own insets).
    * `MorphClose` works here as well as in `children`, because it closes through
@@ -148,6 +150,30 @@ export function MorphDialog({
     }
   }, [config, onOpenChange, parts]);
 
+  /*
+   * The chrome layer is outside the panel, so nothing but this keeps the two the
+   * same size. The engine owns the box while a transition is running; this is
+   * for the rest of the time, when the panel can still be resized by the page or
+   * the viewport underneath it.
+   */
+  useEffect(() => {
+    const panel = panelRef.current;
+    const layer = chromeRef.current;
+    if (!panel || !layer) return;
+    const sync = (): void => {
+      if (inFlight.current || !dialogRef.current?.open) return;
+      const rect = panel.getBoundingClientRect();
+      frameChrome(layer, { x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+    };
+    const observer = new ResizeObserver(sync);
+    observer.observe(panel);
+    window.addEventListener('resize', sync);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', sync);
+    };
+  }, [mounted, chrome]);
+
   // Escape reaches the dialog as `cancel`. The default would close it instantly,
   // skipping the morph, so it is prevented and routed through the same path.
   useEffect(() => {
@@ -199,15 +225,23 @@ export function MorphDialog({
           ref={panelRef}
           className={['morph-panel', panelClassName].filter(Boolean).join(' ')}
         >
-          {mounted && chrome ? (
-            <div ref={chromeRef} className="morph-panel-chrome">
-              {chrome}
-            </div>
-          ) : null}
           <div ref={contentRef} className="morph-panel-content">
             {mounted ? children : null}
           </div>
         </div>
+        {/*
+          Outside the panel on purpose. Shared words and images fly in a layer of
+          their own above everything, and the panel is transformed for the length
+          of the transition, which makes it a stacking context: chrome kept
+          inside it would be painted under a flying image no matter its z-index.
+          Out here it is a sibling of those layers and can sit above them. The
+          engine keeps it over the panel; the stylesheet does at rest.
+        */}
+        {mounted && chrome ? (
+          <div ref={chromeRef} className="morph-panel-chrome">
+            {chrome}
+          </div>
+        ) : null}
       </dialog>
     </MorphCloseContext.Provider>
   );
