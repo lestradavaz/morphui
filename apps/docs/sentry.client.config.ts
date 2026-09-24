@@ -14,17 +14,16 @@ Sentry.init({
 });
 
 if (enabled) {
-  const attachFeedback = () => {
+  /* The footer trigger is a new element on every page the router swaps in, so
+     the form is attached again on each page load and the previous one released. */
+  let detach: (() => void) | undefined;
+  document.addEventListener('astro:page-load', () => {
+    detach?.();
+    detach = undefined;
     const trigger = document.querySelector('#feedback-trigger');
     if (!trigger) return;
 
-    feedback.attachTo(trigger);
+    detach = feedback.attachTo(trigger);
     trigger.addEventListener('click', event => event.preventDefault());
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachFeedback, { once: true });
-  } else {
-    attachFeedback();
-  }
+  });
 }

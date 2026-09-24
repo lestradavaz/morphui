@@ -7,6 +7,19 @@
    flying the hero past whatever the reader was actually looking at. */
 html[data-scroll-ready] { scroll-behavior: smooth; }
 
+/* Page changes crossfade. The old page leaves quickly and the new one arrives a
+   beat later and a little slower, so the eye never reads two pages at once.
+   Astro turns every view transition off under prefers-reduced-motion. */
+@keyframes page-fade-out { to { opacity: 0; } }
+@keyframes page-fade-in { from { opacity: 0; } }
+::view-transition-old(root) { animation: page-fade-out 140ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+::view-transition-new(root) { animation: page-fade-in 240ms cubic-bezier(0.23, 1, 0.32, 1) 40ms both; }
+/* The header is the same bar on every page: it stays put instead of fading
+   with the content under it. */
+.site-header { view-transition-name: site-header; }
+::view-transition-group(site-header), ::view-transition-new(site-header) { animation: none; }
+::view-transition-old(site-header) { animation: none; opacity: 0; }
+
 /* Served from a stable path rather than a hashed bundle so the head can preload
    it: discovered through the stylesheet the file arrives after first paint, and
    the hero's headline visibly resizes as the real font replaces the fallback. */

@@ -57,11 +57,13 @@ const toc = [...(isComponent?[{slug:'preview',text:'Preview'},{slug:'example',te
   {isComponent && <section id="api" class="api-section"><h2>API reference</h2><p class="section-intro">{entry.data.title} props</p><div class="table-scroll" tabindex="0" aria-label="Component props"><table><thead><tr><th>Prop</th><th>Type / default</th><th>Description</th></tr></thead><tbody>{componentApi.rows.map(([name,type,value,description])=><tr><td><code>{name}</code></td><td><code>{type}</code><small>{value}</small></td><td>{description}</td></tr>)}</tbody></table></div><p class="api-note" set:html={componentApi.note}/></section>}
 </DocsLayout>
 <script>
-  document.querySelectorAll('.prose pre').forEach(pre=>{
+  // Every page the router brings in needs its own buttons; a block already wrapped is skipped.
+  document.addEventListener('astro:page-load',()=>document.querySelectorAll('.prose pre').forEach(pre=>{
+    if(pre.parentElement?.classList.contains('markdown-code')) return;
     const wrapper=document.createElement('div');wrapper.className='markdown-code';
     pre.parentNode?.insertBefore(wrapper,pre);wrapper.append(pre);
     const button=document.createElement('button');button.type='button';button.className='copy-button';button.textContent='Copy';button.setAttribute('aria-label','Copy code');
     wrapper.prepend(button);
     button.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(pre.textContent??'');button.textContent='Copied';window.setTimeout(()=>button.textContent='Copy',1800);}catch{button.textContent='Select to copy';const range=document.createRange();range.selectNodeContents(pre);const selection=window.getSelection();selection?.removeAllRanges();selection?.addRange(range);}});
-  });
+  }));
 </script>

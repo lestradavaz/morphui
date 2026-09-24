@@ -1,6 +1,7 @@
 ---
 import SiteHeader from '@/components/SiteHeader.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
+import { ClientRouter } from 'astro:transitions';
 import { SITE } from '@/core/site';
 import '@/styles/global.css';
 
@@ -140,7 +141,14 @@ const jsonLd = canonical && website && {
     <script is:inline>
       (()=>{let mode='system';try{mode=localStorage.getItem('morphui-site-mode')||'system';}catch{}if(!['light','dark','system'].includes(mode))mode='system';document.documentElement.dataset.siteMode=mode;document.documentElement.dataset.morphMode=mode==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode;})();
       addEventListener('load',()=>requestAnimationFrame(()=>document.documentElement.dataset.scrollReady=''),{once:true});
+      /* The router swaps <html>'s attributes for the next page's prerendered ones:
+         carry the resolved appearance across, and bring smooth scrolling back only
+         once the router has put the new page at its position. */
+      document.addEventListener('astro:before-swap',e=>{const from=document.documentElement.dataset,to=e.newDocument.documentElement.dataset;to.siteMode=from.siteMode;to.morphMode=from.morphMode;});
+      document.addEventListener('astro:after-swap',()=>requestAnimationFrame(()=>document.documentElement.dataset.scrollReady=''));
     </script>
+    <ClientRouter/>
+    <script>import '@/core/smooth-scroll';</script>
   </head>
   <body><a class="skip-link" href="#main">Skip to content</a><SiteHeader/><slot/><SiteFooter/></body>
 </html>

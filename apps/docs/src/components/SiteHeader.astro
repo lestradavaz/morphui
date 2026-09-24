@@ -10,33 +10,46 @@ const current = Astro.url.pathname;
   </div>
 </header>
 <script>
-  const header = document.querySelector<HTMLElement>('.site-header[data-home]');
-  const hero = document.querySelector('.hero');
-  if (header && hero) {
-    /* Transparent while the hero is at rest behind it, its own surface the
-       moment the page moves. Keeping the glass for the whole hero sounds
-       better but the headline slides under it and reads straight through, a
-       ghosted second copy of the words that no amount of blur rescues.
-       Plain scroll maths rather than an observer: observing inside the hero is
-       what knocked the restored scroll position off on every reload. */
-    const update = () => {
-      header.dataset.overHero = String(scrollY < 8 && hero.getBoundingClientRect().bottom > header.offsetHeight);
-    };
-    addEventListener('scroll', update, { passive: true });
-    addEventListener('resize', update, { passive: true });
-    update();
-    document.addEventListener('astro:before-swap', () => {
-      removeEventListener('scroll', update);
-      removeEventListener('resize', update);
-    }, { once: true });
-  }
-  const select = document.getElementById('site-mode') as HTMLSelectElement;
-  select.value = document.documentElement.dataset.siteMode ?? 'system';
   const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const siteMode = () => document.getElementById('site-mode') as HTMLSelectElement | null;
   const apply = () => {
+    const select = siteMode();
+    if (!select) return;
     document.documentElement.dataset.morphMode = select.value === 'system' ? (media.matches ? 'dark' : 'light') : select.value;
     document.documentElement.dataset.siteMode = select.value;
   };
-  select.addEventListener('change', () => {apply();try{localStorage.setItem('morphui-site-mode', select.value);}catch{}});
   media.addEventListener('change', apply);
+
+  /* The header is rendered again for every page the router swaps in, so it is
+     wired on each page load and unwired before the next swap. */
+  let detach: (() => void) | undefined;
+  document.addEventListener('astro:before-swap', () => { detach?.(); detach = undefined; });
+  document.addEventListener('astro:page-load', () => {
+    detach?.();
+    detach = undefined;
+    const header = document.querySelector<HTMLElement>('.site-header[data-home]');
+    const hero = document.querySelector('.hero');
+    if (header && hero) {
+      /* Transparent while the hero is at rest behind it, its own surface the
+         moment the page moves. Keeping the glass for the whole hero sounds
+         better but the headline slides under it and reads straight through, a
+         ghosted second copy of the words that no amount of blur rescues.
+         Plain scroll maths rather than an observer: observing inside the hero is
+         what knocked the restored scroll position off on every reload. */
+      const update = () => {
+        header.dataset.overHero = String(scrollY < 8 && hero.getBoundingClientRect().bottom > header.offsetHeight);
+      };
+      addEventListener('scroll', update, { passive: true });
+      addEventListener('resize', update, { passive: true });
+      update();
+      detach = () => {
+        removeEventListener('scroll', update);
+        removeEventListener('resize', update);
+      };
+    }
+    const select = siteMode();
+    if (!select) return;
+    select.value = document.documentElement.dataset.siteMode ?? 'system';
+    select.addEventListener('change', () => {apply();try{localStorage.setItem('morphui-site-mode', select.value);}catch{}});
+  });
 </script>
