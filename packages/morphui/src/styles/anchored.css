@@ -152,7 +152,12 @@
   font-weight: 600;
 }
 
-.morph-combobox__input {
+/* The field draws the ring, and it draws it around the whole field: a page that
+   styles `:focus-visible` globally - which most do - would otherwise put a
+   second, square outline on the input inside the rounded one. Stated as a
+   `:focus-visible` pair so it outranks that rule rather than tying with it. */
+.morph-combobox__input,
+.morph-combobox__input:focus-visible {
   min-width: 0;
   flex: 1;
   border: 0;
@@ -380,7 +385,9 @@
   line-height: 1;
 }
 
-.morph-multi-select__search input {
+/* Same as the combobox input: the field's `:focus-within` ring is the only one. */
+.morph-multi-select__search input,
+.morph-multi-select__search input:focus-visible {
   flex: 1;
   min-width: 0;
   border: 0;

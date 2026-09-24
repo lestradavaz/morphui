@@ -122,6 +122,52 @@ test('a tooltip answers the pointer and the keyboard, and belongs to one control
   await expect(page.locator('.morph-tooltip__bubble[data-open=true]')).toHaveCount(0);
 });
 
+/* The list is longer than the window it lives in, so it has to scroll: a
+   component that is documented and unreachable is not documented. */
+test('the sidebar reaches every component and marks the new ones', async ({ page }) => {
+  await page.goto('/docs/morph-combobox');
+  const sidebar = page.locator('.docs-sidebar');
+  test.skip(!(await sidebar.isVisible()), 'this width uses the disclosure in the page instead');
+
+  const nav = sidebar.locator('nav');
+  const metrics = await nav.evaluate(el => ({ client: el.clientHeight, scroll: el.scrollHeight, overflow: getComputedStyle(el).overflowY }));
+  expect(metrics.overflow, 'the sidebar list does not scroll').toBe('auto');
+  expect(metrics.scroll).toBeGreaterThan(metrics.client);
+
+  await nav.evaluate(el => { el.scrollTop = el.scrollHeight; });
+  const rows = page.locator('.nav-group').nth(1).locator('a');
+  await expect(rows.last()).toBeInViewport();
+  await expect(rows.last().locator('span:first-child')).toHaveText('MorphWindow');
+  // The license is not part of the list and does not scroll away with it.
+  await expect(page.locator('.sidebar-license')).toBeInViewport();
+
+  const labels = await rows.locator('span:first-child').allInnerTexts();
+  expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
+  const marked = await rows.evaluateAll(anchors => anchors.map(a => [a.querySelector('span')!.textContent, !!a.querySelector('.nav-badge')] as const));
+  expect(marked.filter(([, isNew]) => isNew).map(([name]) => name)).toEqual(labels.filter(name => !['MorphCard', 'MorphDialog', 'MorphWindow'].includes(name!)));
+});
+
+test('the menu a narrow window gets carries the same list and the same note', async ({ page }) => {
+  await page.goto('/docs/morph-combobox');
+  test.skip(await page.locator('.docs-sidebar').isVisible(), 'this width uses the sidebar instead');
+
+  await page.locator('.mobile-docs-nav summary').click();
+  const rows = page.locator('.mobile-docs-nav nav a');
+  await expect(rows.last()).toHaveText(/MorphWindow/);
+  await expect(page.locator('.mobile-docs-nav .nav-badge')).toHaveCount(16);
+  await expect(rows.filter({ hasText: 'MorphDialog' }).locator('.nav-badge')).toHaveCount(0);
+});
+
+test('a focused field draws one ring, not two', async ({ page }) => {
+  await page.goto('/docs/morph-combobox');
+  await hydrate(page);
+  const field = page.locator('.morph-combobox__field').first();
+  await field.locator('.morph-combobox__input').click();
+  // The field's own outline is the ring; the input inside it must not draw one.
+  expect(await field.evaluate(el => getComputedStyle(el).outlineStyle)).toBe('solid');
+  expect(await field.locator('.morph-combobox__input').evaluate(el => getComputedStyle(el).outlineStyle)).toBe('none');
+});
+
 /* Four controls change their own size, which is the one thing a control on a
    page is not allowed to make everyone else pay for. */
 test('a control that resizes itself leaves the rest of the page where it was', async ({ page }) => {

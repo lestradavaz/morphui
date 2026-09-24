@@ -15,9 +15,9 @@ const breadcrumbs = [{ name: title, path: current }];
 ---
 <BaseLayout title={title} description={description} breadcrumbs={breadcrumbs}>
   <div class="docs-shell">
-    <aside class="docs-sidebar"><nav aria-label="Documentation">{navigation.map(group=><div class="nav-group"><p>{group.label}</p>{group.links.map(link=><a href={link.href} aria-current={link.href===current?'page':undefined}>{link.label}</a>)}</div>)}</nav><a class="sidebar-license" href="/license.txt">Open source. MIT licensed.</a></aside>
+    <aside class="docs-sidebar"><nav aria-label="Documentation">{navigation.map(group=><div class="nav-group"><p>{group.label}</p>{group.links.map(link=><a href={link.href} aria-current={link.href===current?'page':undefined}><span>{link.label}</span>{link.isNew && <span class="nav-badge">New</span>}</a>)}</div>)}</nav><a class="sidebar-license" href="/license.txt">Open source. MIT licensed.</a></aside>
     <main id="main" class="docs-main">
-      <details class="mobile-docs-nav"><summary>Documentation menu <span aria-hidden="true">⌄</span></summary><nav aria-label="Mobile documentation">{pages.map(page=><a href={page.href} aria-current={page.href===current?'page':undefined}>{page.label}</a>)}</nav></details>
+      <details class="mobile-docs-nav"><summary>Documentation menu <span aria-hidden="true">⌄</span></summary><nav aria-label="Mobile documentation">{pages.map(page=><a href={page.href} aria-current={page.href===current?'page':undefined}><span>{page.label}</span>{page.isNew && <span class="nav-badge">New</span>}</a>)}</nav></details>
       <div class="doc-heading"><a class="breadcrumb" href="/">morphui <span aria-hidden="true">/</span> Documentation</a><h1>{title}</h1><p>{description}</p></div>
       <slot/>
       <nav class="doc-pagination" aria-label="Previous and next pages">{previous ? <a href={previous.href}><span>Previous</span>{previous.label}</a> : <span/>}{next && <a href={next.href}><span>Next</span>{next.label}</a>}</nav>
