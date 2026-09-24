@@ -2,7 +2,9 @@
   "name": "@morphui/docs",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "node scripts/prepare-package.mjs && astro dev --host localhost --port 4321",
     "build": "node scripts/prepare-package.mjs && astro build",
@@ -10,16 +12,17 @@
     "typecheck": "astro check"
   },
   "dependencies": {
-    "astro": "7.3.4",
     "@astrojs/react": "6.0.4",
     "@astrojs/sitemap": "^3.7.3",
-    "@tailwindcss/vite": "4.3.3",
-    "tailwindcss": "4.3.3",
     "@fontsource-variable/schibsted-grotesk": "^5.2.8",
     "@lestradavaz/morph-ui": "workspace:*",
+    "@sentry/astro": "^10.75.2",
+    "@tailwindcss/vite": "4.3.3",
+    "astro": "7.3.4",
     "gsap": "^3.15.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "tailwindcss": "4.3.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

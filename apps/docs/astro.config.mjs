@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
+import sentry from '@sentry/astro';
 import tailwindcss from '@tailwindcss/vite';
 
 /*
@@ -11,6 +12,7 @@ import tailwindcss from '@tailwindcss/vite';
  */
 const site = process.env.SITE_URL ?? 'https://morphui.lestradavaz.com';
 if (!/^https?:\/\//.test(site)) throw new Error('SITE_URL must be an absolute HTTP(S) URL');
+const sentrySourceMapsReady = Boolean(process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT);
 
 export default defineConfig({
   site,
@@ -19,6 +21,6 @@ export default defineConfig({
   trailingSlash: 'never',
   markdown: { shikiConfig: { themes: { light: 'github-light', dark: 'github-dark' } } },
   build: { format: 'file' },
-  integrations: [react(), sitemap({ filter: page => !/\/(404|robots\.txt)(\.html)?$/.test(page) })],
+  integrations: [react(), sitemap({ filter: page => !/\/(404|robots\.txt)(\.html)?$/.test(page) }), sentry({ enabled: { client: true, server: false }, sourcemaps: { disable: !sentrySourceMapsReady, filesToDeleteAfterUpload: ['./dist/**/*.map'] } })],
   vite: { plugins: [tailwindcss()], ssr: { noExternal: ['@lestradavaz/morph-ui', 'gsap'] } },
 });

@@ -27,11 +27,18 @@ build scoped to `apps/docs` has no package to point at.
 | Variable | Required | Effect |
 | --- | --- | --- |
 | `SITE_URL` | no | Absolute URL. Defaults to `https://morphui.lestradavaz.com`. |
+| `PUBLIC_SENTRY_DSN` | for error monitoring | Public DSN from the `morphui` Sentry project. Set at build time. |
+| `SENTRY_AUTH_TOKEN` | no | Build-only token for source map upload. |
+| `SENTRY_ORG` | no | Sentry organization slug for source map upload. |
+| `SENTRY_PROJECT` | no | Sentry project slug for source map upload: `morphui`. |
 | `PORT` | no | Port nginx listens on. Default `80`. |
 | `SITE_ROOT` | no | Directory to serve. Defaults to the built site. |
 
 Nothing has to be set for the production deploy. `SITE_URL` exists so a preview
 or a second host can be built without the canonical links pointing at production.
+Set `PUBLIC_SENTRY_DSN` in the build environment to capture browser errors.
+Source map upload runs only when all three `SENTRY_*` variables above are set.
+Keep the auth token in the build environment; never expose it as a `PUBLIC_` variable.
 
 It must be read at **build** time, not runtime: the canonical tag, `og:url` and
 the sitemap are baked into the HTML and `robots.txt`. Astro treats a build with

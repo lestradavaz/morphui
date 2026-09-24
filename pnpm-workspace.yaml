@@ -3,6 +3,7 @@ packages:
   - "apps/*"
 allowBuilds:
   # esbuild ships a platform binary; tsup cannot bundle without it.
+  '@sentry/cli': true
   esbuild: true
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.11.3'
