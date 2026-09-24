@@ -27,7 +27,7 @@ build scoped to `apps/docs` has no package to point at.
 | Variable | Required | Effect |
 | --- | --- | --- |
 | `SITE_URL` | no | Absolute URL. Defaults to `https://morphui.lestradavaz.com`. |
-| `PUBLIC_SENTRY_DSN` | for error monitoring | Public DSN from the `morphui` Sentry project. Set at build time. |
+| `PUBLIC_SENTRY_DSN` | for error monitoring and feedback | Public DSN from the `morphui` Sentry project. Set at build time. |
 | `SENTRY_AUTH_TOKEN` | no | Build-only token for source map upload. |
 | `SENTRY_ORG` | no | Sentry organization slug for source map upload. |
 | `SENTRY_PROJECT` | no | Sentry project slug for source map upload: `morphui`. |
@@ -36,7 +36,9 @@ build scoped to `apps/docs` has no package to point at.
 
 Nothing has to be set for the production deploy. `SITE_URL` exists so a preview
 or a second host can be built without the canonical links pointing at production.
-Set `PUBLIC_SENTRY_DSN` in the build environment to capture browser errors.
+Set `PUBLIC_SENTRY_DSN` in the build environment to capture browser errors and
+open the Sentry feedback form from the homepage. Without it, the feedback link
+opens a new GitHub issue.
 Source map upload runs only when all three `SENTRY_*` variables above are set.
 Keep the auth token in the build environment; never expose it as a `PUBLIC_` variable.
 
