@@ -10,6 +10,9 @@ export const themes = [
    the previous/next links are all read from: one order, stated once. `isNew`
    marks the components that arrived after the three the library started with,
    and is what draws the badge in the sidebar. */
+/* Typed rather than inferred, so `count` can be stated on the one group that
+   has a number worth showing and left off the other. */
+export type NavigationGroup = { label: string; count?: number; links: { label: string; href: string; isNew: boolean }[] };
 export const components = [
   { id: 'morph-button', name: 'MorphButton', label: 'Button', description: 'A press that starts where your finger landed.', detail: 'Four variants, two sizes, a loading state, and the same curves as everything else.', kind: 'button', isNew: true },
   { id: 'morph-card', name: 'MorphCard', label: 'Card', description: 'From a small detail to the whole story. And back.', detail: 'Expand a card into a full-screen view, keeping the image connected throughout the transition.', kind: 'card', isNew: false },
@@ -32,9 +35,9 @@ export const components = [
   { id: 'morph-window', name: 'MorphWindow', label: 'Window', description: 'A little more room, without losing your place.', detail: 'A focused window that opens from its trigger, with a softer blur and its own closing curve.', kind: 'window', isNew: false },
 ] as const;
 export type DemoKind = typeof components[number]['kind'];
-export const navigation = [
+export const navigation: NavigationGroup[] = [
   { label: 'Getting started', links: [ { label: 'Installation', href: '/docs/installation', isNew: false }, { label: 'Themes', href: '/docs/themes', isNew: false }, { label: 'Motion', href: '/docs/motion', isNew: false } ] },
-  { label: 'Components', links: components.map(c => ({ label: c.name, href: `/docs/${c.id}`, isNew: c.isNew })) },
+  { label: 'Components', count: components.length, links: components.map(c => ({ label: c.name, href: `/docs/${c.id}`, isNew: c.isNew })) },
 ];
 export const sharedProps = [
   ['children', 'ReactNode', 'Required', 'Content rendered inside the panel.'],

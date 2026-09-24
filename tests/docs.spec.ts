@@ -141,6 +141,8 @@ test('the sidebar reaches every component and marks the new ones', async ({ page
   // The license is not part of the list and does not scroll away with it.
   await expect(page.locator('.sidebar-license')).toBeInViewport();
 
+  // The number beside the group's name is the list under it, counted.
+  await expect(page.locator('.nav-group').nth(1).locator('.nav-count')).toHaveText(String(await rows.count()));
   const labels = await rows.locator('span:first-child').allInnerTexts();
   expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
   const marked = await rows.evaluateAll(anchors => anchors.map(a => [a.querySelector('span')!.textContent, !!a.querySelector('.nav-badge')] as const));
