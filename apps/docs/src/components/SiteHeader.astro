@@ -2,7 +2,7 @@
 import Search from './docs/Search';
 const current = Astro.url.pathname;
 ---
-<header class="site-header">
+<header class="site-header" data-home={current === "/" ? "true" : undefined} data-over-hero={current === "/" ? "true" : undefined}>
   <div class="header-inner">
     <a class="wordmark" href="/" aria-label="MorphUI home"><span class="brand-symbol" aria-hidden="true"><span></span><span></span></span>morphui</a>
     <nav class="desktop-nav" aria-label="Main navigation"><a href="/#components" aria-current={current.startsWith('/docs/morph-') ? 'page' : undefined}>Components</a><a href="/docs/installation" aria-current={current === '/docs/installation' ? 'page' : undefined}>Documentation</a></nav>
@@ -10,6 +10,26 @@ const current = Astro.url.pathname;
   </div>
 </header>
 <script>
+  const header = document.querySelector<HTMLElement>('.site-header[data-home]');
+  const hero = document.querySelector('.hero');
+  if (header && hero) {
+    /* Transparent while the hero is at rest behind it, its own surface the
+       moment the page moves. Keeping the glass for the whole hero sounds
+       better but the headline slides under it and reads straight through, a
+       ghosted second copy of the words that no amount of blur rescues.
+       Plain scroll maths rather than an observer: observing inside the hero is
+       what knocked the restored scroll position off on every reload. */
+    const update = () => {
+      header.dataset.overHero = String(scrollY < 8 && hero.getBoundingClientRect().bottom > header.offsetHeight);
+    };
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update, { passive: true });
+    update();
+    document.addEventListener('astro:before-swap', () => {
+      removeEventListener('scroll', update);
+      removeEventListener('resize', update);
+    }, { once: true });
+  }
   const select = document.getElementById('site-mode') as HTMLSelectElement;
   select.value = document.documentElement.dataset.siteMode ?? 'system';
   const media = window.matchMedia('(prefers-color-scheme: dark)');

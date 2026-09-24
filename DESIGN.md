@@ -21,8 +21,11 @@ slight negative tracking. No decorative eyebrows or widely spaced uppercase text
 ## Shape and layout
 
 Radii: 10, 16, 24, 34px and pill. Pills for primary actions; 24/34px for demo stages.
-Home: generous left-aligned introduction beside a live component stage. Component
-index is a row-based catalogue. Docs: familiar navigation rail, reading column,
+Home: centered introduction over a theme-aware shadow mask at 50% opacity, fading
+to transparent at the bottom. The install command sits below the hero actions without section dividers.
+The homepage navigation is transparent over the hero and gains a surface after it. The component catalogue
+is a looping carousel: four columns on desktop, two on tablet, one on mobile.
+Live demos belong on documentation pages. Docs: familiar navigation rail, reading column,
 small on-page navigation on wide screens. Collapse navigation for narrow screens.
 
 ## Motion

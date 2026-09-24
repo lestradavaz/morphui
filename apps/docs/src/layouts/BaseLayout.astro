@@ -2,7 +2,6 @@
 import SiteHeader from '@/components/SiteHeader.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
 import { SITE } from '@/core/site';
-import '@fontsource-variable/schibsted-grotesk';
 import '@/styles/global.css';
 
 interface Props {
@@ -107,6 +106,7 @@ const jsonLd = canonical && website && {
 <html lang={SITE.language} data-morph-theme="ink" data-morph-mode="light">
   <head>
     <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="preload" href="/fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin/>
     <title>{pageTitle}</title><meta name="description" content={description}/>
     <meta name="author" content={SITE.author.name}/>
     <meta name="robots" content={robots}/>
@@ -139,6 +139,7 @@ const jsonLd = canonical && website && {
 
     <script is:inline>
       (()=>{let mode='system';try{mode=localStorage.getItem('morphui-site-mode')||'system';}catch{}if(!['light','dark','system'].includes(mode))mode='system';document.documentElement.dataset.siteMode=mode;document.documentElement.dataset.morphMode=mode==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):mode;})();
+      addEventListener('load',()=>requestAnimationFrame(()=>document.documentElement.dataset.scrollReady=''),{once:true});
     </script>
   </head>
   <body><a class="skip-link" href="#main">Skip to content</a><SiteHeader/><slot/><SiteFooter/></body>

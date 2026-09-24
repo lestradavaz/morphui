@@ -1,0 +1,91 @@
+---
+import { components } from '@/core/data/catalog';
+import Icon from './Icon.astro';
+---
+<component-carousel role="region" aria-roledescription="carousel" aria-label="Components">
+  <div class="carousel-toolbar">
+    <p>Find your next interaction.</p>
+    <div class="carousel-controls">
+      <button type="button" data-prev aria-label="Previous components"><span class="carousel-prev"><Icon name="arrow" /></span></button>
+      <button type="button" data-next aria-label="Next components"><Icon name="arrow" /></button>
+    </div>
+  </div>
+  <div class="carousel-viewport">
+    <div class="carousel-track">
+      {components.map((component, index) => (
+        <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${components.length}`}>
+          <a href={`/docs/${component.id}`} class="component-tile">
+            <div class={`component-glyph glyph-${component.kind}`} aria-hidden="true"><span /><span /><span /></div>
+            <h3>{component.name}</h3>
+            <p>{component.description}</p>
+            <span class="component-tile-action">Explore <Icon name="arrow" size={18} /></span>
+          </a>
+        </div>
+      ))}
+    </div>
+  </div>
+  <span class="sr-only" data-status aria-live="polite" aria-atomic="true"></span>
+</component-carousel>
+
+<script>
+  import EmblaCarousel from 'embla-carousel';
+  import { watchViewport } from '@/core/viewport';
+
+  class ComponentCarousel extends HTMLElement {
+    private cleanup?: () => void;
+    connectedCallback() {
+      const viewport = this.querySelector<HTMLElement>('.carousel-viewport')!;
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+      const carousel = EmblaCarousel(viewport, { loop: true, align: 'start', slidesToScroll: 1, duration: 25 });
+      const previous = this.querySelector<HTMLButtonElement>('[data-prev]')!;
+      const next = this.querySelector<HTMLButtonElement>('[data-next]')!;
+      const status = this.querySelector<HTMLElement>('[data-status]')!;
+      const abort = new AbortController();
+      const options = { signal: abort.signal };
+      let dragging = false;
+      let inView = false;
+      let timer: ReturnType<typeof setInterval> | undefined;
+      const sync = () => {
+        clearInterval(timer);
+        const focusedCard = viewport.contains(document.activeElement);
+        if (!reduced.matches && !dragging && inView && !document.hidden && !focusedCard) {
+          timer = setInterval(() => carousel.scrollNext(), 5000);
+        }
+      };
+      const updateSlides = () => {
+        const visible = carousel.slidesInView();
+        carousel.slideNodes().forEach((slide, index) => {
+          slide.querySelector('a')!.tabIndex = visible.includes(index) ? 0 : -1;
+        });
+      };
+      const move = (direction: number, keyboard: boolean) => {
+        direction > 0 ? carousel.scrollNext(keyboard || reduced.matches) : carousel.scrollPrev(keyboard || reduced.matches);
+        sync();
+        status.textContent = `${carousel.selectedScrollSnap() + 1} of ${carousel.scrollSnapList().length}`;
+      };
+      next.addEventListener('click', event => move(1, event.detail === 0), options);
+      previous.addEventListener('click', event => move(-1, event.detail === 0), options);
+      viewport.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        move(event.key === 'ArrowRight' ? 1 : -1, true);
+        carousel.slideNodes()[carousel.selectedScrollSnap()].querySelector('a')?.focus({ preventScroll: true });
+      }, options);
+      this.addEventListener('focusin', sync, options);
+      this.addEventListener('focusout', () => queueMicrotask(sync), options);
+      carousel.on('pointerDown', () => { dragging = true; sync(); });
+      carousel.on('pointerUp', () => { dragging = false; sync(); });
+      carousel.on('slidesInView', updateSlides);
+      carousel.on('reInit', updateSlides);
+      reduced.addEventListener('change', sync, options);
+      document.addEventListener('visibilitychange', sync, options);
+      const unwatch = watchViewport(this, next => { inView = next; sync(); });
+      updateSlides();
+      sync();
+      this.dataset.ready = 'true';
+      this.cleanup = () => { clearInterval(timer); abort.abort(); unwatch(); carousel.destroy(); };
+    }
+    disconnectedCallback() { this.cleanup?.(); }
+  }
+  if (!customElements.get('component-carousel')) customElements.define('component-carousel', ComponentCarousel);
+</script>

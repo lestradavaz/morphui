@@ -48,7 +48,7 @@ test('every documentation route has content, metadata and no page overflow', asy
 });
 
 test('previews hydrate, keep colors scoped and open all three packaged components', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/docs/morph-dialog');
   await hydrate(page);
   const rootAccent = await page.locator('html').evaluate(el => getComputedStyle(el).getPropertyValue('--morph-accent'));
   const accents = new Set<string>();
@@ -65,7 +65,10 @@ test('previews hydrate, keep colors scoped and open all three packaged component
     el => getComputedStyle(el).getPropertyValue('--morph-bg').trim().toLowerCase().startsWith('#f') ? 'light' : 'dark',
   )).toBe('dark');
   for (const [tab, trigger, close] of [['Dialog','Create account','Close dialog'],['Window','A little context','Close window'],['Card','Open A study in motion','Close story']]) {
-    await page.getByRole('button',{name:tab,exact:true}).click();
+    await page.goto(`/docs/morph-${tab.toLowerCase()}`);
+    await hydrate(page);
+    await page.getByLabel('Preview color theme').selectOption('plum');
+    await page.getByRole('button', {name: 'Dark', exact: true}).click();
     await page.getByRole('button',{name:trigger,exact:true}).click();
     await expect(page.locator('.morph-dialog[open]')).toHaveCount(1);
     await page.waitForTimeout(1350);
@@ -268,7 +271,7 @@ test('installation names the published package and copies the selected command',
   await page.getByRole('button',{name:'pnpm',exact:true}).click();
   await expect(page.locator('.install-code code')).toHaveText(`pnpm add ${pkg.name} gsap`);
   await page.locator('.install-code').getByRole('button',{name:'Copy',exact:true}).click();
-  await expect(page.locator('.copy-feedback')).toHaveText('Copied');
+  await expect(page.locator('.install-code .copy-button')).toHaveText('✓ Copied');
   expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`pnpm add ${pkg.name} gsap`);
 
   /*
@@ -283,23 +286,25 @@ test('installation names the published package and copies the selected command',
   expect((await registry.json())['dist-tags'].latest).toBe(pkg.version);
 });
 
-test('the hero carries a copyable install command for every package manager', async ({ page, context }) => {
+test('the homepage carries a copyable install command for every package manager', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read','clipboard-write']);
   await page.goto('/');
   await hydrate(page);
-  // The hero command is the reason a developer lands here, so it has to be the
-  // real line and not a decorative one.
-  const code = page.locator('.hero-install .install-code code');
+  // Keep the actual install command directly below the hero.
+  const code = page.locator('.home-install .install-code code');
   await expect(code).toHaveText(`npm install ${pkg.name} gsap`);
   // One package on one registry: every manager installs the same thing, so the
-  // hero offers the choice rather than picking one and hiding the rest.
+  // homepage offers the choice rather than picking one and hiding the rest.
   for (const [manager, expected] of [['pnpm',`pnpm add ${pkg.name} gsap`],['yarn',`yarn add ${pkg.name} gsap`],['bun',`bun add ${pkg.name} gsap`]] as const) {
-    await page.locator('.hero-install').getByRole('button',{name:manager,exact:true}).click();
+    await page.locator('.home-install').getByRole('button',{name:manager,exact:true}).click();
     await expect(code).toHaveText(expected);
   }
-  await page.locator('.hero-install').getByRole('button',{name:'Copy',exact:true}).click();
+  await page.locator('.home-install').getByRole('button',{name:'Copy',exact:true}).click();
   expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(`bun add ${pkg.name} gsap`);
-  await expect(page.locator('.hero-install .copy-feedback')).toHaveText('Copied');
+  await expect(page.locator('.home-install .copy-button')).toHaveText('✓ Copied');
+  await expect(page.locator('.home-install .copy-feedback')).toHaveCount(0);
+  await page.locator('.home-install').getByRole('button', {name: 'npm', exact: true}).click();
+  await expect(page.locator('.home-install .copy-button')).toHaveText('Copy');
 });
 
 test('slow motion is local and CSS and geometry use the same multiplier', async ({ page }) => {
@@ -498,4 +503,120 @@ test('every page ships a share card and a structured-data graph', async ({ page,
   const image = await request.get('/og-image.png');
   expect(image.status()).toBe(200);
   expect(image.headers()['content-type']).toContain('image/png');
+});
+
+
+test('homepage carousel loops, supports keyboard and preserves responsive columns', async ({ page, isMobile }) => {
+  await page.goto('/');
+  await expect(page.locator('component-carousel')).toHaveAttribute('data-ready', 'true');
+  await expect(page.locator('.hero .preview')).toHaveCount(0);
+  await expect(page.locator('.hero h1')).toHaveText('Interfaces thatstay connected.');
+  const carousel = page.locator('component-carousel');
+  await carousel.scrollIntoViewIfNeeded();
+  const viewport = await page.locator('.carousel-track').boundingBox();
+  const tile = await page.locator('.carousel-slide').first().boundingBox();
+  expect(Math.round(viewport!.width / tile!.width)).toBe(isMobile ? 1 : 4);
+  const previous = page.getByRole('button', {name: 'Previous components'});
+  await previous.focus();
+  await page.keyboard.press('Enter');
+  const count = await page.locator('.carousel-slide').count();
+  await expect(page.locator('[data-status]')).toHaveText(`${count} of ${count}`);
+  const next = page.getByRole('button', {name: 'Next components'});
+  await next.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-status]')).toHaveText(`1 of ${count}`);
+  await page.locator('.component-tile').first().focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.component-tile').nth(1)).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('homepage honors reduced motion and adapts shadow to site appearance', async ({ page }) => {
+  await page.emulateMedia({reducedMotion: 'reduce'});
+  await page.goto('/');
+  await hydrate(page);
+  await expect(page.locator('[data-rotation]')).toHaveCount(0);
+  const shadow = page.locator('.ethereal-shadow-layer');
+  await expect(page.locator('[data-shadow]')).toHaveAttribute('data-running', 'false');
+  await expect(page.locator('[data-shadow]')).not.toHaveAttribute('data-ready', /.*/);
+  await expect(shadow).toHaveCSS('opacity', '1');
+  await expect(page.locator('[data-shadow]')).toHaveCSS('opacity', '0.5');
+  const colors = [];
+  for (const mode of ['light', 'dark']) {
+    await page.getByLabel('Site appearance').selectOption(mode);
+    colors.push(await shadow.evaluate(el => getComputedStyle(el).backgroundColor));
+  }
+  expect(colors[0]).not.toBe(colors[1]);
+});
+
+test('carousel arrows restart autoplay and loop keeps its gap', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('component-carousel')).toHaveAttribute('data-ready', 'true');
+  await page.locator('component-carousel').scrollIntoViewIfNeeded();
+  const previous = page.getByRole('button', {name: 'Previous components'});
+  await previous.focus();
+  await page.keyboard.press('Enter');
+  const last = await page.locator('.component-tile').last().boundingBox();
+  const first = await page.locator('.component-tile').first().boundingBox();
+  const cycle = (last!.width + 16) * await page.locator('.carousel-slide').count();
+  const gap = first!.x - last!.x - last!.width;
+  expect(Math.round((gap + cycle) % cycle)).toBe(16);
+  const track = page.locator('.carousel-track');
+  const initial = await track.getAttribute('style');
+  await page.waitForTimeout(3000);
+  expect(await track.getAttribute('style')).toBe(initial);
+  await expect.poll(() => track.getAttribute('style'), {timeout: 4000}).not.toBe(initial);
+});
+
+test('hero shadow moves on desktop and header fills after the hero', async ({ page, isMobile }) => {
+  await page.goto('/');
+  await hydrate(page);
+  const header = page.locator('.site-header');
+  await expect(header).toHaveAttribute('data-over-hero', 'true');
+  await expect(header).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  // The churn is the whole point of the background, so prove the canvas is
+  // actually painting new frames rather than merely being mounted.
+  const field = page.locator('[data-shadow]');
+  if (isMobile) await expect(field).toHaveAttribute('data-running', 'false');
+  else {
+    await expect(field).toHaveAttribute('data-ready', 'true');
+    const canvas = page.locator('.ethereal-shadow-canvas');
+    const first = await canvas.screenshot();
+    await page.waitForTimeout(900);
+    expect(Buffer.compare(first, await canvas.screenshot())).not.toBe(0);
+  }
+  // The header keeps its glass until the hero has cleared it, so scroll past the
+  // hero itself rather than to the anchor, which stops inside scroll-padding.
+  await page.locator('.hero').evaluate(el => scrollTo({top: el.offsetTop + el.offsetHeight, behavior: 'instant'}));
+  await expect(header).toHaveAttribute('data-over-hero', 'false');
+  await expect(header).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+});
+
+test('the homepage holds its scroll position across reloads and never animates there', async ({ page }) => {
+  // A fresh document landing on the anchor takes the position; it does not fly
+  // there past the hero. (A fragment click inside the page still animates.)
+  await page.goto('/#components');
+  const samples = new Set<number>();
+  for (let sample = 0; sample < 8; sample++) {
+    samples.add(await page.evaluate(() => Math.round(scrollY)));
+    await page.waitForTimeout(60);
+  }
+  expect(samples.size).toBe(1);
+  expect([...samples][0]).toBeGreaterThan(0);
+
+  /* An IntersectionObserver pointed at the hero's decorative background made the
+     browser land 26px above its restored position on every reload, so the page
+     crept upward each time and flashed the hero past the reader on the way. */
+  await page.goto('/');
+  await hydrate(page);
+  await page.evaluate(() => scrollTo({top: 500, behavior: 'instant'}));
+  await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(500);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page.reload();
+    await hydrate(page);
+    expect(await page.evaluate(() => Math.round(scrollY))).toBe(500);
+  }
+
+  await page.getByRole('link', {name: /Explore components/}).first().click();
+  await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBeGreaterThan(500);
 });

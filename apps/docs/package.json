@@ -14,11 +14,11 @@
   "dependencies": {
     "@astrojs/react": "6.0.4",
     "@astrojs/sitemap": "^3.7.3",
-    "@fontsource-variable/schibsted-grotesk": "^5.2.8",
     "@lestradavaz/morph-ui": "workspace:*",
     "@sentry/astro": "^10.75.2",
     "@tailwindcss/vite": "4.3.3",
     "astro": "7.3.4",
+    "embla-carousel": "^8.6.0",
     "gsap": "^3.15.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

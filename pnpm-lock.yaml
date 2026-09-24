@@ -26,9 +26,6 @@ importers:
       '@astrojs/sitemap':
         specifier: ^3.7.3
         version: 3.7.4
-      '@fontsource-variable/schibsted-grotesk':
-        specifier: ^5.2.8
-        version: 5.3.0
       '@lestradavaz/morph-ui':
         specifier: workspace:*
         version: link:../../packages/morphui
@@ -41,6 +38,9 @@ importers:
       astro:
         specifier: 7.3.4
         version: 7.3.4(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(@types/node@24.13.6)(jiti@2.7.0)(yaml@2.9.1)
+      embla-carousel:
+        specifier: ^8.6.0
+        version: 8.6.0
       gsap:
         specifier: ^3.15.0
         version: 3.15.0
@@ -740,9 +740,6 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
-
-  '@fontsource-variable/schibsted-grotesk@5.3.0':
-    resolution: {integrity: sha512-ndS6H/KICWANchlHF3q4UdZD+xrZ3Ji0rUobIuXlgvDUzDfqZDsVuXPXZb636nJZMHE9zZ9Fmwgqazm8hMB50Q==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1871,6 +1868,9 @@ packages:
 
   electron-to-chromium@1.5.433:
     resolution: {integrity: sha512-5lCAbyZBjtmUt/RAGHRqrL2q0oEFRThDAsZHHDn9XHa89Qw7gMYOeSicBTy+AHfvo0r6vwsZvqNJTQIQy1BLzA==}
+
+  embla-carousel@8.6.0:
+    resolution: {integrity: sha512-SjWyZBHJPbqxHOzckOfo8lHisEaJWmwd23XppYFYVh10bU66/Pn5tkVkbkCMZVdbUE5eTCI2nD8OyIP4Z+uwkA==}
 
   emmet@2.4.11:
     resolution: {integrity: sha512-23QPJB3moh/U9sT4rQzGgeyyGIrcM+GH5uVYg2C6wZIxAIJq7Ng3QLT79tl8FUwDXhyq9SusfknOrofAKqvgyQ==}
@@ -3579,8 +3579,6 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@fontsource-variable/schibsted-grotesk@5.3.0': {}
-
   '@img/colour@1.1.0':
     optional: true
 
@@ -4596,6 +4594,8 @@ snapshots:
   dset@3.1.4: {}
 
   electron-to-chromium@1.5.433: {}
+
+  embla-carousel@8.6.0: {}
 
   emmet@2.4.11:
     dependencies:
